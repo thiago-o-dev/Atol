@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Security;
 using UnityEditor;
 
 public class AddReadmeToProjectAndAsmdefs : AssetPostprocessor
@@ -13,9 +14,9 @@ public class AddReadmeToProjectAndAsmdefs : AssetPostprocessor
 
         UnityEngine.Debug.Log($"Generating {projectName}");
 
-        string[] mdFiles = GetMarkdownFilesForProject(projectName);
+        List<string> mdFiles = GetMarkdownFilesForProject(projectName);
 
-        if (mdFiles.Length == 0)
+        if (mdFiles.Count == 0)
             return content;
 
         var builder = new StringBuilder();
@@ -30,8 +31,6 @@ public class AddReadmeToProjectAndAsmdefs : AssetPostprocessor
                 file);
 
             relativePath = relativePath.Replace('\\', '/');
-
-            // Escape XML characters in the path.
             relativePath = SecurityElement.Escape(relativePath);
 
             builder.AppendLine(
@@ -46,111 +45,90 @@ public class AddReadmeToProjectAndAsmdefs : AssetPostprocessor
             builder + "\n</Project>");
     }
 
-    private static string[] GetMarkdownFilesForProject(string projectName)
+    private static List<string> GetMarkdownFilesForProject(string projectName)
     {
-        string asmdefFolder = FindAssemblyFolder(projectName);
+        var result = new List<string>();
 
-        // This is the important part:
-        //
-        // If an asmdef exists for this project, only include markdown
-        // files belonging to that asmdef.
-        if (asmdefFolder != null)
-        {
-            return Directory.GetFiles(
-                asmdefFolder,
-                "*.md",
-                SearchOption.AllDirectories);
-        }
-
-        // No matching asmdef.
-        //
-        // This normally means Assembly-CSharp (or another Unity-generated
-        // project without an asmdef). Search Assets, but don't include
-        // markdown files that belong to another asmdef.
-        if (projectName == "Assembly-CSharp")
-        {
-            return GetMarkdownFilesOutsideAsmdefs();
-        }
-
-        return new string[0];
-    }
-
-    private static string[] GetMarkdownFilesOutsideAsmdefs()
-    {
         string[] mdFiles = Directory.GetFiles(
             "Assets",
             "*.md",
             SearchOption.AllDirectories);
 
-        string[] asmdefFiles = Directory.GetFiles(
-            "Assets",
-            "*.asmdef",
-            SearchOption.AllDirectories);
-
-        var result = new List<string>();
-
         foreach (string mdFile in mdFiles)
         {
-            bool belongsToAsmdef = false;
+            string assemblyName = FindOwningAssembly(mdFile);
 
-            foreach (string asmdef in asmdefFiles)
+            // No asmdef -> Assembly-CSharp
+            if (assemblyName == null)
             {
-                string asmdefFolder = Path.GetDirectoryName(
-                    Path.GetFullPath(asmdef));
+                if (projectName == "Assembly-CSharp")
+                    result.Add(mdFile);
 
-                string fullMdPath = Path.GetFullPath(mdFile);
-
-                if (IsPathInside(fullMdPath, asmdefFolder))
-                {
-                    belongsToAsmdef = true;
-                    break;
-                }
+                continue;
             }
 
-            if (!belongsToAsmdef)
+            // Has asmdef -> only add to its project
+            if (assemblyName == projectName)
                 result.Add(mdFile);
         }
 
-        return result.ToArray();
+        return result;
     }
 
-    private static bool IsPathInside(string path, string directory)
+    private static string FindOwningAssembly(string file)
     {
-        path = Path.GetFullPath(path)
-            .TrimEnd(Path.DirectorySeparatorChar);
+        string directory = Path.GetDirectoryName(
+            Path.GetFullPath(file));
 
-        directory = Path.GetFullPath(directory)
-            .TrimEnd(Path.DirectorySeparatorChar);
-
-        return path.StartsWith(
-            directory + Path.DirectorySeparatorChar,
-            System.StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string FindAssemblyFolder(string assemblyName)
-    {
-        string[] asmdefs = Directory.GetFiles(
-            "Assets",
-            "*.asmdef",
-            SearchOption.AllDirectories);
-
-        foreach (string asmdef in asmdefs)
+        while (!string.IsNullOrEmpty(directory))
         {
-            string json = File.ReadAllText(asmdef);
+            string[] asmdefs = Directory.GetFiles(
+                directory,
+                "*.asmdef",
+                SearchOption.TopDirectoryOnly);
 
-            Match match = Regex.Match(
-                json,
-                "\"name\"\\s*:\\s*\"([^\"]+)\"");
+            if (asmdefs.Length > 0)
+            {
+                // The nearest asmdef owns this file.
+                //
+                // Normally there will only be one asmdef in a directory.
+                // If there are multiple, use the first one with a valid name.
+                foreach (string asmdef in asmdefs)
+                {
+                    string assemblyName = ReadAssemblyName(asmdef);
 
-            if (!match.Success)
-                continue;
+                    if (!string.IsNullOrEmpty(assemblyName))
+                        return assemblyName;
+                }
+            }
 
-            if (match.Groups[1].Value != assemblyName)
-                continue;
+            string parent = Path.GetDirectoryName(directory);
 
-            return Path.GetDirectoryName(asmdef);
+            if (string.Equals(
+                    parent,
+                    directory,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                break;
+            }
+
+            directory = parent;
         }
 
         return null;
+    }
+
+    private static string ReadAssemblyName(string asmdef)
+    {
+        string json = File.ReadAllText(asmdef);
+
+        Match match = Regex.Match(
+            json,
+            "\"name\"\\s*:\\s*\"([^\"]+)\"");
+
+        if (!match.Success)
+            return null;
+
+        return match.Groups[1].Value;
     }
 }
