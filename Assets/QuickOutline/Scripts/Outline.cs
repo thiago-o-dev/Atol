@@ -89,6 +89,9 @@ public class Outline : MonoBehaviour
 
     private bool needsUpdate;
 
+    private static int nextStencilRef = 1;
+    private int stencilRef;
+
     void Awake()
     {
 
@@ -107,6 +110,16 @@ public class Outline : MonoBehaviour
 
         // Apply material properties immediately
         needsUpdate = true;
+
+        // Thiago: Adds a stencil ref in common for the outline, making it mask uniquely
+        stencilRef = nextStencilRef++;
+        outlineMaskMaterial.SetFloat("_StencilRef", stencilRef);
+        outlineFillMaterial.SetFloat("_StencilRef", stencilRef);
+
+        // Auto reset for safety, rare bug chance that honestly doesnt matter as more than 20 outlines will never happen in our games
+        if (nextStencilRef > 20)
+            nextStencilRef = 1;
+
     }
 
     void OnEnable()
