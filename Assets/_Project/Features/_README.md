@@ -25,6 +25,4 @@ Uma recomendação disso é utilizando EventBus que ira falar com os outros sist
          ├── InventoryConfig.asset
          └── InventoryWindow.prefab -> Temos tambem os seus prefabs aqui
 
-(UI e artes são nas suas pastas correspondentes)
-
-Temos a feature WebComunication criada como exemplo.
+(UI e artes são nas suas pastas Content correspondentes)
