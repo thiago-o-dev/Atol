@@ -1,4 +1,24 @@
-# Games
+# Organização das pastas
+# **Features**
+## O que fica aqui?
+
+Aqui temos o código separado em vertical slices do nosso jogo, funmcionalidades reais para serem utilizadas em cenas e games.
+
+# **Framework**
+## O que fica aqui?
+
+Aqui temos somente código **SEM REFERENCIAS EXTERNAS INSEGURAS**, que pode ser usado por qualquer sistema, sem problemas.
+
+É separado em um asmdef devido isso, para dificultar o uso indevido de referencias externas.
+
+# **Scenes**
+## O que fica aqui?
+
+Aqui não temos códigos e nem prefabs.
+
+Uma Scene aqui se trata de uma parte integral da progressão do jogo, como uma cena **bootstrap**, **menu**, **Salacia**, ou os **Arquipélagos**.
+
+# **Games**
 ## O que fica aqui?
 
 Aqui são pequenas areas teste.
