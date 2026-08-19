@@ -39,7 +39,7 @@ namespace Assets._Project.Framework.Architecture
             SingletonAwake();
         }
 
-        public virtual void SingletonAwake()
+        protected virtual void SingletonAwake()
         {
             return;
         }

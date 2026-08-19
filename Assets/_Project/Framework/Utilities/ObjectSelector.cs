@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 
 public class ObjectSelector : Singleton<ObjectSelector>
 {
+    public bool ShowLogs = true;
     [Header("Input")]
     [SerializeField] private Camera _camera;
     [SerializeField] private InputActionReference _pointAction;
@@ -20,9 +21,9 @@ public class ObjectSelector : Singleton<ObjectSelector>
     public GameObject PressedObject { get; private set; }
 
     private FrameworkLogger _log;
-    public override void SingletonAwake()
+    protected override void SingletonAwake()
     {
-        _log = new(this, showLogs: false, prefixColor: Color.darkGreen);
+        _log = new(this, showLogs: ShowLogs, prefixColor: Color.darkGreen);
     }
 
     private void OnEnable()
