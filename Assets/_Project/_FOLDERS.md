@@ -23,8 +23,8 @@ Uma Scene aqui se trata de uma parte integral da progressão do jogo, como uma c
 
 Aqui são pequenas areas teste.
 
-Entenda primeiro o que é um **playground**, **museum** e um **zoo** na prototipagem de jogos:
-### Playground: 
+Entenda primeiro o que é um **gym**, **zoo** e um **museum** na prototipagem de jogos:
+### Gym: 
 Area para testar loops com testes reais, melhor do que guardar em documentos coisas como
 - Quão longe o personagem pula?
 - Qual a velocidade máxima em tantos metros?
@@ -34,13 +34,23 @@ Area para testar loops com testes reais, melhor do que guardar em documentos coi
 
 O playground é de longe um dos mais importantes.
 
-### Museum: 
-Area para testar items, visualizar modelos, construções pré-montadas.
-
 ### Zoo: 
-Area para conhecer, lutar e olhar os animais do jogo.
+Coletâneas são feitas com zoos.
+- 3D assets, itens, npcs
+- VFX, audio, materiais
+- Vinhetas e art directors
+Você consegue realmente ver o tamanho dos objetos comparados um com os outros, com luz e mais.
+
+### Museum: 
+- Para tecnologias e sistemas
+- shaders e renderização
+- fisica e prefabs
+Diferente de um zoo, vemos os assets com explicações e dados, similar a um gym.
+Area para visualizar itens em diferentes versões, modelos antigos, construções em várias versões.
 
 #### Esses não são os únicos
 São os tipos mais usados de mini-games no desenvolvimento. Mas tambem temos que testar loops como construção, navegação, batalha naval, etc... 
 
-Logo, teremos **vários** Playgrounds, Zoos e Museums.
+Logo, teremos **vários** Gym, Zoos e Museums.
+
+Aprenda mais a fundo em: https://www.youtube.com/watch?v=5PJRCz0t7yY
