@@ -14,7 +14,7 @@ namespace Assets._Project.Framework.Architecture
         {
             if (_instance == null)
             {
-                var objs = FindObjectsByType<T>(FindObjectsSortMode.InstanceID);
+                var objs = FindObjectsByType<T>();
 
                 if (objs.Length > 0)
                     _instance = objs[0];
