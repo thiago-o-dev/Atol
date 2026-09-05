@@ -315,6 +315,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableComponent
   OutlineWidth: 7
+  InactiveOutlineWidth: 3
+  IsMaintainOutlineOnNoInteraction: 0
+  NoInteractionHintColor: {r: 0, g: 1, b: 1, a: 1}
   SelectionHintColor: {r: 1, g: 0.6470588, b: 0, a: 1}
   PressedHintColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   TransitionSpeed: 10
@@ -323,6 +326,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   OnClickReleased:
+    m_PersistentCalls:
+      m_Calls: []
+  OnMouseOver:
+    m_PersistentCalls:
+      m_Calls: []
+  OnMouseLeft:
     m_PersistentCalls:
       m_Calls: []
 --- !u!136 &496560715
@@ -453,6 +462,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableComponent
   OutlineWidth: 7
+  InactiveOutlineWidth: 3
+  IsMaintainOutlineOnNoInteraction: 0
+  NoInteractionHintColor: {r: 0, g: 1, b: 1, a: 1}
   SelectionHintColor: {r: 1, g: 0.6470588, b: 0, a: 1}
   PressedHintColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   TransitionSpeed: 10
@@ -461,6 +473,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   OnClickReleased:
+    m_PersistentCalls:
+      m_Calls: []
+  OnMouseOver:
+    m_PersistentCalls:
+      m_Calls: []
+  OnMouseLeft:
     m_PersistentCalls:
       m_Calls: []
 --- !u!136 &969740308
@@ -572,9 +590,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02d661325c395344a9e594795b6b5c34, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ObjectSelector
+  ShowLogs: 1
   _camera: {fileID: 1134601056}
   _pointAction: {fileID: -1654692200621890270, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   _clickAction: {fileID: 3001919216989983466, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  IsPaused: 0
   OnHovered:
     m_PersistentCalls:
       m_Calls: []
@@ -784,6 +804,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableComponent
   OutlineWidth: 7
+  InactiveOutlineWidth: 3
+  IsMaintainOutlineOnNoInteraction: 0
+  NoInteractionHintColor: {r: 0, g: 1, b: 1, a: 1}
   SelectionHintColor: {r: 1, g: 0.6470588, b: 0, a: 1}
   PressedHintColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   TransitionSpeed: 10
@@ -792,6 +815,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   OnClickReleased:
+    m_PersistentCalls:
+      m_Calls: []
+  OnMouseOver:
+    m_PersistentCalls:
+      m_Calls: []
+  OnMouseLeft:
     m_PersistentCalls:
       m_Calls: []
 --- !u!65 &1395615537
@@ -898,7 +927,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1966004305}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
@@ -950,7 +979,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -1126,6 +1155,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableComponent
   OutlineWidth: 7
+  InactiveOutlineWidth: 3
+  IsMaintainOutlineOnNoInteraction: 1
+  NoInteractionHintColor: {r: 0, g: 1, b: 1, a: 1}
   SelectionHintColor: {r: 1, g: 0.6470588, b: 0, a: 1}
   PressedHintColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   TransitionSpeed: 10
@@ -1134,6 +1166,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   OnClickReleased:
+    m_PersistentCalls:
+      m_Calls: []
+  OnMouseOver:
+    m_PersistentCalls:
+      m_Calls: []
+  OnMouseLeft:
     m_PersistentCalls:
       m_Calls: []
 --- !u!135 &2053713341
