@@ -1,8 +1,5 @@
 using Assets._Project.Features.Movement;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.Splines.Interpolators;
 
 public class GroundedMovement : MonoBehaviour, IMovement
 {

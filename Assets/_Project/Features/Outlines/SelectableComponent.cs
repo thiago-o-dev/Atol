@@ -1,6 +1,5 @@
 using Assets._Project.Framework.Logging;
 using System;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -136,20 +135,15 @@ public class SelectableComponent : MonoBehaviour
 
     private void SetShaderProperty(float value)
     {
-        Color color = Color.Lerp(_outline.OutlineColor, _isPressed
+        Color targetColor = _isPressed
             ? PressedHintColor
             : _isHovered
             ? SelectionHintColor
-            : NoInteractionHintColor,
-            Time.deltaTime * TransitionSpeed).WithAlpha(
-            _isPressed
-            ? PressedHintColor.a
-            : _isHovered
-            ? SelectionHintColor.a
-            : NoInteractionHintColor.a
-            );
+            : NoInteractionHintColor;
 
-        color.a *= IsMaintainOutlineOnNoInteraction ? 1 : value;
+        Color color = Color.Lerp(_outline.OutlineColor, targetColor, Time.deltaTime * TransitionSpeed);
+
+        color.a = targetColor.a * (IsMaintainOutlineOnNoInteraction ? 1 : value);
 
         _outline.OutlineColor = color;
         _outline.OutlineWidth = IsMaintainOutlineOnNoInteraction ? Math.Max(OutlineWidth * value, InactiveOutlineWidth) : OutlineWidth * value;

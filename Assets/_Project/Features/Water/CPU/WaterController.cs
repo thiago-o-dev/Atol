@@ -1,6 +1,5 @@
 using Assets._Project.Framework.Architecture;
 using Assets._Project.Framework.Logging;
-using UnityEditor.Overlays;
 using UnityEngine;
 
 public class WaterController : Singleton<WaterController>
@@ -67,7 +66,7 @@ public class WaterController : Singleton<WaterController>
             _log.Error("SetDataInMaterial(): Material is NULL!");
         }
     }
-    public float getHeightAtPosition(Vector3 position)
+    public float GetHeightAtPosition(Vector3 position)
     {
         float time = Time.timeSinceLevelLoad;
         Vector3 currentPosition = GetWaveAddition(position, time);

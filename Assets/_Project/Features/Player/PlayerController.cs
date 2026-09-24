@@ -30,6 +30,18 @@ public class PlayerController : MonoBehaviour
 
         JumpAction.action.performed += OnJumped;
         JumpAction.action.canceled += OnJumped;
+
+        MovementAction.action.Enable();
+        JumpAction.action.Enable();
+    }
+
+    private void OnDestroy()
+    {
+        MovementAction.action.performed -= OnMoved;
+        MovementAction.action.canceled -= OnMoved;
+
+        JumpAction.action.performed -= OnJumped;
+        JumpAction.action.canceled -= OnJumped;
     }
 
     private void OnMoved(InputAction.CallbackContext context)
