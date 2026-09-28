@@ -1,5 +1,6 @@
 using Assets._Project.Framework.Architecture;
 using Assets._Project.Framework.Logging;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -11,6 +12,7 @@ public class ObjectSelector : Singleton<ObjectSelector>
     [SerializeField] private Camera _camera;
     [SerializeField] private InputActionReference _pointAction;
     [SerializeField] private InputActionReference _clickAction;
+    public bool IsPaused = false;
 
     [Header("Events")]
     public UnityEvent<GameObject, bool> OnHovered;
@@ -19,6 +21,7 @@ public class ObjectSelector : Singleton<ObjectSelector>
 
     public GameObject HoveredObject { get; private set; }
     public GameObject PressedObject { get; private set; }
+
 
     private FrameworkLogger _log;
     protected override void SingletonAwake()
@@ -72,16 +75,19 @@ public class ObjectSelector : Singleton<ObjectSelector>
             _pointAction.action.Disable();
         }
     }
-
     private void Update()
     {
+        if (IsPaused)
+        {
+            return;
+        }
         UpdateHover();
     }
 
     private void UpdateHover()
     {
         if (_camera == null)
-            return;
+            _camera = Camera.main;
 
         Vector2 screenPosition = _pointAction.action.ReadValue<Vector2>();
 
@@ -116,9 +122,20 @@ public class ObjectSelector : Singleton<ObjectSelector>
             OnHovered?.Invoke(HoveredObject, true);
         }
     }
-
+    public void Unpause() => IsPaused = false;
+    public void UnpauseAfterSeconds(float seconds) => StartCoroutine(UnpauseAfterSecondsRoutine(seconds));
+    public void Pause() => IsPaused = true;
+    private IEnumerator UnpauseAfterSecondsRoutine(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        IsPaused = false;
+    }
     public void OnClickPerformed(InputAction.CallbackContext context)
     {
+        if (IsPaused)
+        {
+            return;
+        }
         if (_clickAction.action.IsPressed())
         {
             OnClickStarted(context);

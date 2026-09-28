@@ -1,4 +1,5 @@
 using Assets._Project.Framework.Logging;
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -10,6 +11,9 @@ public class SelectableComponent : MonoBehaviour
 
     [Header("Outline Settings")]
     public float OutlineWidth = 7f;
+    public float InactiveOutlineWidth = 3f;
+    public bool IsMaintainOutlineOnNoInteraction = false;
+    public Color NoInteractionHintColor = Color.cyan;
     public Color SelectionHintColor = Color.orange;
     public Color PressedHintColor = Color.yellow;
     public float TransitionSpeed = 10f;
@@ -21,6 +25,10 @@ public class SelectableComponent : MonoBehaviour
 
     public UnityEvent OnClickPressed;
     public UnityEvent OnClickReleased;
+    public UnityEvent OnMouseOver;
+    public UnityEvent OnMouseLeft;
+
+    private static bool _showLogs = false;
 
     private void Awake()
     {
@@ -29,7 +37,7 @@ public class SelectableComponent : MonoBehaviour
 
         _outline.OutlineMode = Mode;
 
-        _log = new(this);
+        _log = new(this, _showLogs);
 
         SetShaderProperty(0f);
     }
@@ -83,9 +91,22 @@ public class SelectableComponent : MonoBehaviour
         _isHovered = hovered;
 
         if (_isHovered)
+        {
             _log.Log("Started to hover clickable object!");
+            OnMouseOver.Invoke();
+        }
         else
+        {
             _log.Log("Stopped hovering clickable object!");
+
+            if (_isPressed)
+            {
+                _isPressed = false;
+                _log.Log("Cancelled click after leaving hover");
+            }
+
+            OnMouseLeft.Invoke();
+        }
     }
 
     private void OnPressed(GameObject target)
@@ -102,7 +123,7 @@ public class SelectableComponent : MonoBehaviour
 
     private void OnReleased(GameObject target)
     {
-        if (target != gameObject)
+        if (target != gameObject || !_isPressed)
             return;
 
         _isPressed = false;
@@ -114,13 +135,17 @@ public class SelectableComponent : MonoBehaviour
 
     private void SetShaderProperty(float value)
     {
-        Color color = _isPressed
+        Color targetColor = _isPressed
             ? PressedHintColor
-            : SelectionHintColor;
+            : _isHovered
+            ? SelectionHintColor
+            : NoInteractionHintColor;
 
-        color.a *= value;
+        Color color = Color.Lerp(_outline.OutlineColor, targetColor, Time.deltaTime * TransitionSpeed);
+
+        color.a = targetColor.a * (IsMaintainOutlineOnNoInteraction ? 1 : value);
 
         _outline.OutlineColor = color;
-        _outline.OutlineWidth = OutlineWidth * value;
+        _outline.OutlineWidth = IsMaintainOutlineOnNoInteraction ? Math.Max(OutlineWidth * value, InactiveOutlineWidth) : OutlineWidth * value;
     }
 }
