@@ -1,0 +1,487 @@
+#pragma kernel InitSpectrum
+#pragma kernel EvolveSpectrum
+#pragma kernel FFT_X
+#pragma kernel FFT_Y
+#pragma kernel BuildMaps
+
+// Tessendorf-style spectral ocean.
+// Frequency-domain layout:
+//   FFT0.xy = height spectrum
+//   FFT0.zw = horizontal X displacement spectrum
+//   FFTZ.xy = horizontal Z displacement spectrum
+//
+// The inverse FFT is a radix-2 DIT transform. Each 1D transform is performed
+// inside one thread group using groupshared ping-pong storage. This avoids a
+// separate global-memory dispatch for every butterfly stage.
+
+#define WATER_PI       3.14159265358979323846
+#define WATER_TWO_PI   6.28318530717958647692
+#define WATER_GRAVITY  9.81
+#define FFT_MAX_SIZE   512
+#define FFT_HALF_SIZE  256
+
+Texture2D<float2>  _H0Read;
+RWTexture2D<float2> _H0Write;
+
+Texture2D<float4>  _FFT0Read;
+Texture2D<float2>  _FFTZRead;
+RWTexture2D<float4> _FFT0Write;
+RWTexture2D<float2> _FFTZWrite;
+
+RWTexture2D<float4> _DisplacementWrite;
+RWTexture2D<float4> _NormalWrite;
+
+int _Resolution;
+int _Log2Resolution;
+int _Seed;
+
+float _PatchLength;
+float2 _WindDirection;
+float _WindSpeed;
+float _PhillipsAmplitude;
+float _SmallWaveDamping;
+float _BackwindDamping;
+float _MinWavelength;
+float _MaxWavelength;
+float _CascadeScale;
+float _TimeSeconds;
+float _Choppiness;
+float _FoamBias;
+float _FoamGain;
+
+// -----------------------------------------------------------------------------
+// Complex helpers
+// -----------------------------------------------------------------------------
+
+float2 ComplexMul(float2 a, float2 b)
+{
+    return float2(a.x * b.x - a.y * b.y,
+                  a.x * b.y + a.y * b.x);
+}
+
+uint HashUint(uint x)
+{
+    x ^= x >> 16;
+    x *= 0x7feb352du;
+    x ^= x >> 15;
+    x *= 0x846ca68bu;
+    x ^= x >> 16;
+    return x;
+}
+
+float Random01(uint x)
+{
+    return (HashUint(x) & 0x00ffffffu) * (1.0 / 16777216.0);
+}
+
+float2 GaussianRandom(uint2 p)
+{
+    uint index = p.x + p.y * (uint)_Resolution;
+    uint seed = (uint)_Seed;
+
+    float u1 = max(Random01(index ^ (seed + 0x9e3779b9u)), 1e-7);
+    float u2 = Random01(index ^ (seed + 0x85ebca6bu));
+
+    float radius = sqrt(-2.0 * log(u1));
+    float angle = WATER_TWO_PI * u2;
+
+    return radius * float2(cos(angle), sin(angle));
+}
+
+int SignedFrequency(uint index)
+{
+    // Resolution is always a power of two, so use a bit shift rather than
+    // integer division. This also avoids the D3D11 integer-divide warning.
+    uint halfResolution = (uint)_Resolution >> 1u;
+    return (index <= halfResolution)
+        ? (int)index
+        : (int)index - _Resolution;
+}
+
+uint ReverseBits(uint value)
+{
+    uint reversed = 0u;
+
+    [loop]
+    for (int i = 0; i < _Log2Resolution; ++i)
+    {
+        reversed = (reversed << 1u) | (value & 1u);
+        value >>= 1u;
+    }
+
+    return reversed;
+}
+
+// -----------------------------------------------------------------------------
+// 1. Initial Phillips spectrum. Run once per cascade / parameter change.
+// -----------------------------------------------------------------------------
+
+[numthreads(8, 8, 1)]
+void InitSpectrum(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_Resolution || id.y >= (uint)_Resolution)
+        return;
+
+    uint2 p = id.xy;
+    int sx = SignedFrequency(p.x);
+    int sz = SignedFrequency(p.y);
+
+    float2 kVector = (WATER_TWO_PI / max(_PatchLength, 0.001))
+                   * float2((float)sx, (float)sz);
+
+    float k2 = dot(kVector, kVector);
+    if (k2 < 1e-10)
+    {
+        _H0Write[p] = 0.0;
+        return;
+    }
+
+    float kMagnitude = sqrt(k2);
+    float2 kDirection = kVector / kMagnitude;
+
+    float2 wind = _WindDirection;
+    float windLengthSq = dot(wind, wind);
+    wind = (windLengthSq > 1e-8)
+        ? wind * rsqrt(windLengthSq)
+        : float2(1.0, 0.0);
+
+    // Phillips spectrum: wind-aligned energy, long-wave rolloff and
+    // high-frequency damping.
+    float windLength = (_WindSpeed * _WindSpeed) / WATER_GRAVITY;
+    float longWave = exp(-1.0 / max(k2 * windLength * windLength, 1e-8));
+
+    float alignment = dot(kDirection, wind);
+    float forwardEnergy = max(alignment, 0.0);
+    float backwardEnergy = max(-alignment, 0.0);
+    float directionalEnergy = forwardEnergy * forwardEnergy
+                            + _BackwindDamping * backwardEnergy * backwardEnergy;
+
+    float shortWave = exp(-k2 * _SmallWaveDamping * _SmallWaveDamping);
+
+    float wavelength = WATER_TWO_PI / kMagnitude;
+    float bandIn = smoothstep(_MinWavelength * 0.70,
+                              _MinWavelength, wavelength);
+    float bandOut = 1.0 - smoothstep(_MaxWavelength * 0.80,
+                                     _MaxWavelength, wavelength);
+    float bandWeight = bandIn * bandOut;
+
+    float spectrum = _PhillipsAmplitude
+                   * longWave
+                   * directionalEnergy
+                   * shortWave
+                   * bandWeight
+                   / max(k2 * k2, 1e-12);
+
+    // h0(k) = 1/sqrt(2) * (xi_r + i*xi_i) * sqrt(P(k)).
+    // The delta-k and N^2 factors compensate for our normalized inverse FFT.
+    float2 gaussian = GaussianRandom(p);
+
+    // The four self-conjugate frequency bins must be real-valued.
+    uint nyquist = (uint)_Resolution >> 1u;
+    bool selfConjugateX = (p.x == 0u) || (p.x == nyquist);
+    bool selfConjugateZ = (p.y == 0u) || (p.y == nyquist);
+    if (selfConjugateX && selfConjugateZ)
+        gaussian.y = 0.0;
+
+    float deltaK = WATER_TWO_PI / max(_PatchLength, 0.001);
+    float normalization = (float)(_Resolution * _Resolution);
+    float coefficient = sqrt(max(spectrum, 0.0) * 0.5)
+                      * deltaK
+                      * normalization
+                      * _CascadeScale;
+
+    _H0Write[p] = gaussian * coefficient;
+}
+
+// -----------------------------------------------------------------------------
+// 2. Evolve the spectrum in time and create height / choppy displacement fields.
+// -----------------------------------------------------------------------------
+
+[numthreads(8, 8, 1)]
+void EvolveSpectrum(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_Resolution || id.y >= (uint)_Resolution)
+        return;
+
+    uint2 p = id.xy;
+    uint mask = (uint)(_Resolution - 1);
+    uint2 negativeP = (uint2((uint)_Resolution - p.x, (uint)_Resolution - p.y)) & mask;
+
+    int sx = SignedFrequency(p.x);
+    int sz = SignedFrequency(p.y);
+
+    float2 kVector = (WATER_TWO_PI / max(_PatchLength, 0.001))
+                   * float2((float)sx, (float)sz);
+    float kMagnitude = length(kVector);
+
+    if (kMagnitude < 1e-8)
+    {
+        _FFT0Write[p] = 0.0;
+        _FFTZWrite[p] = 0.0;
+        return;
+    }
+
+    float2 h0 = _H0Read.Load(int3(p, 0));
+    float2 h0Negative = _H0Read.Load(int3(negativeP, 0));
+
+    // Deep-water dispersion: omega(k) = sqrt(g * |k|).
+    float omega = sqrt(WATER_GRAVITY * kMagnitude);
+    float phase = omega * _TimeSeconds;
+    float s;
+    float c;
+    sincos(phase, s, c);
+
+    float2 positiveRotation = float2(c, s);
+    float2 negativeRotation = float2(c, -s);
+    float2 h = ComplexMul(h0, positiveRotation)
+             + ComplexMul(float2(h0Negative.x, -h0Negative.y), negativeRotation);
+
+    // D(k) = -i * (k / |k|) * h(k). The artist multiplier is applied
+    // after the inverse transform in BuildMaps.
+    float2 minusIH = float2(h.y, -h.x);
+    float2 displacementX = minusIH * (kVector.x / kMagnitude);
+    float2 displacementZ = minusIH * (kVector.y / kMagnitude);
+
+    // Nyquist displacement coefficients are zeroed to preserve Hermitian symmetry.
+    int nyquist = _Resolution >> 1;
+    if (abs(sx) == nyquist)
+        displacementX = 0.0;
+    if (abs(sz) == nyquist)
+        displacementZ = 0.0;
+
+    _FFT0Write[p] = float4(h, displacementX);
+    _FFTZWrite[p] = displacementZ;
+}
+
+// -----------------------------------------------------------------------------
+// Shared-memory inverse FFT.
+// One thread group transforms one row / column. Each thread handles up to
+// two samples, allowing 256 threads to process 256- or 512-point transforms.
+// -----------------------------------------------------------------------------
+
+groupshared float4 SharedA0[FFT_MAX_SIZE];
+groupshared float4 SharedB0[FFT_MAX_SIZE];
+groupshared float2 SharedAZ[FFT_MAX_SIZE];
+groupshared float2 SharedBZ[FFT_MAX_SIZE];
+
+void ButterflyShared(uint lane, uint stage, bool readFromB)
+{
+    uint span = 1u << (stage + 1u);
+    uint halfSpan = span >> 1u;
+    uint j = lane & (halfSpan - 1u);
+    uint groupBase = lane & ~(span - 1u);
+    uint i0 = groupBase + j;
+    uint i1 = i0 + halfSpan;
+
+    float angle = WATER_TWO_PI * ((float)j / (float)span);
+    float2 twiddle = float2(cos(angle), sin(angle));
+    float signValue = ((lane & halfSpan) != 0u) ? -1.0 : 1.0;
+
+    if (readFromB)
+    {
+        float4 a0 = SharedB0[i0];
+        float4 b0 = SharedB0[i1];
+        float2 az = SharedBZ[i0];
+        float2 bz = SharedBZ[i1];
+
+        SharedA0[lane] = float4(
+            a0.xy + signValue * ComplexMul(b0.xy, twiddle),
+            a0.zw + signValue * ComplexMul(b0.zw, twiddle)
+        );
+        SharedAZ[lane] = az + signValue * ComplexMul(bz, twiddle);
+    }
+    else
+    {
+        float4 a0 = SharedA0[i0];
+        float4 b0 = SharedA0[i1];
+        float2 az = SharedAZ[i0];
+        float2 bz = SharedAZ[i1];
+
+        SharedB0[lane] = float4(
+            a0.xy + signValue * ComplexMul(b0.xy, twiddle),
+            a0.zw + signValue * ComplexMul(b0.zw, twiddle)
+        );
+        SharedBZ[lane] = az + signValue * ComplexMul(bz, twiddle);
+    }
+}
+
+[numthreads(256, 1, 1)]
+void FFT_X(uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID)
+{
+    uint row = groupID.y;
+    uint lane0 = groupThreadID.x;
+    uint lane1 = lane0 + FFT_HALF_SIZE;
+
+    if (lane0 < (uint)_Resolution)
+    {
+        SharedA0[lane0] = _FFT0Read.Load(int3(lane0, row, 0));
+        SharedAZ[lane0] = _FFTZRead.Load(int3(lane0, row, 0));
+    }
+    if (lane1 < (uint)_Resolution)
+    {
+        SharedA0[lane1] = _FFT0Read.Load(int3(lane1, row, 0));
+        SharedAZ[lane1] = _FFTZRead.Load(int3(lane1, row, 0));
+    }
+    GroupMemoryBarrierWithGroupSync();
+
+    // DIT FFT requires bit-reversed input order.
+    if (lane0 < (uint)_Resolution)
+    {
+        uint reversed = ReverseBits(lane0);
+        SharedB0[lane0] = SharedA0[reversed];
+        SharedBZ[lane0] = SharedAZ[reversed];
+    }
+    if (lane1 < (uint)_Resolution)
+    {
+        uint reversed = ReverseBits(lane1);
+        SharedB0[lane1] = SharedA0[reversed];
+        SharedBZ[lane1] = SharedAZ[reversed];
+    }
+    GroupMemoryBarrierWithGroupSync();
+
+    [loop]
+    for (uint stage = 0u; stage < (uint)_Log2Resolution; ++stage)
+    {
+        bool readFromB = ((stage & 1u) == 0u);
+        if (lane0 < (uint)_Resolution)
+            ButterflyShared(lane0, stage, readFromB);
+        if (lane1 < (uint)_Resolution)
+            ButterflyShared(lane1, stage, readFromB);
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    // After an even number of stages, the final values are in B; otherwise A.
+    bool resultInB = ((_Log2Resolution & 1) == 0);
+    if (lane0 < (uint)_Resolution)
+    {
+        _FFT0Write[uint2(lane0, row)] = resultInB ? SharedB0[lane0] : SharedA0[lane0];
+        _FFTZWrite[uint2(lane0, row)] = resultInB ? SharedBZ[lane0] : SharedAZ[lane0];
+    }
+    if (lane1 < (uint)_Resolution)
+    {
+        _FFT0Write[uint2(lane1, row)] = resultInB ? SharedB0[lane1] : SharedA0[lane1];
+        _FFTZWrite[uint2(lane1, row)] = resultInB ? SharedBZ[lane1] : SharedAZ[lane1];
+    }
+}
+
+[numthreads(256, 1, 1)]
+void FFT_Y(uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID)
+{
+    uint column = groupID.x;
+    uint lane0 = groupThreadID.x;
+    uint lane1 = lane0 + FFT_HALF_SIZE;
+
+    if (lane0 < (uint)_Resolution)
+    {
+        SharedA0[lane0] = _FFT0Read.Load(int3(column, lane0, 0));
+        SharedAZ[lane0] = _FFTZRead.Load(int3(column, lane0, 0));
+    }
+    if (lane1 < (uint)_Resolution)
+    {
+        SharedA0[lane1] = _FFT0Read.Load(int3(column, lane1, 0));
+        SharedAZ[lane1] = _FFTZRead.Load(int3(column, lane1, 0));
+    }
+    GroupMemoryBarrierWithGroupSync();
+
+    if (lane0 < (uint)_Resolution)
+    {
+        uint reversed = ReverseBits(lane0);
+        SharedB0[lane0] = SharedA0[reversed];
+        SharedBZ[lane0] = SharedAZ[reversed];
+    }
+    if (lane1 < (uint)_Resolution)
+    {
+        uint reversed = ReverseBits(lane1);
+        SharedB0[lane1] = SharedA0[reversed];
+        SharedBZ[lane1] = SharedAZ[reversed];
+    }
+    GroupMemoryBarrierWithGroupSync();
+
+    [loop]
+    for (uint stage = 0u; stage < (uint)_Log2Resolution; ++stage)
+    {
+        bool readFromB = ((stage & 1u) == 0u);
+        if (lane0 < (uint)_Resolution)
+            ButterflyShared(lane0, stage, readFromB);
+        if (lane1 < (uint)_Resolution)
+            ButterflyShared(lane1, stage, readFromB);
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    bool resultInB = ((_Log2Resolution & 1) == 0);
+    if (lane0 < (uint)_Resolution)
+    {
+        _FFT0Write[uint2(column, lane0)] = resultInB ? SharedB0[lane0] : SharedA0[lane0];
+        _FFTZWrite[uint2(column, lane0)] = resultInB ? SharedBZ[lane0] : SharedAZ[lane0];
+    }
+    if (lane1 < (uint)_Resolution)
+    {
+        _FFT0Write[uint2(column, lane1)] = resultInB ? SharedB0[lane1] : SharedA0[lane1];
+        _FFTZWrite[uint2(column, lane1)] = resultInB ? SharedBZ[lane1] : SharedAZ[lane1];
+    }
+}
+
+// -----------------------------------------------------------------------------
+// 3. Build choppy displacement, normals and a Jacobian whitecap mask.
+// -----------------------------------------------------------------------------
+
+float3 ReadSurface(uint2 p)
+{
+    float normalization = 1.0 / (float)(_Resolution * _Resolution);
+    float4 hAndDx = _FFT0Read.Load(int3(p, 0));
+    float2 dzComplex = _FFTZRead.Load(int3(p, 0));
+
+    return float3(
+        hAndDx.z * normalization * _Choppiness,
+        hAndDx.x * normalization,
+        dzComplex.x * normalization * _Choppiness
+    );
+}
+
+[numthreads(8, 8, 1)]
+void BuildMaps(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_Resolution || id.y >= (uint)_Resolution)
+        return;
+
+    uint mask = (uint)(_Resolution - 1);
+    uint2 p = id.xy;
+
+    uint2 left  = uint2((p.x - 1u) & mask, p.y);
+    uint2 right = uint2((p.x + 1u) & mask, p.y);
+    uint2 down  = uint2(p.x, (p.y - 1u) & mask);
+    uint2 up    = uint2(p.x, (p.y + 1u) & mask);
+
+    float3 center = ReadSurface(p);
+    float3 sL = ReadSurface(left);
+    float3 sR = ReadSurface(right);
+    float3 sD = ReadSurface(down);
+    float3 sU = ReadSurface(up);
+
+    float inverseTwoSpacing = 0.5 * (float)_Resolution / max(_PatchLength, 0.001);
+
+    float dDxDx = (sR.x - sL.x) * inverseTwoSpacing;
+    float dHdx  = (sR.y - sL.y) * inverseTwoSpacing;
+    float dDzDx = (sR.z - sL.z) * inverseTwoSpacing;
+
+    float dDxDz = (sU.x - sD.x) * inverseTwoSpacing;
+    float dHdz  = (sU.y - sD.y) * inverseTwoSpacing;
+    float dDzDz = (sU.z - sD.z) * inverseTwoSpacing;
+
+    float3 tangentX = float3(1.0 + dDxDx, dHdx, dDzDx);
+    float3 tangentZ = float3(dDxDz, dHdz, 1.0 + dDzDz);
+
+    float3 normal = normalize(cross(tangentZ, tangentX));
+    if (normal.y < 0.0)
+        normal = -normal;
+
+    // Jacobian of the horizontal choppy mapping (x,z) -> (x+Dx,z+Dz).
+    float jacobian = (1.0 + dDxDx) * (1.0 + dDzDz)
+                   - dDxDz * dDzDx;
+
+    // Instantaneous whitecap mask. Persistent / advected foam can be added later.
+    float foam = saturate(max(0.0, _FoamBias - jacobian) * _FoamGain);
+
+    _DisplacementWrite[p] = float4(center, foam);
+    _NormalWrite[p] = float4(normal, jacobian);
+}
