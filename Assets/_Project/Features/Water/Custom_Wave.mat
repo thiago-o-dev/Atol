@@ -51,15 +51,33 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ShoreDistance:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _FresnelPower: 1.34
-    - _FresnelStrength: 1.48
+    - _FresnelPower: 2.94
+    - _FresnelStrength: 1.27
+    - _NearShoreWaveStrength: 0.35
     - _OceanEnabled: 0
     - _OceanHalfTexel: 0.001953125
     - _OceanPatchLength0: 2048
     - _OceanPatchLength1: 512
     - _OceanPatchLength2: 128
+    - _OpenOceanFoamMultiplier: 0.08
+    - _ShoreBreakEndDistance: 0.42
+    - _ShoreBreakPeakDistance: 0.12
+    - _ShoreBreakStartDistance: 0.015
+    - _ShoreChoppiness: 3.5
+    - _ShoreFadeEnd: 0.45
+    - _ShoreFadeStart: 0.02
+    - _ShoreFoamGain: 5
+    - _ShoreFoamThreshold: 0.98
+    - _ShoreHeightBoost: 1.55
+    - _ShoreHorizontalFloor: 0.65
+    - _ShoreMapFlipV: 0
+    - _ShoreNormalBoost: 1.65
     - _SpecularPower: 96
     - _SpecularStrength: 1.8
     - _SubsurfaceStrength: 0.9
@@ -69,6 +87,8 @@ Material:
     - _FoamColor: {r: 0.88, g: 0.96, b: 1, a: 1}
     - _FresnelColor: {r: 0.37999994, g: 0.72, b: 0.9, a: 1}
     - _ShallowColor: {r: 0.025, g: 0.23999995, b: 0.29999998, a: 1}
+    - _ShoreMapOriginXZ: {r: 0, g: 0, b: 0, a: 0}
+    - _ShoreMapSizeXZ: {r: 8192, g: 8192, b: 0, a: 0}
     - _SunColor: {r: 1, g: 0.88, b: 0.68, a: 1}
     - _SunDirection: {r: -0.4, g: 0.8, b: -0.3, a: 0}
   m_BuildTextureStacks: []

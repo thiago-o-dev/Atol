@@ -3,6 +3,7 @@
 #pragma kernel FFT_X
 #pragma kernel FFT_Y
 #pragma kernel BuildMaps
+#pragma kernel SampleSurface
 
 // Tessendorf-style spectral ocean.
 // Frequency-domain layout:
@@ -31,6 +32,50 @@ RWTexture2D<float2> _FFTZWrite;
 RWTexture2D<float4> _DisplacementWrite;
 RWTexture2D<float4> _NormalWrite;
 
+// Optional point-query path used by underwater detection and physics buoyancy.
+// It samples the exact FFT displacement/normal maps consumed by Wave.shader.
+Texture2D<float4> _SampleDisplacement0;
+Texture2D<float4> _SampleDisplacement1;
+Texture2D<float4> _SampleDisplacement2;
+Texture2D<float4> _SampleNormal0;
+Texture2D<float4> _SampleNormal1;
+Texture2D<float4> _SampleNormal2;
+Texture2D<float4> _SampleShoreDistance;
+Texture2D<float4> _SampleShoreDepth;
+StructuredBuffer<float2> _SurfaceQueryPositions;
+
+struct SurfaceQueryResult
+{
+    float4 displacement; // xyz = world displacement, w = valid
+    float4 normal;       // xyz = world normal, w = valid
+};
+RWStructuredBuffer<SurfaceQueryResult> _SurfaceQueryResults;
+
+int _SampleResolution;
+int _SampleCount;
+float _SamplePatchLength0;
+float _SamplePatchLength1;
+float _SamplePatchLength2;
+float4 _SampleShoreMapOriginXZ;
+float4 _SampleShoreMapSizeXZ;
+float _SampleShoreMapFlipV;
+float _SampleShoreDistanceRangeMeters;
+float _SampleShoreMaxDepthMeters;
+float _SampleShoreFadeStartMeters;
+float _SampleShoreFadeEndMeters;
+float _SampleNearShoreWaveStrength;
+float _SampleShoreEdgeFadeMeters;
+float _SampleShoreBreakStartMeters;
+float _SampleShoreBreakPeakMeters;
+float _SampleShoreBreakEndMeters;
+float _SampleShoreDepthPerMeter;
+float _SampleBreakerHeightToDepth;
+float _SampleShoreShoalingScale;
+float _SampleShoreHorizontalFloor;
+float _SampleShoreHorizontalDrive;
+float _SampleShoreChoppiness;
+float _SampleShoreNormalBoost;
+
 int _Resolution;
 int _Log2Resolution;
 int _Seed;
@@ -48,6 +93,7 @@ float _TimeSeconds;
 float _Choppiness;
 float _FoamBias;
 float _FoamGain;
+float _SeaStateStrength;
 
 // -----------------------------------------------------------------------------
 // Complex helpers
@@ -431,11 +477,14 @@ float3 ReadSurface(uint2 p)
     float4 hAndDx = _FFT0Read.Load(int3(p, 0));
     float2 dzComplex = _FFTZRead.Load(int3(p, 0));
 
+    // Sea-state strength is applied after the FFT, so storms and calm
+    // transitions do not require regenerating the initial Phillips spectrum.
+    float seaState = max(_SeaStateStrength, 0.0);
     return float3(
         hAndDx.z * normalization * _Choppiness,
         hAndDx.x * normalization,
         dzComplex.x * normalization * _Choppiness
-    );
+    ) * seaState;
 }
 
 [numthreads(8, 8, 1)]
@@ -484,4 +533,331 @@ void BuildMaps(uint3 id : SV_DispatchThreadID)
 
     _DisplacementWrite[p] = float4(center, foam);
     _NormalWrite[p] = float4(normal, jacobian);
+}
+
+
+// -----------------------------------------------------------------------------
+// 3. Point sampling for camera immersion and physics buoyancy.
+// This runs after BuildMaps and samples the same repeating textures as the
+// render shader. The result is read back asynchronously to avoid GPU stalls.
+// -----------------------------------------------------------------------------
+
+float SampleSmootherStep(float edge0, float edge1, float value)
+{
+    float t = saturate((value - edge0) / max(edge1 - edge0, 1e-4));
+    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+}
+
+float4 SampleDisp0(float2 worldXZ)
+{
+    float2 grid = frac(worldXZ / max(_SamplePatchLength0, 1.0)) * _SampleResolution;
+    uint2 p0 = (uint2)floor(grid);
+    uint2 p1 = (p0 + 1u) & ((uint)_SampleResolution - 1u);
+    float2 f = frac(grid);
+    float4 a = _SampleDisplacement0.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleDisplacement0.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleDisplacement0.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleDisplacement0.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleDisp1(float2 worldXZ)
+{
+    float2 grid = frac(worldXZ / max(_SamplePatchLength1, 1.0)) * _SampleResolution;
+    uint2 p0 = (uint2)floor(grid);
+    uint2 p1 = (p0 + 1u) & ((uint)_SampleResolution - 1u);
+    float2 f = frac(grid);
+    float4 a = _SampleDisplacement1.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleDisplacement1.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleDisplacement1.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleDisplacement1.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleDisp2(float2 worldXZ)
+{
+    float2 grid = frac(worldXZ / max(_SamplePatchLength2, 1.0)) * _SampleResolution;
+    uint2 p0 = (uint2)floor(grid);
+    uint2 p1 = (p0 + 1u) & ((uint)_SampleResolution - 1u);
+    float2 f = frac(grid);
+    float4 a = _SampleDisplacement2.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleDisplacement2.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleDisplacement2.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleDisplacement2.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleNorm0(float2 worldXZ)
+{
+    float2 grid = frac(worldXZ / max(_SamplePatchLength0, 1.0)) * _SampleResolution;
+    uint2 p0 = (uint2)floor(grid);
+    uint2 p1 = (p0 + 1u) & ((uint)_SampleResolution - 1u);
+    float2 f = frac(grid);
+    float4 a = _SampleNormal0.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleNormal0.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleNormal0.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleNormal0.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleNorm1(float2 worldXZ)
+{
+    float2 grid = frac(worldXZ / max(_SamplePatchLength1, 1.0)) * _SampleResolution;
+    uint2 p0 = (uint2)floor(grid);
+    uint2 p1 = (p0 + 1u) & ((uint)_SampleResolution - 1u);
+    float2 f = frac(grid);
+    float4 a = _SampleNormal1.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleNormal1.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleNormal1.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleNormal1.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleNorm2(float2 worldXZ)
+{
+    float2 grid = frac(worldXZ / max(_SamplePatchLength2, 1.0)) * _SampleResolution;
+    uint2 p0 = (uint2)floor(grid);
+    uint2 p1 = (p0 + 1u) & ((uint)_SampleResolution - 1u);
+    float2 f = frac(grid);
+    float4 a = _SampleNormal2.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleNormal2.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleNormal2.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleNormal2.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleShoreDistance(float2 uv)
+{
+    uint width, height, _unusedMipCount;
+    _SampleShoreDistance.GetDimensions(0, width, height, _unusedMipCount);
+    width = max(width, 1u);
+    height = max(height, 1u);
+    float2 pixel = saturate(uv) * float2(width, height) - 0.5;
+    int2 p0 = (int2)floor(pixel);
+    int2 p1 = p0 + 1;
+    float2 f = frac(pixel);
+    int2 maxPixel = int2((int)width - 1, (int)height - 1);
+    p0 = clamp(p0, int2(0, 0), maxPixel);
+    p1 = clamp(p1, int2(0, 0), maxPixel);
+    float4 a = _SampleShoreDistance.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleShoreDistance.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleShoreDistance.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleShoreDistance.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleShoreDepth(float2 uv)
+{
+    uint width, height, _unusedMipCount;
+    _SampleShoreDepth.GetDimensions(0, width, height, _unusedMipCount);
+    width = max(width, 1u);
+    height = max(height, 1u);
+    float2 pixel = saturate(uv) * float2(width, height) - 0.5;
+    int2 p0 = (int2)floor(pixel);
+    int2 p1 = p0 + 1;
+    float2 f = frac(pixel);
+    int2 maxPixel = int2((int)width - 1, (int)height - 1);
+    p0 = clamp(p0, int2(0, 0), maxPixel);
+    p1 = clamp(p1, int2(0, 0), maxPixel);
+    float4 a = _SampleShoreDepth.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleShoreDepth.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleShoreDepth.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleShoreDepth.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+// Evaluate exactly the same shore/depth attenuation as Wave.shader at a
+// parametric mesh coordinate. This helper is also used by the inverse horizontal
+// mapping below, so camera and physics probes query the wave at their actual XZ.
+bool EvaluateSurfaceAtParamXZ(
+    float2 baseXZ,
+    out float3 displacement,
+    out float3 normal)
+{
+    displacement = 0.0;
+    normal = float3(0.0, 1.0, 0.0);
+
+    float2 mapSize = max(_SampleShoreMapSizeXZ.xy, float2(1.0, 1.0));
+    float2 shoreUV = (baseXZ - _SampleShoreMapOriginXZ.xy) / mapSize;
+    if (_SampleShoreMapFlipV > 0.5)
+        shoreUV.y = 1.0 - shoreUV.y;
+
+    bool insideMap = all(shoreUV >= 0.0) && all(shoreUV <= 1.0);
+    float sampledDistance01 = 1.0;
+    if (insideMap)
+    {
+        sampledDistance01 = SampleShoreDistance(shoreUV).r;
+        if (!isfinite(sampledDistance01))
+            sampledDistance01 = 1.0;
+        sampledDistance01 = saturate(sampledDistance01);
+    }
+
+    float shoreDistanceMeters = sampledDistance01
+        * max(_SampleShoreDistanceRangeMeters, 1.0);
+
+    float waveStrength = lerp(
+        saturate(_SampleNearShoreWaveStrength), 1.0,
+        SampleSmootherStep(_SampleShoreFadeStartMeters,
+            max(_SampleShoreFadeEndMeters, _SampleShoreFadeStartMeters + 0.1),
+            shoreDistanceMeters));
+
+    float breakIn = SampleSmootherStep(
+        _SampleShoreBreakStartMeters,
+        max(_SampleShoreBreakPeakMeters, _SampleShoreBreakStartMeters + 0.1),
+        shoreDistanceMeters);
+    float breakOut = 1.0 - SampleSmootherStep(
+        _SampleShoreBreakPeakMeters,
+        max(_SampleShoreBreakEndMeters, _SampleShoreBreakPeakMeters + 0.1),
+        shoreDistanceMeters);
+    float breakStrength = saturate(breakIn * breakOut);
+
+    float depthFactor = 1.0;
+    if (insideMap)
+    {
+        depthFactor = SampleShoreDepth(shoreUV).r;
+        if (!isfinite(depthFactor))
+            depthFactor = 1.0;
+        depthFactor = saturate(depthFactor);
+    }
+
+    float localDepth = max(0.05, min(
+        shoreDistanceMeters * max(_SampleShoreDepthPerMeter, 0.001),
+        max(_SampleShoreMaxDepthMeters, 1.0)) * depthFactor);
+
+    float4 d0 = SampleDisp0(baseXZ);
+    float4 d1 = SampleDisp1(baseXZ);
+    float3 rawDisplacement = float3(d0.x + d1.x, d0.y + d1.y, d0.z + d1.z);
+    bool valid = all(isfinite(rawDisplacement)) && all(abs(rawDisplacement) < 10000.0);
+    if (!valid)
+        rawDisplacement = 0.0;
+
+    float shoalRamp = 1.0 - SampleSmootherStep(
+        _SampleShoreBreakStartMeters,
+        max(_SampleShoreBreakEndMeters, _SampleShoreBreakStartMeters + 0.1),
+        shoreDistanceMeters);
+    float shoalScale = lerp(1.0, max(_SampleShoreShoalingScale, 1.0), shoalRamp);
+    float candidateHeight = rawDisplacement.y * shoalScale;
+    float maxCrestAmplitude = max(
+        0.05, 0.5 * max(_SampleBreakerHeightToDepth, 0.1) * localDepth);
+    float depthLimitedHeight = maxCrestAmplitude
+        * tanh(candidateHeight / maxCrestAmplitude);
+    float depthLimitBlend = 1.0 - SampleSmootherStep(1.0, 14.0, localDepth);
+    float limitedHeight = lerp(candidateHeight, depthLimitedHeight, depthLimitBlend);
+
+    float stillBand = max(_SampleShoreEdgeFadeMeters, 0.5);
+    float nearShoreBlend = SampleSmootherStep(0.0, stillBand, shoreDistanceMeters);
+    float troughSuppression = 1.0 - SampleSmootherStep(
+        0.0, stillBand * 2.0, shoreDistanceMeters);
+    float shoreSafeHeight = lerp(
+        max(limitedHeight, 0.0), limitedHeight, 1.0 - troughSuppression);
+    rawDisplacement.y = shoreSafeHeight * waveStrength * nearShoreBlend;
+
+    float horizontalScale = lerp(
+        saturate(_SampleShoreHorizontalFloor), 1.0, nearShoreBlend);
+    horizontalScale *= lerp(1.0, max(_SampleShoreChoppiness, 1.0), breakStrength);
+    float horizontalDrive = saturate(
+        waveStrength + _SampleShoreHorizontalDrive * breakStrength);
+    rawDisplacement.xz *= horizontalScale * horizontalDrive;
+
+    // Land/shore pixels represent stationary water. Never generate a negative
+    // height or horizontal offset from the mask at the land boundary.
+    if (shoreDistanceMeters <= 0.001)
+        rawDisplacement = 0.0;
+
+    if (!all(isfinite(rawDisplacement)) || any(abs(rawDisplacement) > 10000.0))
+    {
+        rawDisplacement = 0.0;
+        valid = false;
+    }
+
+    float shorelineMotion = SampleSmootherStep(0.0, stillBand, shoreDistanceMeters);
+    float normalScale = waveStrength * shorelineMotion * lerp(
+        1.0, max(_SampleShoreNormalBoost, 1.0), breakStrength);
+
+    float3 rawN0 = SampleNorm0(baseXZ).xyz;
+    float3 rawN1 = SampleNorm1(baseXZ).xyz;
+    float3 rawN2 = SampleNorm2(baseXZ).xyz;
+    float3 n0 = all(isfinite(rawN0)) && dot(rawN0, rawN0) > 1e-6
+        ? normalize(rawN0) : float3(0.0, 1.0, 0.0);
+    float3 n1 = all(isfinite(rawN1)) && dot(rawN1, rawN1) > 1e-6
+        ? normalize(rawN1) : float3(0.0, 1.0, 0.0);
+    float3 n2 = all(isfinite(rawN2)) && dot(rawN2, rawN2) > 1e-6
+        ? normalize(rawN2) : float3(0.0, 1.0, 0.0);
+
+    float2 combinedSlope = (
+        n0.xz / max(n0.y, 0.12) +
+        n1.xz / max(n1.y, 0.12) +
+        n2.xz / max(n2.y, 0.12)) * normalScale;
+    float3 calculatedNormal = float3(combinedSlope.x, 1.0, combinedSlope.y);
+    normal = all(isfinite(calculatedNormal)) && dot(calculatedNormal, calculatedNormal) > 1e-6
+        ? normalize(calculatedNormal)
+        : float3(0.0, 1.0, 0.0);
+
+    displacement = rawDisplacement;
+    return valid;
+}
+
+[numthreads(64, 1, 1)]
+void SampleSurface(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x;
+    if (index >= (uint)_SampleCount)
+        return;
+
+    float2 targetWorldXZ = _SurfaceQueryPositions[index];
+    float2 parametricXZ = targetWorldXZ;
+    float3 displacement = 0.0;
+    float3 normal = float3(0.0, 1.0, 0.0);
+    bool valid = true;
+
+    // The FFT field stores a parametric (choppy) surface: a sample at base XZ
+    // moves horizontally. Invert that mapping so this query reports the height
+    // directly below the requested world-space XZ instead of a nearby crest.
+    // Five damped fixed-point steps are inexpensive for small camera/hull batches.
+    // Folded mappings still use the local parametric fallback below.
+    [unroll]
+    for (int iteration = 0; iteration < 5; ++iteration)
+    {
+        bool iterationValid = EvaluateSurfaceAtParamXZ(
+            parametricXZ, displacement, normal);
+        valid = valid && iterationValid;
+        float2 mappedWorldXZ = parametricXZ + displacement.xz;
+        float2 correction = clamp(targetWorldXZ - mappedWorldXZ,
+            float2(-20.0, -20.0), float2(20.0, 20.0));
+        parametricXZ += correction * 0.85;
+    }
+
+    valid = EvaluateSurfaceAtParamXZ(parametricXZ, displacement, normal) && valid;
+    float2 finalMappedXZ = parametricXZ + displacement.xz;
+    float2 residualXZ = finalMappedXZ - targetWorldXZ;
+
+    // In highly compressed shore-break folds the horizontal map may cease to be
+    // one-to-one. Do not report the height of a distant folded sheet to the camera
+    // or a hull probe. Use the local parametric sample at the requested XZ instead.
+    if (!valid || !all(isfinite(residualXZ)) || any(abs(residualXZ) > 0.75))
+    {
+        bool fallbackValid = EvaluateSurfaceAtParamXZ(
+            targetWorldXZ, displacement, normal);
+        if (fallbackValid && all(isfinite(displacement)) &&
+            all(isfinite(normal)) && dot(normal, normal) > 1e-6)
+        {
+            residualXZ = 0.0;
+            valid = true;
+        }
+        else
+        {
+            displacement = 0.0;
+            normal = float3(0.0, 1.0, 0.0);
+            residualXZ = 0.0;
+            valid = false;
+        }
+    }
+
+    SurfaceQueryResult result;
+    // The output is expressed relative to the requested point so the C# side
+    // can use Position as the world-space water point under the camera/hull probe.
+    result.displacement = float4(residualXZ.x, displacement.y, residualXZ.y,
+        valid ? 1.0 : 0.0);
+    result.normal = float4(normal, valid ? 1.0 : 0.0);
+    _SurfaceQueryResults[index] = result;
 }

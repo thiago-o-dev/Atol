@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.Rendering;
 
 /// <summary>
 /// Drives a three-band Tessendorf / Phillips-spectrum ocean using GPU compute.
@@ -13,6 +16,82 @@ using UnityEngine.Experimental.Rendering;
 [RequireComponent(typeof(MeshRenderer))]
 public sealed class SpectralOceanFFT : MonoBehaviour
 {
+    public enum ShoreDebugView
+    {
+        Final = 0,
+        Distance = 1,
+        WaveAttenuation = 2,
+        BreakerBand = 3,
+        FoamCoverage = 4,
+        SeabedDepth = 5
+    }
+
+
+    /// <summary>
+    /// Asynchronously sampled position on the animated FFT surface. Position is
+    /// the displaced world position corresponding to BasePosition.xz.
+    /// </summary>
+    public struct SurfaceSample
+    {
+        public Vector3 BasePosition;
+        public Vector3 Position;
+        public Vector3 Normal;
+        public bool IsValid;
+        public float SampleTime;
+        public float Height => Position.y;
+    }
+
+    private const int MaxSurfaceQueriesPerBatch = 256;
+    private const int SurfaceQuerySlotCount = 8;
+    private const int MaxPendingCameraQueries = 8;
+    private const int MaxPendingPhysicsQueries = 24;
+    private const int MaxPendingSurfaceQueries = MaxPendingCameraQueries + MaxPendingPhysicsQueries;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct GpuSurfaceQueryResult
+    {
+        public Vector4 displacement;
+        public Vector4 normal;
+    }
+
+    private sealed class PendingSurfaceQuery
+    {
+        public Vector3[] positions;
+        public Action<SurfaceSample[]> callback;
+    }
+
+    private sealed class SurfaceQuerySlice
+    {
+        public PendingSurfaceQuery query;
+        public int offset;
+        public float sampleTime;
+        public float waterLevelY;
+    }
+
+    private sealed class SurfaceQuerySlot
+    {
+        public ComputeBuffer positions;
+        public ComputeBuffer results;
+        public bool inFlight;
+        public bool disposeWhenComplete;
+        public int resultCount;
+        public List<SurfaceQuerySlice> slices;
+
+        public void Dispose()
+        {
+            if (positions != null)
+            {
+                positions.Release();
+                positions = null;
+            }
+            if (results != null)
+            {
+                results.Release();
+                results = null;
+            }
+        }
+    }
+
     [Serializable]
     private sealed class CascadeSettings
     {
@@ -33,6 +112,9 @@ public sealed class SpectralOceanFFT : MonoBehaviour
     [Header("GPU Simulation")]
     [SerializeField] private ComputeShader oceanCompute;
     [SerializeField, Range(64, 512)] private int resolution = 256;
+    [Header("Vertex Displacement Culling")]
+    [Tooltip("Expands the MeshRenderer's local bounds in all directions so GPU-displaced waves are not incorrectly frustum-culled. Increase this for extreme storms or very large waves.")]
+    [SerializeField, Min(1f)] private float rendererBoundsPaddingMeters = 250f;
 
     [Header("Wind / Spectrum")]
     [Tooltip("World-space XZ wind direction. X = world X, Y = world Z.")]
@@ -52,6 +134,95 @@ public sealed class SpectralOceanFFT : MonoBehaviour
     [Tooltip("Foam begins where the horizontal displacement Jacobian drops below this value.")]
     [SerializeField, Range(0.5f, 1.2f)] private float foamBias = 0.98f;
     [SerializeField, Min(0f)] private float foamGain = 3f;
+
+    [Header("Dynamic Sea State")]
+    [Tooltip("Starting wave-strength multiplier. 1 = authored default, 2 = roughly twice the displacement amplitude.")]
+    [SerializeField, Range(0f, 3f)] private float startSeaState = 1f;
+    [Tooltip("Default transition duration used by the public sea-state preset methods.")]
+    [SerializeField, Min(0f)] private float defaultSeaStateTransition = 3f;
+    [Tooltip("Extra horizontal crest sharpening at high sea states.")]
+    [SerializeField, Range(1f, 2f)] private float stormChoppinessMultiplier = 1.3f;
+    [Tooltip("Extra whitecap generation at high sea states.")]
+    [SerializeField, Range(1f, 3f)] private float stormFoamMultiplier = 1.6f;
+    [Tooltip("Optional development shortcuts: F5 calm, F6 normal, F7 rough, F8 storm.")]
+    [SerializeField] private bool enableDebugHotkeys = false;
+
+    [Header("Shoreline Distance Field")]
+    [InspectorName("Baked Shore Distance Map"), Tooltip("World-aligned distance field. Black = shore/land, white = offshore. Assign the baked distance texture here.")]
+    [SerializeField] private Texture2D shoreDistanceTexture;
+    [InspectorName("Painted Seabed Depth Modifier"), Tooltip("Optional grayscale map made by the Shore Distance Baker. Black = land/shallow, white = deep. It multiplies the inferred distance-based water depth.")]
+    [SerializeField] private Texture2D shoreDepthModifierTexture;
+    [InspectorName("Maximum Inferred Water Depth (m)"), Tooltip("Caps the distance-based depth estimate before the painted seabed modifier is applied.")]
+    [SerializeField, Min(1f)] private float shoreMaxDepthMeters = 60f;
+    [Tooltip("World-space XZ coordinate represented by the bottom-left corner of the shore map.")]
+    [SerializeField] private Vector2 shoreMapOriginXZ = Vector2.zero;
+    [Tooltip("World-space XZ size covered by the shore map. Must match the baker's World Size XZ.")]
+    [SerializeField] private Vector2 shoreMapSizeXZ = new Vector2(8192f, 8192f);
+    [Tooltip("Enable if the texture's vertical axis is opposite to world +Z.")]
+    [SerializeField] private bool shoreMapFlipV;
+    [InspectorName("Baked Distance Range (m)"), Tooltip("Must exactly match the Baker's Coastal Fade Distance. A white pixel represents this distance or farther.")]
+    [SerializeField, Min(1f)] private float shoreDistanceRangeMeters = 150f;
+    [InspectorName("Wave Recovery Starts (m)"), Tooltip("Distance from the shoreline where wave displacement begins recovering from the still-water edge.")]
+    [SerializeField, Min(0f)] private float shoreFadeStartMeters = 0f;
+    [InspectorName("Full Wave Height At (m)"), Tooltip("Distance offshore where the full open-ocean wave height is restored. Increase this for a longer, calmer shelf.")]
+    [SerializeField, Min(1f)] private float shoreFadeEndMeters = 100f;
+    [InspectorName("Residual Shore Wave Strength"), Tooltip("Small residual movement near shore. The final still-water band always eases to exactly zero at land.")]
+    [SerializeField, Range(0f, 0.8f)] private float nearShoreWaveStrength = 0.08f;
+    [InspectorName("Still-Water Band Width (m)"), Tooltip("Width of the final shoreline band. Wave displacement and normal detail ease to zero, but the water mesh remains visible and stationary.")]
+    [SerializeField, Min(0.5f)] private float shoreEdgeFadeMeters = 10f;
+
+    [Header("Shoaling and Breaking")]
+    [InspectorName("Breaker Zone Starts (m)"), Tooltip("Offshore distance where the wave begins shoaling toward the breaker zone.")]
+    [SerializeField, Min(0f)] private float shoreBreakStartMeters = 2f;
+    [InspectorName("Strongest Breaking At (m)"), Tooltip("Distance from shore where crest compression and breaking foam are strongest.")]
+    [SerializeField, Min(0.1f)] private float shoreBreakPeakMeters = 22f;
+    [InspectorName("Breaker Zone Ends (m)"), Tooltip("Distance offshore where the breaker response returns to ordinary open-ocean motion.")]
+    [SerializeField, Min(1f)] private float shoreBreakEndMeters = 90f;
+    [InspectorName("Approx. Seabed Slope"), Tooltip("Inferred depth per metre offshore. 0.12 means about 12 m depth at 100 m from land. This is an approximation, not real bathymetry.")]
+    [SerializeField, Range(0.01f, 0.5f)] private float shoreDepthPerMeter = 0.12f;
+    [Tooltip("Depth-limited breaker index. Around 0.78 is a common shallow-water approximation (maximum wave height / depth).")]
+    [SerializeField, Range(0.5f, 1f)] private float breakerHeightToDepth = 0.78f;
+    [InspectorName("Maximum Gradual Height Gain"), Tooltip("Maximum height scale as waves shoal. The gain ramps gradually across the breaker zone and is depth-limited. Keep it near 1.1-1.3.")]
+    [SerializeField, Range(1f, 1.5f)] private float shoreShoalingScale = 1.18f;
+    [Tooltip("Horizontal compression multiplier at the breaker peak. Keep this modest to avoid huge self-intersections.")]
+    [SerializeField, Range(1f, 2.5f)] private float shoreChoppiness = 1.55f;
+    [Tooltip("Minimum horizontal displacement scale within the still-water approach band. The final shoreline motion still eases to zero.")]
+    [SerializeField, Range(0f, 1f)] private float shoreHorizontalFloor = 0.12f;
+    [Tooltip("Restores this fraction of horizontal wave travel at the breaker peak while vertical height remains attenuated. Higher values pitch crests forward more strongly.")]
+    [SerializeField, Range(0f, 1f)] private float shoreHorizontalDrive = 0.45f;
+    [Tooltip("Additional lighting-normal strength in the breaker zone.")]
+    [SerializeField, Range(1f, 2f)] private float shoreNormalBoost = 1.25f;
+
+    [Header("Coastal Foam / Wash")]
+    [InspectorName("Full-Strength Shore Wash Width (m)"), Tooltip("Distance from land that receives the strongest continuous whitewash. Increase to carry foam farther offshore.")]
+    [SerializeField, Min(1f)] private float shoreFoamWidthMeters = 60f;
+    [InspectorName("Foam Fade Length (m)"), Tooltip("Approximate distance for foam to fall from full strength to about 6%. Uses a soft asymptotic falloff, not a hard cutoff. Try 70-110 m for beaches.")]
+    [SerializeField, Min(0.1f)] private float shoreFoamEdgeFeatherMeters = 85f;
+    [InspectorName("Dark-Land Foam Sensitivity"), Tooltip("Normalized distance-map threshold. Higher values include lighter gray pixels farther offshore in the foam expansion. 0.3 = mostly dark pixels; 0.7 = include much lighter grays.")]
+    [SerializeField, Range(0f, 1f)] private float shoreFoamBlackThreshold = 0.45f;
+    [InspectorName("Dark-Land Transition Softness"), Tooltip("Softness of the sensitivity threshold in the distance map. Higher values make the black-to-gray response more gradual.")]
+    [SerializeField, Range(0.001f, 0.5f)] private float shoreFoamBlackSoftness = 0.18f;
+    [InspectorName("Foam Boundary Irregularity (m)"), Tooltip("Multi-scale world-space noise displacement of the foam boundary. Increase to break up smooth concentric rings around islands.")]
+    [SerializeField, Range(0f, 60f)] private float shoreFoamEdgeNoiseMeters = 14f;
+    [Tooltip("Multiplier for the shore wash / breaking foam coverage.")]
+    [SerializeField, Range(0f, 8f)] private float shoreFoamGain = 3.5f;
+    [Tooltip("Open-ocean spectral whitecap multiplier. Lower values keep the middle of the ocean cleaner.")]
+    [SerializeField, Range(0f, 1f)] private float openOceanFoamMultiplier = 0.035f;
+    [Tooltip("Jacobian value below which horizontal compression starts contributing to a wave crest.")]
+    [SerializeField, Range(0.5f, 1f)] private float shoreCrestJacobianThreshold = 0.94f;
+    [Tooltip("Gain applied to crest compression when generating the peak / foam mask.")]
+    [SerializeField, Range(1f, 20f)] private float shoreCrestCompressionGain = 8f;
+    [Tooltip("How much positive crest height contributes to the peak mask.")]
+    [SerializeField, Range(0f, 2f)] private float shoreCrestHeightGain = 0.45f;
+    [Tooltip("Travel speed of the animated shore wash front, in metres per second. Positive values move the front toward the shoreline.")]
+    [SerializeField, Range(0f, 12f)] private float shoreWashSpeed = 2.2f;
+    [Tooltip("Distance between successive animated wash fronts, in metres.")]
+    [SerializeField, Range(5f, 200f)] private float shoreWashSpacingMeters = 42f;
+    [Tooltip("How strongly foam pulses as each wash front advances. Zero gives steady foam; one gives a stronger moving front.")]
+    [SerializeField, Range(0f, 1f)] private float shoreWashPulseStrength = 0.65f;
+
+    [Header("Shore Debug")]
+    [SerializeField] private ShoreDebugView shoreDebugView = ShoreDebugView.Final;
 
     [Header("Frequency Cascades")]
     [Tooltip("Keep exactly three cascades. Large and medium bands displace geometry; the small band adds normals and foam.")]
@@ -78,6 +249,41 @@ public sealed class SpectralOceanFFT : MonoBehaviour
 
     private static readonly int HalfTexelId = Shader.PropertyToID("_OceanHalfTexel");
     private static readonly int OceanEnabledId = Shader.PropertyToID("_OceanEnabled");
+    private static readonly int ShoreDistanceId = Shader.PropertyToID("_ShoreDistance");
+    private static readonly int ShoreDepthModifierId = Shader.PropertyToID("_ShoreDepthModifier");
+    private static readonly int ShoreMaxDepthMetersId = Shader.PropertyToID("_ShoreMaxDepthMeters");
+    private static readonly int ShoreMapOriginId = Shader.PropertyToID("_ShoreMapOriginXZ");
+    private static readonly int ShoreMapSizeId = Shader.PropertyToID("_ShoreMapSizeXZ");
+    private static readonly int ShoreMapFlipVId = Shader.PropertyToID("_ShoreMapFlipV");
+    private static readonly int ShoreDistanceRangeMetersId = Shader.PropertyToID("_ShoreDistanceRangeMeters");
+    private static readonly int ShoreFadeStartMetersId = Shader.PropertyToID("_ShoreFadeStartMeters");
+    private static readonly int ShoreFadeEndMetersId = Shader.PropertyToID("_ShoreFadeEndMeters");
+    private static readonly int NearShoreWaveStrengthId = Shader.PropertyToID("_NearShoreWaveStrength");
+    private static readonly int ShoreEdgeFadeMetersId = Shader.PropertyToID("_ShoreEdgeFadeMeters");
+    private static readonly int ShoreBreakStartMetersId = Shader.PropertyToID("_ShoreBreakStartMeters");
+    private static readonly int ShoreBreakPeakMetersId = Shader.PropertyToID("_ShoreBreakPeakMeters");
+    private static readonly int ShoreBreakEndMetersId = Shader.PropertyToID("_ShoreBreakEndMeters");
+    private static readonly int ShoreDepthPerMeterId = Shader.PropertyToID("_ShoreDepthPerMeter");
+    private static readonly int BreakerHeightToDepthId = Shader.PropertyToID("_BreakerHeightToDepth");
+    private static readonly int ShoreShoalingScaleId = Shader.PropertyToID("_ShoreShoalingScale");
+    private static readonly int ShoreHorizontalFloorId = Shader.PropertyToID("_ShoreHorizontalFloor");
+    private static readonly int ShoreHorizontalDriveId = Shader.PropertyToID("_ShoreHorizontalDrive");
+    private static readonly int ShoreChoppinessId = Shader.PropertyToID("_ShoreChoppiness");
+    private static readonly int ShoreNormalBoostId = Shader.PropertyToID("_ShoreNormalBoost");
+    private static readonly int ShoreFoamWidthMetersId = Shader.PropertyToID("_ShoreFoamWidthMeters");
+    private static readonly int ShoreFoamEdgeFeatherMetersId = Shader.PropertyToID("_ShoreFoamEdgeFeatherMeters");
+    private static readonly int ShoreFoamBlackThresholdId = Shader.PropertyToID("_ShoreFoamBlackThreshold");
+    private static readonly int ShoreFoamBlackSoftnessId = Shader.PropertyToID("_ShoreFoamBlackSoftness");
+    private static readonly int ShoreFoamEdgeNoiseMetersId = Shader.PropertyToID("_ShoreFoamEdgeNoiseMeters");
+    private static readonly int OpenOceanFoamMultiplierId = Shader.PropertyToID("_OpenOceanFoamMultiplier");
+    private static readonly int ShoreFoamGainId = Shader.PropertyToID("_ShoreFoamGain");
+    private static readonly int ShoreCrestJacobianThresholdId = Shader.PropertyToID("_ShoreCrestJacobianThreshold");
+    private static readonly int ShoreCrestCompressionGainId = Shader.PropertyToID("_ShoreCrestCompressionGain");
+    private static readonly int ShoreCrestHeightGainId = Shader.PropertyToID("_ShoreCrestHeightGain");
+    private static readonly int ShoreWashSpeedId = Shader.PropertyToID("_ShoreWashSpeed");
+    private static readonly int ShoreWashSpacingMetersId = Shader.PropertyToID("_ShoreWashSpacingMeters");
+    private static readonly int ShoreWashPulseStrengthId = Shader.PropertyToID("_ShoreWashPulseStrength");
+    private static readonly int ShoreDebugViewId = Shader.PropertyToID("_ShoreDebugView");
 
     private static readonly int[] PatchLengthIds =
     {
@@ -87,39 +293,215 @@ public sealed class SpectralOceanFFT : MonoBehaviour
     };
 
     private MeshRenderer meshRenderer;
+    private MeshFilter meshFilter;
+    private Mesh boundsSourceMesh;
     private MaterialPropertyBlock propertyBlock;
+    private Bounds originalRendererLocalBounds;
+    private bool hasOriginalRendererLocalBounds;
+    private Vector3 lastExpandedBoundsScale;
+    private bool hasExpandedBoundsScale;
 
     private int kernelInit;
     private int kernelEvolve;
     private int kernelFftX;
     private int kernelFftY;
     private int kernelBuildMaps;
+    private int kernelSampleSurface;
     private int log2Resolution;
+
+    // Camera immersion samples are prioritized over bulk physics probe batches.
+    // This prevents many boats from starving the player's underwater detection.
+    private readonly Queue<PendingSurfaceQuery> pendingCameraSurfaceQueries =
+        new Queue<PendingSurfaceQuery>();
+    private readonly Queue<PendingSurfaceQuery> pendingSurfaceQueries =
+        new Queue<PendingSurfaceQuery>();
+    private readonly Vector2[] surfaceQueryPositionScratch =
+        new Vector2[MaxSurfaceQueriesPerBatch];
+    private SurfaceQuerySlot[] surfaceQuerySlots;
 
     private bool resourcesReady;
     private bool rebuildRequested = true;
     private bool spectrumDirty = true;
+    private int allocatedResolution;
+    private ComputeShader allocatedCompute;
+    private int allocatedCascadeCount;
+
+    private float currentSeaStateStrength = 1f;
+    private float targetSeaStateStrength = 1f;
+    private float seaStateVelocity;
+    private float seaStateSmoothTime = 3f;
+
+    /// <summary>Base water-plane height in world space. The FFT shader adds displacement around this level.</summary>
+    public float WaterLevelY => transform.position.y;
+
+    public float CurrentSeaStateStrength => currentSeaStateStrength;
+    public float TargetSeaStateStrength => targetSeaStateStrength;
+    public bool CanSampleSurface => resourcesReady &&
+        surfaceQuerySlots != null && SystemInfo.supportsAsyncGPUReadback;
+
+    /// <summary>
+    /// Queues one or more world-space XZ samples against the current GPU FFT maps.
+    /// Results arrive asynchronously to avoid a GPU/CPU synchronization stall.
+    /// Call from FixedUpdate for buoyancy or LateUpdate for camera immersion.
+    /// </summary>
+    public bool RequestSurfaceSamples(
+        Vector3[] worldPositions,
+        Action<SurfaceSample[]> callback)
+    {
+        if (!CanQueueSurfaceQuery(worldPositions, callback))
+            return false;
+
+        pendingSurfaceQueries.Enqueue(CreatePendingQuery(worldPositions, callback));
+        return true;
+    }
+
+    public bool RequestSurfaceSample(Vector3 worldPosition, Action<SurfaceSample> callback)
+    {
+        if (callback == null)
+            return false;
+
+        return RequestSurfaceSamples(new[] { worldPosition }, samples =>
+        {
+            callback(samples != null && samples.Length > 0 ? samples[0] : default);
+        });
+    }
+
+    /// <summary>
+    /// Render-time variant for the output camera. Call from LateUpdate after
+    /// Cinemachine has applied the final camera pose; it dispatches the queued
+    /// query immediately against the ocean maps generated during Update.
+    /// </summary>
+    public bool RequestSurfaceSampleForCamera(Vector3 worldPosition, Action<SurfaceSample> callback)
+    {
+        if (callback == null || !CanSampleSurface ||
+            !IsFinite(worldPosition.x) || !IsFinite(worldPosition.y) || !IsFinite(worldPosition.z) ||
+            pendingCameraSurfaceQueries.Count >= MaxPendingCameraQueries ||
+            pendingCameraSurfaceQueries.Count + pendingSurfaceQueries.Count >= MaxPendingSurfaceQueries)
+            return false;
+
+        pendingCameraSurfaceQueries.Enqueue(CreatePendingQuery(
+            new[] { worldPosition }, samples =>
+            {
+                callback(samples != null && samples.Length > 0 ? samples[0] : default);
+            }));
+
+        // Dispatch immediately when a slot is available. Camera queries are
+        // dequeued before buoyancy batches in ProcessSurfaceSampleRequests.
+        ProcessSurfaceSampleRequests();
+        return true;
+    }
+
+    private bool CanQueueSurfaceQuery(Vector3[] worldPositions, Action<SurfaceSample[]> callback)
+    {
+        if (worldPositions == null || worldPositions.Length == 0 ||
+            worldPositions.Length > MaxSurfaceQueriesPerBatch || callback == null ||
+            !CanSampleSurface || pendingSurfaceQueries.Count >= MaxPendingPhysicsQueries ||
+            pendingCameraSurfaceQueries.Count + pendingSurfaceQueries.Count >= MaxPendingSurfaceQueries)
+            return false;
+
+        for (int i = 0; i < worldPositions.Length; i++)
+        {
+            Vector3 p = worldPositions[i];
+            if (!IsFinite(p.x) || !IsFinite(p.y) || !IsFinite(p.z))
+                return false;
+        }
+        return true;
+    }
+
+    private static PendingSurfaceQuery CreatePendingQuery(
+        Vector3[] worldPositions, Action<SurfaceSample[]> callback)
+    {
+        return new PendingSurfaceQuery
+        {
+            positions = (Vector3[])worldPositions.Clone(),
+            callback = callback
+        };
+    }
+
+    private bool HasPendingSurfaceQueries =>
+        pendingCameraSurfaceQueries.Count > 0 || pendingSurfaceQueries.Count > 0;
+
+    private PendingSurfaceQuery PeekNextSurfaceQuery()
+    {
+        return pendingCameraSurfaceQueries.Count > 0
+            ? pendingCameraSurfaceQueries.Peek()
+            : pendingSurfaceQueries.Peek();
+    }
+
+    private PendingSurfaceQuery DequeueNextSurfaceQuery()
+    {
+        return pendingCameraSurfaceQueries.Count > 0
+            ? pendingCameraSurfaceQueries.Dequeue()
+            : pendingSurfaceQueries.Dequeue();
+    }
 
     private void OnEnable()
     {
         meshRenderer = GetComponent<MeshRenderer>();
+        meshFilter = GetComponent<MeshFilter>();
+        boundsSourceMesh = meshFilter != null ? meshFilter.sharedMesh : null;
         propertyBlock = new MaterialPropertyBlock();
+        CaptureAndExpandRendererBounds();
         rebuildRequested = true;
         spectrumDirty = true;
+        currentSeaStateStrength = Mathf.Clamp(startSeaState, 0f, 3f);
+        targetSeaStateStrength = currentSeaStateStrength;
+        seaStateVelocity = 0f;
+        seaStateSmoothTime = Mathf.Max(0.01f, defaultSeaStateTransition);
     }
 
     private void OnDisable()
     {
         ReleaseResources();
+        RestoreRendererBounds();
     }
 
     private void OnValidate()
     {
         resolution = Mathf.Clamp(Mathf.ClosestPowerOfTwo(Mathf.Clamp(resolution, 64, 512)), 64, 512);
+        rendererBoundsPaddingMeters = Mathf.Max(1f, rendererBoundsPaddingMeters);
         windSpeed = Mathf.Max(0.1f, windSpeed);
         phillipsAmplitude = Mathf.Max(0f, phillipsAmplitude);
         smallWaveDamping = Mathf.Max(0f, smallWaveDamping);
         foamGain = Mathf.Max(0f, foamGain);
+        startSeaState = Mathf.Clamp(startSeaState, 0f, 3f);
+        defaultSeaStateTransition = Mathf.Max(0f, defaultSeaStateTransition);
+        shoreMapSizeXZ.x = Mathf.Max(1f, shoreMapSizeXZ.x);
+        shoreMapSizeXZ.y = Mathf.Max(1f, shoreMapSizeXZ.y);
+        shoreDistanceRangeMeters = Mathf.Max(1f, shoreDistanceRangeMeters);
+        shoreMaxDepthMeters = Mathf.Max(1f, shoreMaxDepthMeters);
+        shoreFadeStartMeters = Mathf.Clamp(shoreFadeStartMeters, 0f, shoreDistanceRangeMeters - 0.1f);
+        shoreFadeEndMeters = Mathf.Clamp(shoreFadeEndMeters, shoreFadeStartMeters + 0.1f, shoreDistanceRangeMeters);
+        nearShoreWaveStrength = Mathf.Clamp01(nearShoreWaveStrength);
+        shoreEdgeFadeMeters = Mathf.Max(0.5f, shoreEdgeFadeMeters);
+        shoreBreakStartMeters = Mathf.Clamp(shoreBreakStartMeters, 0f, Mathf.Max(0f, shoreDistanceRangeMeters - 0.2f));
+        shoreBreakPeakMeters = Mathf.Clamp(
+            shoreBreakPeakMeters, shoreBreakStartMeters + 0.1f, Mathf.Max(shoreBreakStartMeters + 0.1f, shoreDistanceRangeMeters - 0.1f));
+        shoreBreakEndMeters = Mathf.Clamp(
+            shoreBreakEndMeters, shoreBreakPeakMeters + 0.1f, shoreDistanceRangeMeters);
+        shoreDepthPerMeter = Mathf.Clamp(shoreDepthPerMeter, 0.01f, 0.5f);
+        breakerHeightToDepth = Mathf.Clamp(breakerHeightToDepth, 0.5f, 1f);
+        shoreShoalingScale = Mathf.Clamp(shoreShoalingScale, 1f, 1.5f);
+        shoreChoppiness = Mathf.Clamp(shoreChoppiness, 1f, 2.5f);
+        shoreHorizontalFloor = Mathf.Clamp01(shoreHorizontalFloor);
+        shoreHorizontalDrive = Mathf.Clamp01(shoreHorizontalDrive);
+        shoreNormalBoost = Mathf.Clamp(shoreNormalBoost, 1f, 2f);
+        shoreFoamEdgeFeatherMeters = Mathf.Max(0.1f, shoreFoamEdgeFeatherMeters);
+        shoreFoamWidthMeters = Mathf.Max(1f, shoreFoamWidthMeters);
+        shoreFoamBlackSoftness = Mathf.Clamp(shoreFoamBlackSoftness, 0.001f, 0.5f);
+        shoreFoamEdgeNoiseMeters = Mathf.Clamp(shoreFoamEdgeNoiseMeters, 0f, 60f);
+        shoreFoamBlackThreshold = Mathf.Clamp(
+            shoreFoamBlackThreshold, 0f, 1f - shoreFoamBlackSoftness);
+        shoreFoamGain = Mathf.Clamp(shoreFoamGain, 0f, 8f);
+        openOceanFoamMultiplier = Mathf.Clamp01(openOceanFoamMultiplier);
+        shoreCrestJacobianThreshold = Mathf.Clamp(shoreCrestJacobianThreshold, 0.5f, 1f);
+        shoreCrestCompressionGain = Mathf.Clamp(shoreCrestCompressionGain, 1f, 20f);
+        shoreCrestHeightGain = Mathf.Clamp(shoreCrestHeightGain, 0f, 2f);
+        shoreWashSpeed = Mathf.Clamp(shoreWashSpeed, 0f, 12f);
+        shoreWashSpacingMeters = Mathf.Clamp(shoreWashSpacingMeters, 5f, 200f);
+        shoreWashPulseStrength = Mathf.Clamp01(shoreWashPulseStrength);
+        if (Application.isPlaying && meshRenderer != null && hasOriginalRendererLocalBounds)
+            CaptureAndExpandRendererBounds();
 
         if (cascades != null)
         {
@@ -135,12 +517,29 @@ public sealed class SpectralOceanFFT : MonoBehaviour
             }
         }
 
-        rebuildRequested = true;
+        // Inspector changes to coastal fade / foam / crest controls are applied
+        // by ApplyShoreParameters every frame. Do not release and recreate every
+        // FFT RenderTexture just because an artist adjusts a shoreline slider.
+        // Only settings that affect allocated GPU resources require a rebuild.
+        bool resourceLayoutChanged = !resourcesReady ||
+                                     resolution != allocatedResolution ||
+                                     oceanCompute != allocatedCompute ||
+                                     cascades == null ||
+                                     cascades.Length != allocatedCascadeCount;
+        if (resourceLayoutChanged)
+            rebuildRequested = true;
+
+        // Wind and spectrum values are cheap to regenerate once through InitSpectrum;
+        // this does not recreate the FFT textures.
         spectrumDirty = true;
     }
 
     private void Update()
     {
+        UpdateRendererBoundsIfScaleChanged();
+        HandleDebugHotkeys();
+        UpdateSeaState(Time.deltaTime);
+
         if (rebuildRequested || !resourcesReady)
         {
             if (!InitializeResources())
@@ -148,6 +547,7 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         }
 
         SetCommonParameters();
+        ApplyShoreParameters();
 
         if (spectrumDirty)
         {
@@ -159,6 +559,395 @@ public sealed class SpectralOceanFFT : MonoBehaviour
 
         for (int i = 0; i < cascades.Length; i++)
             SimulateCascade(cascades[i], i);
+    }
+
+    private void LateUpdate()
+    {
+        ProcessSurfaceSampleRequests();
+    }
+
+    private void InitializeSurfaceQuerySlots()
+    {
+        ReleaseSurfaceQuerySlots();
+
+        if (!SystemInfo.supportsAsyncGPUReadback)
+        {
+            Debug.LogWarning(
+                "SpectralOceanFFT: Async GPU readback is unavailable. Underwater wave tracking and buoyancy sampling will use their fallback behavior.",
+                this);
+            return;
+        }
+
+        try
+        {
+            surfaceQuerySlots = new SurfaceQuerySlot[SurfaceQuerySlotCount];
+            for (int i = 0; i < surfaceQuerySlots.Length; i++)
+            {
+                surfaceQuerySlots[i] = new SurfaceQuerySlot
+                {
+                    positions = new ComputeBuffer(
+                        MaxSurfaceQueriesPerBatch, sizeof(float) * 2, ComputeBufferType.Structured),
+                    results = new ComputeBuffer(
+                        MaxSurfaceQueriesPerBatch, Marshal.SizeOf<GpuSurfaceQueryResult>(), ComputeBufferType.Structured)
+                };
+            }
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning(
+                "SpectralOceanFFT: Could not allocate asynchronous surface-query buffers. Sampling is disabled. " + exception.Message,
+                this);
+            ReleaseSurfaceQuerySlots();
+        }
+    }
+
+    private void ProcessSurfaceSampleRequests()
+    {
+        if (!resourcesReady || surfaceQuerySlots == null || !HasPendingSurfaceQueries)
+            return;
+
+        SurfaceQuerySlot slot = null;
+        for (int i = 0; i < surfaceQuerySlots.Length; i++)
+        {
+            SurfaceQuerySlot candidate = surfaceQuerySlots[i];
+            if (candidate != null && !candidate.inFlight &&
+                candidate.positions != null && candidate.results != null)
+            {
+                slot = candidate;
+                break;
+            }
+        }
+
+        if (slot == null)
+            return;
+
+        List<SurfaceQuerySlice> slices = new List<SurfaceQuerySlice>(8);
+        int sampleCount = 0;
+        float sampleTime = Time.realtimeSinceStartup;
+        float waterLevel = WaterLevelY;
+
+        while (HasPendingSurfaceQueries)
+        {
+            PendingSurfaceQuery query = PeekNextSurfaceQuery();
+            if (query.positions == null || query.positions.Length == 0)
+            {
+                DequeueNextSurfaceQuery();
+                InvokeInvalidSurfaceQuery(query.callback, 0);
+                continue;
+            }
+
+            if (sampleCount + query.positions.Length > MaxSurfaceQueriesPerBatch)
+            {
+                if (sampleCount == 0)
+                {
+                    DequeueNextSurfaceQuery();
+                    InvokeInvalidSurfaceQuery(query.callback, query.positions.Length);
+                }
+                break;
+            }
+
+            DequeueNextSurfaceQuery();
+            int offset = sampleCount;
+            for (int i = 0; i < query.positions.Length; i++)
+            {
+                Vector3 p = query.positions[i];
+                surfaceQueryPositionScratch[sampleCount++] = new Vector2(p.x, p.z);
+            }
+
+            slices.Add(new SurfaceQuerySlice
+            {
+                query = query,
+                offset = offset,
+                sampleTime = sampleTime,
+                waterLevelY = waterLevel
+            });
+        }
+
+        if (sampleCount == 0)
+            return;
+
+        slot.slices = slices;
+        slot.resultCount = sampleCount;
+        slot.inFlight = true;
+
+        try
+        {
+            // Keep buffer upload, binding and dispatch in the same guarded block.
+            // Previously an exception from SetData/SetTexture happened before the
+            // try/catch and left camera/physics callbacks waiting forever.
+            slot.positions.SetData(surfaceQueryPositionScratch, 0, 0, sampleCount);
+            BindSurfaceQueryParameters(slot, sampleCount);
+            oceanCompute.Dispatch(kernelSampleSurface,
+                Mathf.CeilToInt(sampleCount / 64f), 1, 1);
+            AsyncGPUReadback.Request(slot.results, request => CompleteSurfaceSampleReadback(slot, request));
+        }
+        catch (Exception exception)
+        {
+            slot.inFlight = false;
+            slot.slices = null;
+            slot.resultCount = 0;
+            Debug.LogWarning("SpectralOceanFFT: Surface query dispatch failed: " + exception.Message, this);
+            for (int i = 0; i < slices.Count; i++)
+                InvokeInvalidSurfaceQuery(slices[i].query.callback, slices[i].query.positions.Length);
+        }
+    }
+
+    private void BindSurfaceQueryParameters(SurfaceQuerySlot slot, int sampleCount)
+    {
+        oceanCompute.SetInt("_SampleResolution", resolution);
+        oceanCompute.SetInt("_SampleCount", sampleCount);
+        oceanCompute.SetFloat("_SamplePatchLength0", cascades[0].patchLength);
+        oceanCompute.SetFloat("_SamplePatchLength1", cascades[1].patchLength);
+        oceanCompute.SetFloat("_SamplePatchLength2", cascades[2].patchLength);
+        oceanCompute.SetVector("_SampleShoreMapOriginXZ",
+            new Vector4(shoreMapOriginXZ.x, shoreMapOriginXZ.y, 0f, 0f));
+        oceanCompute.SetVector("_SampleShoreMapSizeXZ",
+            new Vector4(Mathf.Max(1f, shoreMapSizeXZ.x), Mathf.Max(1f, shoreMapSizeXZ.y), 0f, 0f));
+        oceanCompute.SetFloat("_SampleShoreMapFlipV", shoreMapFlipV ? 1f : 0f);
+        oceanCompute.SetFloat("_SampleShoreDistanceRangeMeters", shoreDistanceRangeMeters);
+        oceanCompute.SetFloat("_SampleShoreMaxDepthMeters", shoreMaxDepthMeters);
+        oceanCompute.SetFloat("_SampleShoreFadeStartMeters", shoreFadeStartMeters);
+        oceanCompute.SetFloat("_SampleShoreFadeEndMeters", shoreFadeEndMeters);
+        oceanCompute.SetFloat("_SampleNearShoreWaveStrength", nearShoreWaveStrength);
+        oceanCompute.SetFloat("_SampleShoreEdgeFadeMeters", shoreEdgeFadeMeters);
+        oceanCompute.SetFloat("_SampleShoreBreakStartMeters", shoreBreakStartMeters);
+        oceanCompute.SetFloat("_SampleShoreBreakPeakMeters", shoreBreakPeakMeters);
+        oceanCompute.SetFloat("_SampleShoreBreakEndMeters", shoreBreakEndMeters);
+        oceanCompute.SetFloat("_SampleShoreDepthPerMeter", shoreDepthPerMeter);
+        oceanCompute.SetFloat("_SampleBreakerHeightToDepth", breakerHeightToDepth);
+        oceanCompute.SetFloat("_SampleShoreShoalingScale", shoreShoalingScale);
+        oceanCompute.SetFloat("_SampleShoreHorizontalFloor", shoreHorizontalFloor);
+        oceanCompute.SetFloat("_SampleShoreHorizontalDrive", shoreHorizontalDrive);
+        oceanCompute.SetFloat("_SampleShoreChoppiness", shoreChoppiness);
+        oceanCompute.SetFloat("_SampleShoreNormalBoost", shoreNormalBoost);
+
+        oceanCompute.SetTexture(kernelSampleSurface, "_SampleDisplacement0", cascades[0].displacement);
+        oceanCompute.SetTexture(kernelSampleSurface, "_SampleDisplacement1", cascades[1].displacement);
+        oceanCompute.SetTexture(kernelSampleSurface, "_SampleDisplacement2", cascades[2].displacement);
+        oceanCompute.SetTexture(kernelSampleSurface, "_SampleNormal0", cascades[0].normal);
+        oceanCompute.SetTexture(kernelSampleSurface, "_SampleNormal1", cascades[1].normal);
+        oceanCompute.SetTexture(kernelSampleSurface, "_SampleNormal2", cascades[2].normal);
+        oceanCompute.SetTexture(kernelSampleSurface, "_SampleShoreDistance",
+            shoreDistanceTexture != null ? shoreDistanceTexture : Texture2D.whiteTexture);
+        oceanCompute.SetTexture(kernelSampleSurface, "_SampleShoreDepth",
+            shoreDepthModifierTexture != null ? shoreDepthModifierTexture : Texture2D.whiteTexture);
+        oceanCompute.SetBuffer(kernelSampleSurface, "_SurfaceQueryPositions", slot.positions);
+        oceanCompute.SetBuffer(kernelSampleSurface, "_SurfaceQueryResults", slot.results);
+    }
+
+    private void CompleteSurfaceSampleReadback(
+        SurfaceQuerySlot slot, AsyncGPUReadbackRequest request)
+    {
+        List<SurfaceQuerySlice> slices = slot.slices;
+        bool success = !request.hasError && slices != null;
+        GpuSurfaceQueryResult[] results = null;
+
+        if (success)
+        {
+            try
+            {
+                var data = request.GetData<GpuSurfaceQueryResult>();
+                int expectedCount = Mathf.Clamp(slot.resultCount, 0, MaxSurfaceQueriesPerBatch);
+                success = expectedCount > 0 && data.Length >= expectedCount;
+                if (success)
+                {
+                    results = new GpuSurfaceQueryResult[expectedCount];
+                    for (int i = 0; i < expectedCount; i++)
+                        results[i] = data[i];
+                }
+            }
+            catch (Exception exception)
+            {
+                success = false;
+                Debug.LogWarning("SpectralOceanFFT: Could not read surface-query results: " + exception.Message, this);
+            }
+        }
+
+        if (slices != null)
+        {
+            for (int s = 0; s < slices.Count; s++)
+            {
+                SurfaceQuerySlice slice = slices[s];
+                SurfaceSample[] samples = new SurfaceSample[slice.query.positions.Length];
+                for (int i = 0; i < samples.Length; i++)
+                {
+                    int resultIndex = slice.offset + i;
+                    if (!success || results == null || resultIndex >= results.Length)
+                    {
+                        samples[i] = MakeInvalidSurfaceSample(slice.query.positions[i], slice.sampleTime, slice.waterLevelY);
+                        continue;
+                    }
+
+                    GpuSurfaceQueryResult gpu = results[resultIndex];
+                    bool valid = gpu.displacement.w > 0.5f &&
+                        IsFinite(gpu.displacement) && IsFinite(gpu.normal);
+                    Vector3 basePosition = slice.query.positions[i];
+                    Vector3 displacement = valid
+                        ? new Vector3(gpu.displacement.x, gpu.displacement.y, gpu.displacement.z)
+                        : Vector3.zero;
+                    Vector3 normal = valid
+                        ? new Vector3(gpu.normal.x, gpu.normal.y, gpu.normal.z).normalized
+                        : Vector3.up;
+
+                    samples[i] = new SurfaceSample
+                    {
+                        BasePosition = basePosition,
+                        Position = new Vector3(
+                            basePosition.x + displacement.x,
+                            slice.waterLevelY + displacement.y,
+                            basePosition.z + displacement.z),
+                        Normal = normal,
+                        IsValid = valid,
+                        SampleTime = slice.sampleTime
+                    };
+                }
+
+                try
+                {
+                    slice.query.callback?.Invoke(samples);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception, this);
+                }
+            }
+        }
+
+        slot.inFlight = false;
+        slot.slices = null;
+        slot.resultCount = 0;
+        if (slot.disposeWhenComplete)
+            slot.Dispose();
+    }
+
+    private static bool IsFinite(Vector4 value)
+    {
+        return IsFinite(value.x) && IsFinite(value.y) &&
+               IsFinite(value.z) && IsFinite(value.w);
+    }
+
+    private static bool IsFinite(float value)
+    {
+        return !float.IsNaN(value) && !float.IsInfinity(value);
+    }
+
+    private static SurfaceSample MakeInvalidSurfaceSample(
+        Vector3 basePosition, float sampleTime, float waterLevel)
+    {
+        return new SurfaceSample
+        {
+            BasePosition = basePosition,
+            Position = new Vector3(basePosition.x, waterLevel, basePosition.z),
+            Normal = Vector3.up,
+            IsValid = false,
+            SampleTime = sampleTime
+        };
+    }
+
+    private static void InvokeInvalidSurfaceQuery(Action<SurfaceSample[]> callback, int count)
+    {
+        if (callback == null)
+            return;
+        callback(new SurfaceSample[Mathf.Max(0, count)]);
+    }
+
+    private void ReleaseSurfaceQuerySlots()
+    {
+        while (pendingCameraSurfaceQueries.Count > 0)
+        {
+            PendingSurfaceQuery query = pendingCameraSurfaceQueries.Dequeue();
+            InvokeInvalidSurfaceQuery(query.callback, query.positions != null ? query.positions.Length : 0);
+        }
+        while (pendingSurfaceQueries.Count > 0)
+        {
+            PendingSurfaceQuery query = pendingSurfaceQueries.Dequeue();
+            InvokeInvalidSurfaceQuery(query.callback, query.positions != null ? query.positions.Length : 0);
+        }
+
+        if (surfaceQuerySlots == null)
+            return;
+
+        for (int i = 0; i < surfaceQuerySlots.Length; i++)
+        {
+            SurfaceQuerySlot slot = surfaceQuerySlots[i];
+            if (slot == null)
+                continue;
+
+            if (slot.inFlight)
+                slot.disposeWhenComplete = true;
+            else
+                slot.Dispose();
+        }
+        surfaceQuerySlots = null;
+    }
+
+    private void CaptureAndExpandRendererBounds()
+    {
+        if (meshRenderer == null)
+            meshRenderer = GetComponent<MeshRenderer>();
+        if (meshFilter == null)
+            meshFilter = GetComponent<MeshFilter>();
+        if (meshRenderer == null)
+            return;
+
+        if (!hasOriginalRendererLocalBounds)
+        {
+            originalRendererLocalBounds = meshRenderer.localBounds;
+            hasOriginalRendererLocalBounds = true;
+        }
+
+        Bounds expanded = originalRendererLocalBounds;
+        Vector3 scale = transform.lossyScale;
+        lastExpandedBoundsScale = scale;
+        hasExpandedBoundsScale = true;
+        float padX = rendererBoundsPaddingMeters / Mathf.Max(Mathf.Abs(scale.x), 0.0001f);
+        float padY = rendererBoundsPaddingMeters / Mathf.Max(Mathf.Abs(scale.y), 0.0001f);
+        float padZ = rendererBoundsPaddingMeters / Mathf.Max(Mathf.Abs(scale.z), 0.0001f);
+        expanded.Expand(new Vector3(padX * 2f, padY * 2f, padZ * 2f));
+        meshRenderer.localBounds = expanded;
+    }
+
+    private void RestoreRendererBounds()
+    {
+        if (meshRenderer != null && hasOriginalRendererLocalBounds)
+            meshRenderer.localBounds = originalRendererLocalBounds;
+        hasOriginalRendererLocalBounds = false;
+        hasExpandedBoundsScale = false;
+        boundsSourceMesh = null;
+    }
+
+    private void UpdateRendererBoundsIfScaleChanged()
+    {
+        if (meshRenderer == null)
+            return;
+        if (meshFilter == null)
+            meshFilter = GetComponent<MeshFilter>();
+
+        Mesh currentMesh = meshFilter != null ? meshFilter.sharedMesh : null;
+        if (currentMesh != boundsSourceMesh)
+        {
+            // A runtime mesh replacement changes the source bounds. Capture the
+            // new mesh bounds before applying the GPU displacement padding.
+            boundsSourceMesh = currentMesh;
+            originalRendererLocalBounds = currentMesh != null
+                ? currentMesh.bounds
+                : meshRenderer.localBounds;
+            meshRenderer.localBounds = originalRendererLocalBounds;
+            hasOriginalRendererLocalBounds = true;
+            hasExpandedBoundsScale = false;
+        }
+
+        if (!hasOriginalRendererLocalBounds)
+        {
+            originalRendererLocalBounds = meshRenderer.localBounds;
+            hasOriginalRendererLocalBounds = true;
+            hasExpandedBoundsScale = false;
+        }
+
+        Vector3 currentScale = transform.lossyScale;
+        if (!hasExpandedBoundsScale ||
+            (currentScale - lastExpandedBoundsScale).sqrMagnitude > 0.000001f)
+            CaptureAndExpandRendererBounds();
     }
 
     private bool InitializeResources()
@@ -187,6 +976,8 @@ public sealed class SpectralOceanFFT : MonoBehaviour
 
         if (meshRenderer == null)
             meshRenderer = GetComponent<MeshRenderer>();
+        if (!hasOriginalRendererLocalBounds)
+            CaptureAndExpandRendererBounds();
 
         if (propertyBlock == null)
             propertyBlock = new MaterialPropertyBlock();
@@ -199,6 +990,7 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         kernelFftX = oceanCompute.FindKernel("FFT_X");
         kernelFftY = oceanCompute.FindKernel("FFT_Y");
         kernelBuildMaps = oceanCompute.FindKernel("BuildMaps");
+        kernelSampleSurface = oceanCompute.FindKernel("SampleSurface");
 
         for (int i = 0; i < cascades.Length; i++)
         {
@@ -223,9 +1015,14 @@ public sealed class SpectralOceanFFT : MonoBehaviour
             }
         }
 
+        InitializeSurfaceQuerySlots();
+
         resourcesReady = true;
         rebuildRequested = false;
         spectrumDirty = true;
+        allocatedResolution = resolution;
+        allocatedCompute = oceanCompute;
+        allocatedCascadeCount = cascades.Length;
         ApplyMaterialTextures();
         return true;
     }
@@ -273,9 +1070,10 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         oceanCompute.SetFloat("_SmallWaveDamping", smallWaveDamping);
         oceanCompute.SetFloat("_BackwindDamping", backwindDamping);
         oceanCompute.SetFloat("_TimeSeconds", Time.time);
-        oceanCompute.SetFloat("_Choppiness", choppiness);
         oceanCompute.SetFloat("_FoamBias", foamBias);
-        oceanCompute.SetFloat("_FoamGain", foamGain);
+        oceanCompute.SetFloat("_FoamGain", foamGain * GetStormFoamMultiplier());
+        oceanCompute.SetFloat("_SeaStateStrength", currentSeaStateStrength);
+        oceanCompute.SetFloat("_Choppiness", choppiness * GetStormChoppinessMultiplier());
     }
 
     private void SetCascadeParameters(CascadeSettings c, int cascadeIndex)
@@ -356,11 +1154,141 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         propertyBlock.SetFloat(HalfTexelId, 0.5f / resolution);
         propertyBlock.SetFloat(OceanEnabledId, 1f);
         meshRenderer.SetPropertyBlock(propertyBlock);
+        ApplyShoreParameters();
+    }
+
+    private void ApplyShoreParameters()
+    {
+        if (meshRenderer == null)
+            return;
+
+        if (propertyBlock == null)
+            propertyBlock = new MaterialPropertyBlock();
+
+        meshRenderer.GetPropertyBlock(propertyBlock);
+        propertyBlock.SetTexture(ShoreDistanceId,
+            shoreDistanceTexture != null ? shoreDistanceTexture : Texture2D.whiteTexture);
+        propertyBlock.SetTexture(ShoreDepthModifierId,
+            shoreDepthModifierTexture != null ? shoreDepthModifierTexture : Texture2D.whiteTexture);
+        propertyBlock.SetFloat(ShoreMaxDepthMetersId, shoreMaxDepthMeters);
+        propertyBlock.SetVector(ShoreMapOriginId,
+            new Vector4(shoreMapOriginXZ.x, shoreMapOriginXZ.y, 0f, 0f));
+        propertyBlock.SetVector(ShoreMapSizeId,
+            new Vector4(Mathf.Max(1f, shoreMapSizeXZ.x), Mathf.Max(1f, shoreMapSizeXZ.y), 0f, 0f));
+        propertyBlock.SetFloat(ShoreMapFlipVId, shoreMapFlipV ? 1f : 0f);
+
+        // The baker stores distance / Coastal Fade Distance in the red channel.
+        // Convert it back to world metres here so all fade/break/foam controls
+        // have predictable units and no longer depend on arbitrary 0..1 sliders.
+        propertyBlock.SetFloat(ShoreDistanceRangeMetersId, Mathf.Max(1f, shoreDistanceRangeMeters));
+        propertyBlock.SetFloat(ShoreFadeStartMetersId, shoreFadeStartMeters);
+        propertyBlock.SetFloat(ShoreFadeEndMetersId, Mathf.Max(shoreFadeStartMeters + 0.1f, shoreFadeEndMeters));
+        propertyBlock.SetFloat(NearShoreWaveStrengthId, nearShoreWaveStrength);
+        propertyBlock.SetFloat(ShoreEdgeFadeMetersId, shoreEdgeFadeMeters);
+
+        propertyBlock.SetFloat(ShoreBreakStartMetersId, shoreBreakStartMeters);
+        propertyBlock.SetFloat(ShoreBreakPeakMetersId, Mathf.Max(shoreBreakStartMeters + 0.1f, shoreBreakPeakMeters));
+        propertyBlock.SetFloat(ShoreBreakEndMetersId, Mathf.Max(shoreBreakPeakMeters + 0.1f, shoreBreakEndMeters));
+        propertyBlock.SetFloat(ShoreDepthPerMeterId, shoreDepthPerMeter);
+        propertyBlock.SetFloat(BreakerHeightToDepthId, breakerHeightToDepth);
+        propertyBlock.SetFloat(ShoreShoalingScaleId, shoreShoalingScale);
+        propertyBlock.SetFloat(ShoreHorizontalFloorId, shoreHorizontalFloor);
+        propertyBlock.SetFloat(ShoreHorizontalDriveId, shoreHorizontalDrive);
+        propertyBlock.SetFloat(ShoreChoppinessId, shoreChoppiness);
+        propertyBlock.SetFloat(ShoreNormalBoostId, shoreNormalBoost);
+
+        propertyBlock.SetFloat(ShoreFoamWidthMetersId, shoreFoamWidthMeters);
+        propertyBlock.SetFloat(ShoreFoamEdgeFeatherMetersId, shoreFoamEdgeFeatherMeters);
+        propertyBlock.SetFloat(ShoreFoamBlackThresholdId, shoreFoamBlackThreshold);
+        propertyBlock.SetFloat(ShoreFoamBlackSoftnessId, shoreFoamBlackSoftness);
+        propertyBlock.SetFloat(ShoreFoamEdgeNoiseMetersId, shoreFoamEdgeNoiseMeters);
+        propertyBlock.SetFloat(OpenOceanFoamMultiplierId, openOceanFoamMultiplier);
+        propertyBlock.SetFloat(ShoreFoamGainId, shoreFoamGain);
+        propertyBlock.SetFloat(ShoreCrestJacobianThresholdId, shoreCrestJacobianThreshold);
+        propertyBlock.SetFloat(ShoreCrestCompressionGainId, shoreCrestCompressionGain);
+        propertyBlock.SetFloat(ShoreCrestHeightGainId, shoreCrestHeightGain);
+        propertyBlock.SetFloat(ShoreWashSpeedId, shoreWashSpeed);
+        propertyBlock.SetFloat(ShoreWashSpacingMetersId, shoreWashSpacingMeters);
+        propertyBlock.SetFloat(ShoreWashPulseStrengthId, shoreWashPulseStrength);
+        propertyBlock.SetFloat(ShoreDebugViewId, (float)shoreDebugView);
+
+        meshRenderer.SetPropertyBlock(propertyBlock);
+    }
+
+    /// <summary>
+    /// Sets the target sea-state strength. 0 = calm, 1 = authored baseline,
+    /// 2 = severe storm, 3 = extreme. Transition is smoothed over time.
+    /// </summary>
+    public void SetSeaState(float strength)
+    {
+        SetSeaState(strength, defaultSeaStateTransition);
+    }
+
+    public void SetSeaState(float strength, float transitionSeconds)
+    {
+        targetSeaStateStrength = Mathf.Clamp(strength, 0f, 3f);
+        seaStateSmoothTime = Mathf.Max(0.01f, transitionSeconds);
+
+        if (transitionSeconds <= 0f)
+        {
+            currentSeaStateStrength = targetSeaStateStrength;
+            seaStateVelocity = 0f;
+        }
+    }
+
+    // Parameterless methods can be connected directly to Unity UI Buttons.
+    public void SetCalmSea() => SetSeaState(0.35f);
+    public void SetNormalSea() => SetSeaState(1.0f);
+    public void SetRoughSea() => SetSeaState(1.6f, 5f);
+    public void SetStormSea() => SetSeaState(2.2f, 8f);
+    public void SetExtremeStorm() => SetSeaState(2.8f, 10f);
+
+    private void UpdateSeaState(float deltaTime)
+    {
+        if (deltaTime <= 0f)
+            return;
+
+        currentSeaStateStrength = Mathf.SmoothDamp(
+            currentSeaStateStrength,
+            targetSeaStateStrength,
+            ref seaStateVelocity,
+            seaStateSmoothTime,
+            Mathf.Infinity,
+            deltaTime);
+    }
+
+    private float GetStormBlend()
+    {
+        return Mathf.InverseLerp(1f, 2.8f, currentSeaStateStrength);
+    }
+
+    private float GetStormChoppinessMultiplier()
+    {
+        return Mathf.Lerp(1f, stormChoppinessMultiplier, GetStormBlend());
+    }
+
+    private float GetStormFoamMultiplier()
+    {
+        return Mathf.Lerp(1f, stormFoamMultiplier, GetStormBlend());
+    }
+
+    private void HandleDebugHotkeys()
+    {
+        if (!enableDebugHotkeys)
+            return;
+
+        // Uses Unity's legacy Input Manager. Public preset methods are preferred
+        // when driving sea state from the Input System or gameplay code.
+        if (Input.GetKeyDown(KeyCode.F5)) SetCalmSea();
+        if (Input.GetKeyDown(KeyCode.F6)) SetNormalSea();
+        if (Input.GetKeyDown(KeyCode.F7)) SetRoughSea();
+        if (Input.GetKeyDown(KeyCode.F8)) SetStormSea();
     }
 
     private void ReleaseResources()
     {
         resourcesReady = false;
+        ReleaseSurfaceQuerySlots();
 
         if (cascades != null)
         {
