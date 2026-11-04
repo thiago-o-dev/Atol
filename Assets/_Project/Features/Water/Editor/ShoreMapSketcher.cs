@@ -34,7 +34,7 @@ public sealed class ShoreMapSketcher : EditorWindow
     private Color32[] pixels;
     private bool isPainting;
     private byte activePaintValue;
-    private bool hasUnsavedChanges;
+    private bool hasPendingChanges;
 
     [MenuItem("Tools/Water/Sketch Shore Map")]
     public static void OpenWindow()
@@ -94,7 +94,7 @@ public sealed class ShoreMapSketcher : EditorWindow
             new[] { 256, 512, 1024, 2048 });
         if (nextResolution != resolution)
         {
-            if (hasUnsavedChanges && !EditorUtility.DisplayDialog(
+            if (hasPendingChanges && !EditorUtility.DisplayDialog(
                     "Resize Shore Map?",
                     "Resizing clears the current sketch. Continue?",
                     "Resize", "Cancel"))
@@ -105,7 +105,7 @@ public sealed class ShoreMapSketcher : EditorWindow
             {
                 resolution = nextResolution;
                 CreateWorkingTexture(fillWhite: true);
-                hasUnsavedChanges = true;
+                hasPendingChanges = true;
             }
         }
 
@@ -149,7 +149,7 @@ public sealed class ShoreMapSketcher : EditorWindow
                 Fill(0);
             if (GUILayout.Button("Clear / New Map"))
             {
-                if (!hasUnsavedChanges || EditorUtility.DisplayDialog(
+                if (!hasPendingChanges || EditorUtility.DisplayDialog(
                         "Clear Shore Map?", "This will erase the current sketch.", "Clear", "Cancel"))
                     Fill(255);
             }
@@ -201,7 +201,7 @@ public sealed class ShoreMapSketcher : EditorWindow
             GUI.enabled = true;
         }
 
-        if (hasUnsavedChanges)
+        if (hasPendingChanges)
             EditorGUILayout.HelpBox("Unsaved sketch changes.", MessageType.Warning);
     }
 
@@ -306,7 +306,7 @@ public sealed class ShoreMapSketcher : EditorWindow
 
         workingTexture.SetPixels32(pixels);
         workingTexture.Apply(false, false);
-        hasUnsavedChanges = true;
+        hasPendingChanges = true;
         Repaint();
     }
 
@@ -354,7 +354,7 @@ public sealed class ShoreMapSketcher : EditorWindow
 
             workingTexture.SetPixels32(pixels);
             workingTexture.Apply(false, false);
-            hasUnsavedChanges = false;
+            hasPendingChanges = false;
             Repaint();
         }
         catch (Exception ex)
@@ -372,7 +372,7 @@ public sealed class ShoreMapSketcher : EditorWindow
             pixels[i] = color;
         workingTexture.SetPixels32(pixels);
         workingTexture.Apply(false, false);
-        hasUnsavedChanges = true;
+        hasPendingChanges = true;
     }
 
     private void EnsureWorkingTexture()
@@ -471,7 +471,7 @@ public sealed class ShoreMapSketcher : EditorWindow
             EditorPrefs.SetFloat(PrefSizeZ, worldSizeXZ.y);
             EditorPrefs.SetFloat(PrefLandThreshold, landThreshold);
 
-            hasUnsavedChanges = false;
+            hasPendingChanges = false;
             EditorGUIUtility.PingObject(saved);
             Selection.activeObject = saved;
             Debug.Log(

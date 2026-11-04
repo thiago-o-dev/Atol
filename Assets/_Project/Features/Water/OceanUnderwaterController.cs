@@ -127,7 +127,7 @@ public sealed class OceanUnderwaterController : MonoBehaviour
         if (outputCamera == null)
             outputCamera = GetComponent<Camera>();
         if (ocean == null)
-            ocean = FindObjectOfType<SpectralOceanFFT>();
+            ocean = UnityEngine.Object.FindAnyObjectByType<SpectralOceanFFT>();
 
         hasSurfaceSample = false;
         hasInitializedFromReliableSurface = false;
