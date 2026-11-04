@@ -136,6 +136,7 @@ Shader "Custom/Wave"
                 float _OceanHalfTexel;
                 float _OceanEnabled;
 
+
                 float4 _ShoreMapOriginXZ;
                 float4 _ShoreMapSizeXZ;
                 float _ShoreMapFlipV;
@@ -727,6 +728,7 @@ Shader "Custom/Wave"
                 }
 
                 waterColor = lerp(waterColor, _FoamColor.rgb, foam);
+
                 return half4(waterColor, 1.0);
             }
 

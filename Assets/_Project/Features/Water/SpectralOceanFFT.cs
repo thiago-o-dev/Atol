@@ -121,12 +121,30 @@ public sealed class SpectralOceanFFT : MonoBehaviour
     [SerializeField] private Vector2 windDirectionXZ = new Vector2(1f, 0.15f);
     [Tooltip("Wind speed in metres per second. Higher values move spectral energy toward longer, stronger waves.")]
     [SerializeField, Min(0.1f)] private float windSpeed = 26f;
+    [Tooltip("Live wind intensity from 0 (light air) to 1 (strong wind). This scales wave displacement, choppiness, foam and wind-particle motion without rebuilding the FFT textures.")]
+    [InspectorName("Wind Strength"), SerializeField, Range(0f, 1f)] private float windStrength = 0.65f;
     [Tooltip("Phillips spectrum energy multiplier. Increase this for a more violent sea.")]
     [SerializeField, Min(0f)] private float phillipsAmplitude = 0.0008f;
     [Tooltip("Suppresses very short waves to keep the spectrum well behaved.")]
     [SerializeField, Min(0f)] private float smallWaveDamping = 0.3f;
     [SerializeField, Range(0f, 1f)] private float backwindDamping = 0.07f;
     [SerializeField] private int randomSeed = 12345;
+
+    [Header("Wind Visual Effects")]
+    [Tooltip("Master switch for the short-lived, world-space wind particles around the player.")]
+    [InspectorName("Show Wind Particles"), SerializeField] private bool showWindStreaks = true;
+    [Tooltip("Controls how many short-lived world-space wind wisps are emitted. Use about 0.2-0.4 on land and 1.8-2.4 while sailing.")]
+    [InspectorName("Wind Particle Density"), SerializeField, Range(0f, 3f)] private float windStreakFrequency = 1.2f;
+    [Tooltip("Multiplier for particle travel speed in the wind direction.")]
+    [InspectorName("Particle Flow Speed"), SerializeField, Range(0.1f, 3f)] private float windStreakSpeed = 1.0f;
+    [Tooltip("Controls the stretched length of each wind wisp.")]
+    [InspectorName("Particle Length"), SerializeField, Range(0.2f, 0.95f)] private float windStreakLength = 0.68f;
+    [Tooltip("Approximate particle width in world metres.")]
+    [InspectorName("Particle Width (m)"), SerializeField, Range(0.01f, 0.25f)] private float windStreakWidthMeters = 0.055f;
+    [Tooltip("Maximum particle opacity. Wind strength also affects the spawn rate and speed.")]
+    [InspectorName("Particle Opacity"), SerializeField, Range(0f, 1f)] private float windStreakOpacity = 0.72f;
+    [Tooltip("Wind wisps are white by default; this can be used for a subtle warm or cool tint.")]
+    [InspectorName("Particle Tint"), SerializeField] private Color windStreakColor = Color.white;
 
     [Header("Surface Shape")]
     [Tooltip("Horizontal displacement multiplier. Higher values create sharper, more curled crests.")]
@@ -322,6 +340,8 @@ public sealed class SpectralOceanFFT : MonoBehaviour
     private bool resourcesReady;
     private bool rebuildRequested = true;
     private bool spectrumDirty = true;
+    private int spectrumSettingsHash;
+    private bool hasSpectrumSettingsHash;
     private int allocatedResolution;
     private ComputeShader allocatedCompute;
     private int allocatedCascadeCount;
@@ -331,11 +351,36 @@ public sealed class SpectralOceanFFT : MonoBehaviour
     private float seaStateVelocity;
     private float seaStateSmoothTime = 3f;
 
+    private Vector2 currentWindDirectionXZ = Vector2.right;
+    private Vector2 targetWindDirectionXZ = Vector2.right;
+    private float currentWindDirectionAngle;
+    private float targetWindDirectionAngle;
+    private float windDirectionAngleVelocity;
+    private float currentWindStrength = 0.65f;
+    private float targetWindStrength = 0.65f;
+    private float windStrengthVelocity;
+    private float windDirectionSmoothTime = 1.0f;
+    private float windStrengthSmoothTime = 1.0f;
+    private float currentWindStreakFrequency = 1.2f;
+    private float targetWindStreakFrequency = 1.2f;
+    private float windStreakFrequencyVelocity;
+    private float windStreakFrequencySmoothTime = 0.35f;
+
     /// <summary>Base water-plane height in world space. The FFT shader adds displacement around this level.</summary>
     public float WaterLevelY => transform.position.y;
 
     public float CurrentSeaStateStrength => currentSeaStateStrength;
     public float TargetSeaStateStrength => targetSeaStateStrength;
+    public Vector2 CurrentWindDirectionXZ => currentWindDirectionXZ;
+    public float CurrentWindStrength => currentWindStrength;
+    public float TargetWindStrength => targetWindStrength;
+    public bool WindStreaksEnabled => showWindStreaks;
+    public float WindStreakFrequency => currentWindStreakFrequency;
+    public float WindParticleSpeedMultiplier => windStreakSpeed;
+    public float WindParticleLength => windStreakLength;
+    public float WindParticleWidthMeters => windStreakWidthMeters;
+    public float WindParticleOpacity => windStreakOpacity;
+    public Color WindParticleTint => windStreakColor;
     public bool CanSampleSurface => resourcesReady &&
         surfaceQuerySlots != null && SystemInfo.supportsAsyncGPUReadback;
 
@@ -448,6 +493,24 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         targetSeaStateStrength = currentSeaStateStrength;
         seaStateVelocity = 0f;
         seaStateSmoothTime = Mathf.Max(0.01f, defaultSeaStateTransition);
+
+        windDirectionXZ = NormalizeWindDirection(windDirectionXZ);
+        currentWindDirectionXZ = windDirectionXZ;
+        targetWindDirectionXZ = windDirectionXZ;
+        currentWindDirectionAngle = Mathf.Atan2(windDirectionXZ.y, windDirectionXZ.x) * Mathf.Rad2Deg;
+        targetWindDirectionAngle = currentWindDirectionAngle;
+        windDirectionAngleVelocity = 0f;
+        currentWindStrength = Mathf.Clamp01(windStrength);
+        targetWindStrength = currentWindStrength;
+        windStrengthVelocity = 0f;
+        windDirectionSmoothTime = 1.0f;
+        windStrengthSmoothTime = 1.0f;
+        currentWindStreakFrequency = Mathf.Clamp(windStreakFrequency, 0f, 3f);
+        targetWindStreakFrequency = currentWindStreakFrequency;
+        windStreakFrequencyVelocity = 0f;
+        windStreakFrequencySmoothTime = 0.35f;
+        spectrumSettingsHash = ComputeSpectrumSettingsHash();
+        hasSpectrumSettingsHash = true;
     }
 
     private void OnDisable()
@@ -461,6 +524,28 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         resolution = Mathf.Clamp(Mathf.ClosestPowerOfTwo(Mathf.Clamp(resolution, 64, 512)), 64, 512);
         rendererBoundsPaddingMeters = Mathf.Max(1f, rendererBoundsPaddingMeters);
         windSpeed = Mathf.Max(0.1f, windSpeed);
+        windDirectionXZ = NormalizeWindDirection(windDirectionXZ);
+        windStrength = Mathf.Clamp01(windStrength);
+        windStreakFrequency = Mathf.Clamp(windStreakFrequency, 0f, 3f);
+        if (Application.isPlaying)
+        {
+            targetWindStreakFrequency = windStreakFrequency;
+        }
+        else
+        {
+            currentWindStreakFrequency = windStreakFrequency;
+            targetWindStreakFrequency = windStreakFrequency;
+        }
+        windStreakSpeed = Mathf.Clamp(windStreakSpeed, 0.1f, 3f);
+        windStreakLength = Mathf.Clamp(windStreakLength, 0.2f, 0.95f);
+        windStreakWidthMeters = Mathf.Clamp(windStreakWidthMeters, 0.01f, 0.25f);
+        windStreakOpacity = Mathf.Clamp01(windStreakOpacity);
+        if (Application.isPlaying)
+        {
+            targetWindDirectionXZ = windDirectionXZ;
+            targetWindDirectionAngle = Mathf.Atan2(windDirectionXZ.y, windDirectionXZ.x) * Mathf.Rad2Deg;
+            targetWindStrength = windStrength;
+        }
         phillipsAmplitude = Mathf.Max(0f, phillipsAmplitude);
         smallWaveDamping = Mathf.Max(0f, smallWaveDamping);
         foamGain = Mathf.Max(0f, foamGain);
@@ -529,9 +614,46 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         if (resourceLayoutChanged)
             rebuildRequested = true;
 
-        // Wind and spectrum values are cheap to regenerate once through InitSpectrum;
-        // this does not recreate the FFT textures.
-        spectrumDirty = true;
+        // Only H0/spectrum-defining settings regenerate the random spectrum.
+        // Shore, wind-streak density, runtime wind direction and wind strength are
+        // live uniforms and must not trigger unnecessary spectrum dispatches.
+        int currentSpectrumHash = ComputeSpectrumSettingsHash();
+        if (!hasSpectrumSettingsHash || currentSpectrumHash != spectrumSettingsHash)
+        {
+            spectrumSettingsHash = currentSpectrumHash;
+            hasSpectrumSettingsHash = true;
+            spectrumDirty = true;
+        }
+    }
+
+    private int ComputeSpectrumSettingsHash()
+    {
+        unchecked
+        {
+            int hash = 17;
+            hash = hash * 31 + windSpeed.GetHashCode();
+            hash = hash * 31 + phillipsAmplitude.GetHashCode();
+            hash = hash * 31 + smallWaveDamping.GetHashCode();
+            hash = hash * 31 + randomSeed.GetHashCode();
+            if (cascades != null)
+            {
+                hash = hash * 31 + cascades.Length;
+                for (int i = 0; i < cascades.Length; i++)
+                {
+                    CascadeSettings c = cascades[i];
+                    if (c == null)
+                    {
+                        hash = hash * 31;
+                        continue;
+                    }
+                    hash = hash * 31 + c.patchLength.GetHashCode();
+                    hash = hash * 31 + c.minWavelength.GetHashCode();
+                    hash = hash * 31 + c.maxWavelength.GetHashCode();
+                    hash = hash * 31 + c.amplitudeScale.GetHashCode();
+                }
+            }
+            return hash;
+        }
     }
 
     private void Update()
@@ -539,6 +661,7 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         UpdateRendererBoundsIfScaleChanged();
         HandleDebugHotkeys();
         UpdateSeaState(Time.deltaTime);
+        UpdateWind(Time.deltaTime);
 
         if (rebuildRequested || !resourcesReady)
         {
@@ -1057,23 +1180,34 @@ public sealed class SpectralOceanFFT : MonoBehaviour
 
     private void SetCommonParameters()
     {
-        Vector2 wind = windDirectionXZ.sqrMagnitude > 0.000001f
-            ? windDirectionXZ.normalized
+        Vector2 wind = currentWindDirectionXZ.sqrMagnitude > 0.000001f
+            ? currentWindDirectionXZ.normalized
             : Vector2.right;
+
+        // Direction is evaluated in EvolveSpectrum every frame, so runtime wind
+        // shifts rotate the spectrum without regenerating random H0 textures.
+        // Strength is applied after the FFT and remains inexpensive to animate.
+        float normalizedWind = Mathf.Clamp01(currentWindStrength);
+        float windWaveScale = Mathf.Lerp(0.12f, 1.75f,
+            Mathf.Pow(normalizedWind, 1.25f));
+        float windChopScale = Mathf.Lerp(0.65f, 1.35f, normalizedWind);
+        float windFoamScale = Mathf.Lerp(0.55f, 1.5f, normalizedWind);
 
         oceanCompute.SetInt("_Resolution", resolution);
         oceanCompute.SetInt("_Log2Resolution", log2Resolution);
         oceanCompute.SetInt("_Seed", randomSeed);
         oceanCompute.SetVector("_WindDirection", new Vector4(wind.x, wind.y, 0f, 0f));
         oceanCompute.SetFloat("_WindSpeed", windSpeed);
+        oceanCompute.SetFloat("_WindStrength", normalizedWind);
+        oceanCompute.SetFloat("_WindWaveStrength", windWaveScale);
         oceanCompute.SetFloat("_PhillipsAmplitude", phillipsAmplitude);
         oceanCompute.SetFloat("_SmallWaveDamping", smallWaveDamping);
         oceanCompute.SetFloat("_BackwindDamping", backwindDamping);
         oceanCompute.SetFloat("_TimeSeconds", Time.time);
         oceanCompute.SetFloat("_FoamBias", foamBias);
-        oceanCompute.SetFloat("_FoamGain", foamGain * GetStormFoamMultiplier());
+        oceanCompute.SetFloat("_FoamGain", foamGain * GetStormFoamMultiplier() * windFoamScale);
         oceanCompute.SetFloat("_SeaStateStrength", currentSeaStateStrength);
-        oceanCompute.SetFloat("_Choppiness", choppiness * GetStormChoppinessMultiplier());
+        oceanCompute.SetFloat("_Choppiness", choppiness * GetStormChoppinessMultiplier() * windChopScale);
     }
 
     private void SetCascadeParameters(CascadeSettings c, int cascadeIndex)
@@ -1213,6 +1347,122 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         propertyBlock.SetFloat(ShoreDebugViewId, (float)shoreDebugView);
 
         meshRenderer.SetPropertyBlock(propertyBlock);
+    }
+
+    private static Vector2 NormalizeWindDirection(Vector2 direction)
+    {
+        return direction.sqrMagnitude > 0.000001f ? direction.normalized : Vector2.right;
+    }
+
+    private void UpdateWind(float deltaTime)
+    {
+        if (deltaTime <= 0f)
+            return;
+
+        // Smooth the heading as an angle so a 180-degree wind reversal never
+        // passes through a zero-length direction vector.
+        currentWindDirectionAngle = Mathf.SmoothDampAngle(
+            currentWindDirectionAngle,
+            targetWindDirectionAngle,
+            ref windDirectionAngleVelocity,
+            Mathf.Max(0.01f, windDirectionSmoothTime),
+            Mathf.Infinity,
+            deltaTime);
+        float angleRadians = currentWindDirectionAngle * Mathf.Deg2Rad;
+        currentWindDirectionXZ = new Vector2(Mathf.Cos(angleRadians), Mathf.Sin(angleRadians));
+
+        currentWindStrength = Mathf.SmoothDamp(
+            currentWindStrength,
+            targetWindStrength,
+            ref windStrengthVelocity,
+            Mathf.Max(0.01f, windStrengthSmoothTime),
+            Mathf.Infinity,
+            deltaTime);
+        currentWindStrength = Mathf.Clamp01(currentWindStrength);
+
+        currentWindStreakFrequency = Mathf.SmoothDamp(
+            currentWindStreakFrequency,
+            targetWindStreakFrequency,
+            ref windStreakFrequencyVelocity,
+            Mathf.Max(0.01f, windStreakFrequencySmoothTime),
+            Mathf.Infinity,
+            deltaTime);
+        currentWindStreakFrequency = Mathf.Clamp(currentWindStreakFrequency, 0f, 3f);
+    }
+
+    /// <summary>
+    /// Changes the direction the wind blows toward and its normalized strength.
+    /// Strength ranges from 0 (light air) to 1 (strong wind). These controls affect
+    /// FFT wave amplitude, choppiness, foam and animated surface streaks.
+    /// </summary>
+    public void SetWind(Vector2 directionXZ, float strength, float transitionSeconds = 1f)
+    {
+        SetWindDirection(directionXZ, transitionSeconds);
+        SetWindStrength(strength, transitionSeconds);
+    }
+
+    public void SetWindDirection(Vector2 directionXZ, float transitionSeconds = 1f)
+    {
+        if (directionXZ.sqrMagnitude <= 0.000001f)
+            return;
+
+        windDirectionXZ = directionXZ.normalized;
+        targetWindDirectionXZ = windDirectionXZ;
+        targetWindDirectionAngle = Mathf.Atan2(
+            targetWindDirectionXZ.y, targetWindDirectionXZ.x) * Mathf.Rad2Deg;
+        windDirectionSmoothTime = Mathf.Max(0.01f, transitionSeconds);
+        if (transitionSeconds <= 0f)
+        {
+            currentWindDirectionAngle = targetWindDirectionAngle;
+            windDirectionAngleVelocity = 0f;
+            currentWindDirectionXZ = targetWindDirectionXZ;
+        }
+    }
+
+    public void SetWindStrength(float strength, float transitionSeconds = 1f)
+    {
+        windStrength = Mathf.Clamp01(strength);
+        targetWindStrength = windStrength;
+        windStrengthSmoothTime = Mathf.Max(0.01f, transitionSeconds);
+        if (transitionSeconds <= 0f)
+        {
+            currentWindStrength = targetWindStrength;
+            windStrengthVelocity = 0f;
+        }
+    }
+
+    /// <summary>Master on/off toggle for world-space wind particles.</summary>
+    public void SetWindStreaksEnabled(bool enabled)
+    {
+        showWindStreaks = enabled;
+        ApplyShoreParameters();
+    }
+
+    /// <summary>Controls world wind-particle density and spawn frequency (0..3).</summary>
+    public void SetWindStreakFrequency(float frequency, float transitionSeconds = 0.35f)
+    {
+        windStreakFrequency = Mathf.Clamp(frequency, 0f, 3f);
+        targetWindStreakFrequency = windStreakFrequency;
+        windStreakFrequencySmoothTime = Mathf.Max(0.01f, transitionSeconds);
+        if (transitionSeconds <= 0f)
+        {
+            currentWindStreakFrequency = targetWindStreakFrequency;
+            windStreakFrequencyVelocity = 0f;
+        }
+        ApplyShoreParameters();
+    }
+
+    /// <summary>
+    /// Convenience hook for player-state logic: keep a sparse wind cue on land and
+    /// increase particle density while sailing. Wind strength also controls particle motion.
+    /// </summary>
+    public void SetSailingWindEffects(bool isSailing)
+    {
+        // Keep the effect faintly visible on land rather than disabling it entirely;
+        // wind strength still modulates how much of that low-density signal is visible.
+        SetWindStreakFrequency(isSailing ? 2.2f : 0.28f, 0.55f);
+        if (isSailing)
+            SetWindStreaksEnabled(true);
     }
 
     /// <summary>

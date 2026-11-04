@@ -83,6 +83,8 @@ int _Seed;
 float _PatchLength;
 float2 _WindDirection;
 float _WindSpeed;
+float _WindStrength;
+float _WindWaveStrength;
 float _PhillipsAmplitude;
 float _SmallWaveDamping;
 float _BackwindDamping;
@@ -183,25 +185,12 @@ void InitSpectrum(uint3 id : SV_DispatchThreadID)
     }
 
     float kMagnitude = sqrt(k2);
-    float2 kDirection = kVector / kMagnitude;
 
-    float2 wind = _WindDirection;
-    float windLengthSq = dot(wind, wind);
-    wind = (windLengthSq > 1e-8)
-        ? wind * rsqrt(windLengthSq)
-        : float2(1.0, 0.0);
-
-    // Phillips spectrum: wind-aligned energy, long-wave rolloff and
-    // high-frequency damping.
+    // Base Phillips spectrum. Directional weighting is applied in EvolveSpectrum
+    // so runtime wind direction changes can rotate the wave field without
+    // reallocating or regenerating the initial random spectrum.
     float windLength = (_WindSpeed * _WindSpeed) / WATER_GRAVITY;
     float longWave = exp(-1.0 / max(k2 * windLength * windLength, 1e-8));
-
-    float alignment = dot(kDirection, wind);
-    float forwardEnergy = max(alignment, 0.0);
-    float backwardEnergy = max(-alignment, 0.0);
-    float directionalEnergy = forwardEnergy * forwardEnergy
-                            + _BackwindDamping * backwardEnergy * backwardEnergy;
-
     float shortWave = exp(-k2 * _SmallWaveDamping * _SmallWaveDamping);
 
     float wavelength = WATER_TWO_PI / kMagnitude;
@@ -213,7 +202,6 @@ void InitSpectrum(uint3 id : SV_DispatchThreadID)
 
     float spectrum = _PhillipsAmplitude
                    * longWave
-                   * directionalEnergy
                    * shortWave
                    * bandWeight
                    / max(k2 * k2, 1e-12);
@@ -267,8 +255,35 @@ void EvolveSpectrum(uint3 id : SV_DispatchThreadID)
         return;
     }
 
-    float2 h0 = _H0Read.Load(int3(p, 0));
-    float2 h0Negative = _H0Read.Load(int3(negativeP, 0));
+    float2 wind = _WindDirection;
+    float windLengthSq = dot(wind, wind);
+    wind = (windLengthSq > 1e-8)
+        ? wind * rsqrt(windLengthSq)
+        : float2(1.0, 0.0);
+
+    // Apply the Phillips directional lobe during evolution. Evaluate +k and -k
+    // independently because their upwind/downwind energy can differ. This makes
+    // wind direction a live control instead of requiring a spectrum rebuild.
+    float2 kDirection = kVector / kMagnitude;
+    float alignment = dot(kDirection, wind);
+    float forwardEnergy = max(alignment, 0.0);
+    float backwardEnergy = max(-alignment, 0.0);
+    float directionalEnergy = forwardEnergy * forwardEnergy
+                            + _BackwindDamping * backwardEnergy * backwardEnergy;
+    float reverseDirectionalEnergy = backwardEnergy * backwardEnergy
+                                   + _BackwindDamping * forwardEnergy * forwardEnergy;
+
+    // Light air leaves a broader, more isotropic residual swell. As wind rises,
+    // energy increasingly concentrates into the downwind lobe. The separate
+    // _WindWaveStrength multiplier in ReadSurface also scales total amplitude.
+    float directionalBlend = pow(saturate(_WindStrength), 0.8);
+    directionalEnergy = lerp(0.18, directionalEnergy, directionalBlend);
+    reverseDirectionalEnergy = lerp(0.18, reverseDirectionalEnergy, directionalBlend);
+
+    float2 h0 = _H0Read.Load(int3(p, 0))
+              * sqrt(max(directionalEnergy, 0.0));
+    float2 h0Negative = _H0Read.Load(int3(negativeP, 0))
+                      * sqrt(max(reverseDirectionalEnergy, 0.0));
 
     // Deep-water dispersion: omega(k) = sqrt(g * |k|).
     float omega = sqrt(WATER_GRAVITY * kMagnitude);
@@ -480,11 +495,12 @@ float3 ReadSurface(uint2 p)
     // Sea-state strength is applied after the FFT, so storms and calm
     // transitions do not require regenerating the initial Phillips spectrum.
     float seaState = max(_SeaStateStrength, 0.0);
+    float windDrive = max(_WindWaveStrength, 0.0);
     return float3(
         hAndDx.z * normalization * _Choppiness,
         hAndDx.x * normalization,
         dzComplex.x * normalization * _Choppiness
-    ) * seaState;
+    ) * seaState * windDrive;
 }
 
 [numthreads(8, 8, 1)]

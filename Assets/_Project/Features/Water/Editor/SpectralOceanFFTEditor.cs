@@ -22,7 +22,33 @@ public sealed class SpectralOceanFFTEditor : Editor
         }
 
         EditorGUILayout.Space(5f);
+        EditorGUILayout.LabelField("Quick Wind Effect Density", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox(
+            "Wind is shown as short-lived white wisps in world space around the player. " +
+            "They move quickly downwind, fade in and out, and are depth-tested against opaque geometry. " +
+            "Use On Land for a sparse hint and Sailing for a denser field.",
+            MessageType.Info);
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (GUILayout.Button("On Land")) ApplyWindFrequencyPreset(0.28f);
+            if (GUILayout.Button("Sailing")) ApplyWindFrequencyPreset(2.2f);
+        }
+
+        EditorGUILayout.Space(5f);
         DrawDefaultInspector();
+    }
+
+    private void ApplyWindFrequencyPreset(float frequency)
+    {
+        foreach (Object item in targets)
+        {
+            SerializedObject so = new SerializedObject(item);
+            so.Update();
+            Undo.RecordObject(item, "Set Wind Particle Density");
+            Set(so, "windStreakFrequency", frequency);
+            so.ApplyModifiedProperties();
+            EditorUtility.SetDirty(item);
+        }
     }
 
     private enum ShorePreset { SandyBeach, RockyCoast, CalmShore }

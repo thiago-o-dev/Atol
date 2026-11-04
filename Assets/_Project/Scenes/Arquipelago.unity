@@ -471,6 +471,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0f3d14a9a6b2ceb469c15d151552a614, type: 3}
+--- !u!1 &490669664 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 359553442384897938, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
+  m_PrefabInstance: {fileID: 1921187133}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &533258352
 GameObject:
   m_ObjectHideFlags: 0
@@ -537,174 +542,22 @@ Transform:
   - {fileID: 1872811278}
   m_Father: {fileID: 1904027187}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &746659102
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 746659103}
-  - component: {fileID: 746659106}
-  - component: {fileID: 746659105}
-  - component: {fileID: 746659107}
-  m_Layer: 0
-  m_Name: CloseWater
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &746659103
+--- !u!4 &746659103 stripped
 Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 2016644464129663549, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+  m_PrefabInstance: {fileID: 7730170171283816193}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 746659102}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 5, y: 1, z: 5}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1169225968}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!23 &746659105
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 746659102}
-  m_Enabled: 1
-  m_CastShadows: 0
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: b97bae061925830409b1d20fa68760a4, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &746659106
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 746659102}
-  m_Mesh: {fileID: 4300000, guid: 3be9c8d549c7e4907a8eeb6a5476a60f, type: 2}
---- !u!114 &746659107
+--- !u!114 &746659107 stripped
 MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 3798075987593443356, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+  m_PrefabInstance: {fileID: 7730170171283816193}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 746659102}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b84c64b6ad01019428b7f4035a53acbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpectralOceanFFT
-  oceanCompute: {fileID: 7200000, guid: 0be1139d3782dff449977ec935b9a6b0, type: 3}
-  resolution: 256
-  rendererBoundsPaddingMeters: 250
-  windDirectionXZ: {x: 1, y: 0.15}
-  windSpeed: 26
-  phillipsAmplitude: 0.0008
-  smallWaveDamping: 0.3
-  backwindDamping: 0.07
-  randomSeed: 12345
-  choppiness: 1.65
-  foamBias: 0.98
-  foamGain: 3
-  startSeaState: 1
-  defaultSeaStateTransition: 3
-  stormChoppinessMultiplier: 1.3
-  stormFoamMultiplier: 1.6
-  enableDebugHotkeys: 0
-  shoreDistanceTexture: {fileID: 2800000, guid: 11938da1a675f2b45a8882740656f4cd, type: 3}
-  shoreDepthModifierTexture: {fileID: 0}
-  shoreMaxDepthMeters: 60
-  shoreMapOriginXZ: {x: -260, y: -260}
-  shoreMapSizeXZ: {x: 500, y: 500}
-  shoreMapFlipV: 0
-  shoreDistanceRangeMeters: 150
-  shoreFadeStartMeters: 0
-  shoreFadeEndMeters: 145
-  nearShoreWaveStrength: 0.02
-  shoreEdgeFadeMeters: 18
-  shoreBreakStartMeters: 4
-  shoreBreakPeakMeters: 38
-  shoreBreakEndMeters: 140
-  shoreDepthPerMeter: 0.1
-  breakerHeightToDepth: 0.78
-  shoreShoalingScale: 1.1
-  shoreChoppiness: 1.2
-  shoreHorizontalFloor: 0.427
-  shoreHorizontalDrive: 0.25
-  shoreNormalBoost: 2
-  shoreFoamWidthMeters: 65
-  shoreFoamEdgeFeatherMeters: 110
-  shoreFoamBlackThreshold: 0.4
-  shoreFoamBlackSoftness: 0.22
-  shoreFoamEdgeNoiseMeters: 18
-  shoreFoamGain: 2.2
-  openOceanFoamMultiplier: 0.179
-  shoreCrestJacobianThreshold: 0.94
-  shoreCrestCompressionGain: 8
-  shoreCrestHeightGain: 0.45
-  shoreWashSpeed: 2.2
-  shoreWashSpacingMeters: 42
-  shoreWashPulseStrength: 0.65
-  shoreDebugView: 0
-  cascades:
-  - patchLength: 2048
-    minWavelength: 24
-    maxWavelength: 1800
-    amplitudeScale: 1.7
-  - patchLength: 512
-    minWavelength: 8
-    maxWavelength: 100
-    amplitudeScale: 2
-  - patchLength: 128
-    minWavelength: 1.5
-    maxWavelength: 12
-    amplitudeScale: 4
 --- !u!1 &997918949
 GameObject:
   m_ObjectHideFlags: 0
@@ -1773,7 +1626,7 @@ MonoBehaviour:
   ocean: {fileID: 746659107}
   fallbackWaterLevelY: 0
   enterDepthMeters: 0
-  exitAboveSurfaceMeters: 0.18
+  exitAboveSurfaceMeters: 0.05
   enterConfirmationSeconds: 0.08
   exitConfirmationSeconds: 0.5
   maximumSurfaceSampleAge: 0.28
@@ -1786,7 +1639,7 @@ MonoBehaviour:
   maximumSamplePositionDrift: 30
   maximumConcurrentCameraQueries: 4
   surfaceHeightSmoothing: 0.065
-  fullEffectDepthMeters: 0.4
+  fullEffectDepthMeters: 0.1
   transitionSeconds: 0.18
   exitBlurFadeSeconds: 1.5
   exitBlurRadiusPixels: 2.5
@@ -1976,13 +1829,42 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 359553442384897938, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1921187138}
   m_SourcePrefab: {fileID: 100100000, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
 --- !u!4 &1921187134 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3276620587067567657, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
   m_PrefabInstance: {fileID: 1921187133}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1921187138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 490669664}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16e02b87c157c0d4da157bde229ed76b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindParticleField
+  ocean: {fileID: 746659107}
+  followTarget: {fileID: 1921187134}
+  particleMaterial: {fileID: 2100000, guid: 513091f996b3915429ce16025e69d1e0, type: 2}
+  particleShader: {fileID: 4800000, guid: 1a2133bb5ef884841ba86171a507a622, type: 3}
+  spawnVolume: {x: 16, y: 3.2, z: 16}
+  heightAboveTarget: 2.5
+  followSharpness: 14
+  lightWindSpeed: 3.5
+  strongWindSpeed: 10
+  minimumLifetime: 0.65
+  maximumLifetime: 1.15
+  turbulence: 0.18
+  baseEmissionRate: 11
+  maximumParticles: 96
 --- !u!1 &2006470652
 GameObject:
   m_ObjectHideFlags: 0
@@ -2101,6 +1983,63 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8c71f03fcb0c13644a30696cafc5cda8, type: 3}
   m_PrefabInstance: {fileID: 1293819750}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &7730170171283816193
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1169225968}
+    m_Modifications:
+    - target: {fileID: 2016644464129663549, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2016644464129663549, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2016644464129663549, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2016644464129663549, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2016644464129663549, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2016644464129663549, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2016644464129663549, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2016644464129663549, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2016644464129663549, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2016644464129663549, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3625377787630510905, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
+      propertyPath: m_Name
+      value: Water
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
 --- !u!1001 &8508103540618595980
 PrefabInstance:
   m_ObjectHideFlags: 0
