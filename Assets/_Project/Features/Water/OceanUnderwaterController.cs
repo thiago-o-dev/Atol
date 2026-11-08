@@ -12,11 +12,11 @@ using UnityEngine.Rendering;
 [DefaultExecutionOrder(10000)]
 public sealed class OceanUnderwaterController : MonoBehaviour
 {
-    [SerializeField, HideInInspector] private int settingsVersion;
+    [SerializeField, HideInInspector] private int settingsVersion = 2;
 
     [Header("Camera / Animated Water Surface")]
     [SerializeField] private Camera outputCamera;
-    [Tooltip("Optional authoritative surface. Leave empty to follow the animated FFT surface.")]
+    [Tooltip("Optional flat/static water-height override. Leave EMPTY when using SpectralOceanFFT, otherwise animated waves are intentionally bypassed.")]
     [SerializeField] private Transform waterSurfaceReference;
     [SerializeField] private SpectralOceanFFT ocean;
     [Tooltip("Used only as a fallback mean water level when no valid FFT sample is available.")]
@@ -36,19 +36,19 @@ public sealed class OceanUnderwaterController : MonoBehaviour
     [Tooltip("How far into the future the last measured wave-height velocity may be extrapolated.")]
     [SerializeField, Range(0f, 0.35f)] private float surfacePredictionSeconds = 0.22f;
     [Tooltip("Maximum extrapolated vertical wave speed, in metres per second.")]
-    [SerializeField, Range(1f, 40f)] private float maximumPredictedWaveSpeed = 16f;
-    [Tooltip("Maximum vertical wave acceleration used for short readback-latency prediction.")]
-    [SerializeField, Range(0f, 100f)] private float maximumPredictedWaveAcceleration = 45f;
-    [Tooltip("Maximum height correction estimated from camera movement across a wave slope.")]
-    [SerializeField, Range(0.1f, 10f)] private float maximumSpatialHeightCorrection = 1.25f;
-    [Tooltip("Maximum height correction from temporal wave prediction. Keeps a noisy velocity estimate from falsely putting an above-water camera underwater.")]
-    [SerializeField, Range(0.05f, 3f)] private float maximumTemporalHeightCorrection = 0.35f;
+    [SerializeField, Range(1f, 60f)] private float maximumPredictedWaveSpeed = 32f;
+    [Tooltip("Maximum vertical wave acceleration used for short readback-latency prediction. Strong storms can move the surface much faster than calm-sea defaults.")]
+    [SerializeField, Range(0f, 160f)] private float maximumPredictedWaveAcceleration = 100f;
+    [Tooltip("Maximum height correction estimated from camera movement across a steep, wind-driven wave slope.")]
+    [SerializeField, Range(0.1f, 12f)] private float maximumSpatialHeightCorrection = 4f;
+    [Tooltip("Maximum height correction from temporal wave prediction. A larger bound is needed for high-wind crests while the prediction horizon remains short.")]
+    [SerializeField, Range(0.05f, 4f)] private float maximumTemporalHeightCorrection = 1.5f;
     [Tooltip("Reject a readback if the camera teleported farther than this since the query was issued.")]
     [SerializeField, Min(1f)] private float maximumSamplePositionDrift = 30f;
     [Tooltip("Camera point queries in flight. The ocean shares its GPU readback ring with buoyancy probes.")]
     [SerializeField, Range(1, 4)] private int maximumConcurrentCameraQueries = 4;
     [Tooltip("Small final filter on the predicted wave height. Increase slightly if the waterline still sparkles.")]
-    [SerializeField, Range(0f, 0.25f)] private float surfaceHeightSmoothing = 0.065f;
+    [SerializeField, Range(0f, 0.25f)] private float surfaceHeightSmoothing = 0.025f;
     [Tooltip("Depth below the animated surface at which the underwater look reaches full strength.")]
     [SerializeField, Min(0.1f)] private float fullEffectDepthMeters = 1.5f;
     [SerializeField, Min(0f)] private float transitionSeconds = 0.14f;
@@ -177,10 +177,10 @@ public sealed class OceanUnderwaterController : MonoBehaviour
         maximumSurfaceSampleAge = Mathf.Clamp(maximumSurfaceSampleAge, 0.05f, 1.5f);
         staleSurfaceFallbackFade = Mathf.Clamp(staleSurfaceFallbackFade, 0.05f, 1.5f);
         surfacePredictionSeconds = Mathf.Clamp(surfacePredictionSeconds, 0f, 0.35f);
-        maximumPredictedWaveSpeed = Mathf.Clamp(maximumPredictedWaveSpeed, 1f, 40f);
-        maximumPredictedWaveAcceleration = Mathf.Clamp(maximumPredictedWaveAcceleration, 0f, 100f);
-        maximumSpatialHeightCorrection = Mathf.Clamp(maximumSpatialHeightCorrection, 0.1f, 10f);
-        maximumTemporalHeightCorrection = Mathf.Clamp(maximumTemporalHeightCorrection, 0.05f, 3f);
+        maximumPredictedWaveSpeed = Mathf.Clamp(maximumPredictedWaveSpeed, 1f, 60f);
+        maximumPredictedWaveAcceleration = Mathf.Clamp(maximumPredictedWaveAcceleration, 0f, 160f);
+        maximumSpatialHeightCorrection = Mathf.Clamp(maximumSpatialHeightCorrection, 0.1f, 12f);
+        maximumTemporalHeightCorrection = Mathf.Clamp(maximumTemporalHeightCorrection, 0.05f, 4f);
         maximumSamplePositionDrift = Mathf.Max(1f, maximumSamplePositionDrift);
         maximumConcurrentCameraQueries = Mathf.Clamp(maximumConcurrentCameraQueries, 1, 4);
         surfaceHeightSmoothing = Mathf.Clamp(surfaceHeightSmoothing, 0f, 0.25f);
@@ -199,26 +199,37 @@ public sealed class OceanUnderwaterController : MonoBehaviour
 
     private void MigrateLegacySettings()
     {
-        if (settingsVersion >= 1)
-            return;
+        if (settingsVersion < 1)
+        {
+            // v3's OnValidate forced Exit Above Surface to be greater than Enter Depth.
+            // Existing scenes therefore kept values such as 0.32 m even after the
+            // corrected script default became 0.08 m. Migrate that old coupled value
+            // exactly once so replacing the component script actually fixes existing
+            // scenes instead of only fixing newly added components.
+            if (exitAboveSurfaceMeters > 0.20f)
+                exitAboveSurfaceMeters = 0.08f;
+            if (maximumSurfaceSampleAge > 0.45f)
+                maximumSurfaceSampleAge = 0.28f;
+            if (staleSurfaceFallbackFade > 0.30f)
+                staleSurfaceFallbackFade = 0.20f;
+            if (enterConfirmationSeconds < 0.10f)
+                enterConfirmationSeconds = 0.14f;
+            settingsVersion = 1;
+        }
 
-        // v3's OnValidate forced Exit Above Surface to be greater than Enter Depth.
-        // Existing scenes therefore kept values such as 0.32 m even after the
-        // corrected script default became 0.08 m. Migrate that old coupled value
-        // exactly once so replacing the component script actually fixes existing
-        // scenes instead of only fixing newly added components.
-        if (exitAboveSurfaceMeters > 0.20f)
-            exitAboveSurfaceMeters = 0.08f;
-        if (maximumSurfaceSampleAge > 0.45f)
-            maximumSurfaceSampleAge = 0.28f;
-        if (staleSurfaceFallbackFade > 0.30f)
-            staleSurfaceFallbackFade = 0.20f;
-        if (enterConfirmationSeconds < 0.10f)
-            enterConfirmationSeconds = 0.14f;
-        if (maximumSpatialHeightCorrection > 1.5f)
-            maximumSpatialHeightCorrection = 1.25f;
-
-        settingsVersion = 1;
+        if (settingsVersion < 2)
+        {
+            // High-wind FFT crests can travel several metres during async GPU
+            // readback. Older defaults clamped both spatial and temporal prediction
+            // too aggressively, making the underwater threshold follow mean sea
+            // level instead of the actual crest/trough.
+            maximumPredictedWaveSpeed = Mathf.Max(maximumPredictedWaveSpeed, 32f);
+            maximumPredictedWaveAcceleration = Mathf.Max(maximumPredictedWaveAcceleration, 100f);
+            maximumSpatialHeightCorrection = Mathf.Max(maximumSpatialHeightCorrection, 4f);
+            maximumTemporalHeightCorrection = Mathf.Max(maximumTemporalHeightCorrection, 1.5f);
+            surfaceHeightSmoothing = Mathf.Min(surfaceHeightSmoothing, 0.025f);
+            settingsVersion = 2;
+        }
     }
 
     private void LateUpdate()
@@ -480,7 +491,7 @@ public sealed class OceanUnderwaterController : MonoBehaviour
             : Vector3.up;
         float normalY = Mathf.Max(normal.y, 0.2f);
         Vector2 slope = new Vector2(-normal.x / normalY, -normal.z / normalY);
-        slope = Vector2.ClampMagnitude(slope, 3.0f);
+        slope = Vector2.ClampMagnitude(slope, 8.0f);
 
         Vector3 cameraPosition = outputCamera != null
             ? outputCamera.transform.position

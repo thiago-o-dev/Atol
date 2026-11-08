@@ -112,6 +112,17 @@ public sealed class SpectralOceanFFT : MonoBehaviour
     [Header("GPU Simulation")]
     [SerializeField] private ComputeShader oceanCompute;
     [SerializeField, Range(64, 512)] private int resolution = 256;
+
+    [Header("Performance")]
+    [Tooltip("Maximum FFT simulation updates per second. Wind and sea-state controls still interpolate every frame; only the expensive GPU FFT dispatch is rate-limited.")]
+    [SerializeField, Range(10f, 60f)] private float simulationUpdateRate = 30f;
+    [Tooltip("If enabled, the ocean renderer stops submitting FFT work when no enabled camera can see its bounds. Disabled by default so boat buoyancy and world-state sampling remain continuous.")]
+    [SerializeField] private bool pauseSimulationWhenNotVisible = false;
+    [Tooltip("Optional camera used for visibility checks. If empty, the main camera is used.")]
+    [SerializeField] private Camera simulationCamera;
+    private float nextSimulationTime;
+    private float lastSurfaceSimulationRealtime = -1f;
+    private bool hasSimulatedAtLeastOnce;
     [Header("Vertex Displacement Culling")]
     [Tooltip("Expands the MeshRenderer's local bounds in all directions so GPU-displaced waves are not incorrectly frustum-culled. Increase this for extreme storms or very large waves.")]
     [SerializeField, Min(1f)] private float rendererBoundsPaddingMeters = 250f;
@@ -381,8 +392,13 @@ public sealed class SpectralOceanFFT : MonoBehaviour
     public float WindParticleWidthMeters => windStreakWidthMeters;
     public float WindParticleOpacity => windStreakOpacity;
     public Color WindParticleTint => windStreakColor;
-    public bool CanSampleSurface => resourcesReady &&
+    public bool CanSampleSurface => resourcesReady && hasSimulatedAtLeastOnce &&
         surfaceQuerySlots != null && SystemInfo.supportsAsyncGPUReadback;
+    /// <summary>Realtime timestamp of the FFT maps currently displayed by the water renderer.</summary>
+    public float SurfaceMapsUpdatedRealtime => lastSurfaceSimulationRealtime;
+    public float SurfaceMapsAge => lastSurfaceSimulationRealtime > 0f
+        ? Mathf.Max(0f, Time.realtimeSinceStartup - lastSurfaceSimulationRealtime)
+        : float.PositiveInfinity;
 
     /// <summary>
     /// Queues one or more world-space XZ samples against the current GPU FFT maps.
@@ -483,6 +499,16 @@ public sealed class SpectralOceanFFT : MonoBehaviour
     private void OnEnable()
     {
         meshRenderer = GetComponent<MeshRenderer>();
+        if (meshRenderer != null)
+        {
+            // The water surface is a single forward pass and does not need
+            // per-object shadows, probes or motion-vector rendering.
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            meshRenderer.receiveShadows = false;
+            meshRenderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+            meshRenderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+            meshRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+        }
         meshFilter = GetComponent<MeshFilter>();
         boundsSourceMesh = meshFilter != null ? meshFilter.sharedMesh : null;
         propertyBlock = new MaterialPropertyBlock();
@@ -522,6 +548,7 @@ public sealed class SpectralOceanFFT : MonoBehaviour
     private void OnValidate()
     {
         resolution = Mathf.Clamp(Mathf.ClosestPowerOfTwo(Mathf.Clamp(resolution, 64, 512)), 64, 512);
+        simulationUpdateRate = Mathf.Clamp(simulationUpdateRate, 10f, 60f);
         rendererBoundsPaddingMeters = Mathf.Max(1f, rendererBoundsPaddingMeters);
         windSpeed = Mathf.Max(0.1f, windSpeed);
         windDirectionXZ = NormalizeWindDirection(windDirectionXZ);
@@ -669,8 +696,22 @@ public sealed class SpectralOceanFFT : MonoBehaviour
                 return;
         }
 
+        // Material/world-state controls are refreshed every frame. This keeps
+        // exposed wind, sea-state, shoreline and foam controls responsive even
+        // when the heavier FFT update is rate-limited below.
         SetCommonParameters();
         ApplyShoreParameters();
+
+        bool forceSimulation = spectrumDirty || !hasSimulatedAtLeastOnce;
+        float interval = 1f / Mathf.Max(10f, simulationUpdateRate);
+        if (!forceSimulation && Time.unscaledTime < nextSimulationTime)
+            return;
+
+        if (pauseSimulationWhenNotVisible && !forceSimulation && !IsVisibleToSimulationCamera())
+        {
+            nextSimulationTime = Time.unscaledTime + interval;
+            return;
+        }
 
         if (spectrumDirty)
         {
@@ -682,6 +723,25 @@ public sealed class SpectralOceanFFT : MonoBehaviour
 
         for (int i = 0; i < cascades.Length; i++)
             SimulateCascade(cascades[i], i);
+
+        // Surface-query timestamps must describe the data that was actually
+        // rendered. The previous implementation stamped a query with dispatch
+        // time even when the FFT maps were up to one simulation interval old.
+        // At storm speed this hid 1-2 frames of real wave motion from buoyancy and
+        // camera prediction, making them disagree with the visible water crest.
+        lastSurfaceSimulationRealtime = Time.realtimeSinceStartup;
+        hasSimulatedAtLeastOnce = true;
+        nextSimulationTime = Time.unscaledTime + interval;
+    }
+
+    private bool IsVisibleToSimulationCamera()
+    {
+        if (meshRenderer == null || !meshRenderer.enabled)
+            return false;
+
+        Camera cam = simulationCamera != null ? simulationCamera : Camera.main;
+        return cam == null || GeometryUtility.TestPlanesAABB(
+            GeometryUtility.CalculateFrustumPlanes(cam), meshRenderer.bounds);
     }
 
     private void LateUpdate()
@@ -746,7 +806,9 @@ public sealed class SpectralOceanFFT : MonoBehaviour
 
         List<SurfaceQuerySlice> slices = new List<SurfaceQuerySlice>(8);
         int sampleCount = 0;
-        float sampleTime = Time.realtimeSinceStartup;
+        float sampleTime = lastSurfaceSimulationRealtime > 0f
+            ? lastSurfaceSimulationRealtime
+            : Time.realtimeSinceStartup;
         float waterLevel = WaterLevelY;
 
         while (HasPendingSurfaceQueries)
