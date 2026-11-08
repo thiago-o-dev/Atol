@@ -813,6 +813,96 @@ bool EvaluateSurfaceAtParamXZ(
     return valid;
 }
 
+// Solve the choppy parametric-to-world mapping with a damped Newton step.
+// A plain fixed-point iteration works in calm water but becomes unreliable when
+// high wind/sea-state settings compress horizontal displacement near wave crests.
+// Numerical derivatives include the shoreline attenuation, so the Jacobian is
+// consistent with the actual surface used by the vertex shader.
+bool RefineSurfaceParameter(
+    float2 targetWorldXZ,
+    float2 seed,
+    out float3 bestDisplacement,
+    out float3 bestNormal,
+    out float2 bestResidual,
+    out float bestResidualSqr)
+{
+    float2 param = seed;
+    bestDisplacement = 0.0;
+    bestNormal = float3(0.0, 1.0, 0.0);
+    bestResidual = float2(1e6, 1e6);
+    bestResidualSqr = 1e12;
+
+    float epsilon = max(0.15,
+        min(_SamplePatchLength0, _SamplePatchLength1) / max((float)_SampleResolution, 1.0) * 0.5);
+
+    [loop]
+    for (int iteration = 0; iteration < 6; ++iteration)
+    {
+        float3 displacement;
+        float3 normal;
+        if (!EvaluateSurfaceAtParamXZ(param, displacement, normal))
+            break;
+
+        float2 mapped = param + displacement.xz;
+        float2 residual = targetWorldXZ - mapped;
+        float residualSqr = dot(residual, residual);
+        if (all(isfinite(residual)) && residualSqr < bestResidualSqr &&
+            all(isfinite(displacement)) && all(isfinite(normal)))
+        {
+            bestDisplacement = displacement;
+            bestNormal = normal;
+            bestResidual = -residual;
+            bestResidualSqr = residualSqr;
+        }
+
+        if (residualSqr < 0.0004)
+            break;
+
+        float3 displacementX;
+        float3 normalX;
+        float3 displacementZ;
+        float3 normalZ;
+        bool validX = EvaluateSurfaceAtParamXZ(
+            param + float2(epsilon, 0.0), displacementX, normalX);
+        bool validZ = EvaluateSurfaceAtParamXZ(
+            param + float2(0.0, epsilon), displacementZ, normalZ);
+        if (!validX || !validZ)
+        {
+            param += clamp(residual * 0.55, float2(-24.0, -24.0), float2(24.0, 24.0));
+            continue;
+        }
+
+        float2 mappedX = param + float2(epsilon, 0.0) + displacementX.xz;
+        float2 mappedZ = param + float2(0.0, epsilon) + displacementZ.xz;
+        float j00 = (mappedX.x - mapped.x) / epsilon;
+        float j10 = (mappedX.y - mapped.y) / epsilon;
+        float j01 = (mappedZ.x - mapped.x) / epsilon;
+        float j11 = (mappedZ.y - mapped.y) / epsilon;
+        float determinant = j00 * j11 - j01 * j10;
+
+        float2 step;
+        if (isfinite(determinant) && abs(determinant) > 0.035)
+        {
+            step.x = ( residual.x * j11 - j01 * residual.y) / determinant;
+            step.y = ( j00 * residual.y - residual.x * j10) / determinant;
+            if (!all(isfinite(step)))
+                step = residual * 0.55;
+        }
+        else
+        {
+            // Near a folded/non-invertible patch, fall back to a conservative
+            // fixed-point step rather than amplifying the nearly singular inverse.
+            step = residual * 0.55;
+        }
+
+        float maxStep = max(24.0, length(displacement.xz) * 1.75 + 4.0);
+        step = clamp(step, float2(-maxStep, -maxStep), float2(maxStep, maxStep));
+        param += step * 0.72;
+    }
+
+    return bestResidualSqr < 1e11;
+}
+
 [numthreads(64, 1, 1)]
 void SampleSurface(uint3 id : SV_DispatchThreadID)
 {
@@ -821,59 +911,66 @@ void SampleSurface(uint3 id : SV_DispatchThreadID)
         return;
 
     float2 targetWorldXZ = _SurfaceQueryPositions[index];
-    float2 parametricXZ = targetWorldXZ;
-    float3 displacement = 0.0;
-    float3 normal = float3(0.0, 1.0, 0.0);
-    bool valid = true;
+    float3 initialDisplacement;
+    float3 initialNormal;
+    bool initialValid = EvaluateSurfaceAtParamXZ(
+        targetWorldXZ, initialDisplacement, initialNormal);
 
-    // The FFT field stores a parametric (choppy) surface: a sample at base XZ
-    // moves horizontally. Invert that mapping so this query reports the height
-    // directly below the requested world-space XZ instead of a nearby crest.
-    // Five damped fixed-point steps are inexpensive for small camera/hull batches.
-    // Folded mappings still use the local parametric fallback below.
+    float2 seeds[2];
+    seeds[0] = targetWorldXZ;
+    seeds[1] = initialValid ? targetWorldXZ - initialDisplacement.xz : targetWorldXZ;
+
+    float3 bestDisplacement = 0.0;
+    float3 bestNormal = float3(0.0, 1.0, 0.0);
+    float2 bestResidual = float2(1e6, 1e6);
+    float bestResidualSqr = 1e12;
+
     [unroll]
-    for (int iteration = 0; iteration < 5; ++iteration)
+    for (int seedIndex = 0; seedIndex < 2; ++seedIndex)
     {
-        bool iterationValid = EvaluateSurfaceAtParamXZ(
-            parametricXZ, displacement, normal);
-        valid = valid && iterationValid;
-        float2 mappedWorldXZ = parametricXZ + displacement.xz;
-        float2 correction = clamp(targetWorldXZ - mappedWorldXZ,
-            float2(-20.0, -20.0), float2(20.0, 20.0));
-        parametricXZ += correction * 0.85;
+        float3 candidateDisplacement;
+        float3 candidateNormal;
+        float2 candidateResidual;
+        float candidateResidualSqr;
+        if (RefineSurfaceParameter(
+            targetWorldXZ, seeds[seedIndex],
+            candidateDisplacement, candidateNormal,
+            candidateResidual, candidateResidualSqr))
+        {
+            // Prefer the smallest world-space horizontal error. When two sheets
+            // map almost identically at a folded crest, select the higher surface;
+            // cameras and buoyancy need the top/visible water sheet, not a lower
+            // overlapping branch.
+            bool clearlyCloser = candidateResidualSqr < bestResidualSqr - 0.0025;
+            bool nearTie = abs(candidateResidualSqr - bestResidualSqr) <= 0.0025;
+            if (clearlyCloser || (nearTie && candidateDisplacement.y > bestDisplacement.y))
+            {
+                bestDisplacement = candidateDisplacement;
+                bestNormal = candidateNormal;
+                bestResidual = candidateResidual;
+                bestResidualSqr = candidateResidualSqr;
+            }
+        }
     }
 
-    valid = EvaluateSurfaceAtParamXZ(parametricXZ, displacement, normal) && valid;
-    float2 finalMappedXZ = parametricXZ + displacement.xz;
-    float2 residualXZ = finalMappedXZ - targetWorldXZ;
+    // Preserve the true mapped XZ residual. The former fallback sampled the
+    // parametric point at target XZ and then forced its residual to zero. At high
+    // wind this falsely claimed that a displaced crest was directly under the
+    // camera/hull, which made every water consumer disagree with the rendered top.
+    bool valid = bestResidualSqr <= 2.25 &&
+        all(isfinite(bestDisplacement)) && all(isfinite(bestNormal)) &&
+        dot(bestNormal, bestNormal) > 1e-6;
 
-    // In highly compressed shore-break folds the horizontal map may cease to be
-    // one-to-one. Do not report the height of a distant folded sheet to the camera
-    // or a hull probe. Use the local parametric sample at the requested XZ instead.
-    if (!valid || !all(isfinite(residualXZ)) || any(abs(residualXZ) > 0.75))
+    if (!valid)
     {
-        bool fallbackValid = EvaluateSurfaceAtParamXZ(
-            targetWorldXZ, displacement, normal);
-        if (fallbackValid && all(isfinite(displacement)) &&
-            all(isfinite(normal)) && dot(normal, normal) > 1e-6)
-        {
-            residualXZ = 0.0;
-            valid = true;
-        }
-        else
-        {
-            displacement = 0.0;
-            normal = float3(0.0, 1.0, 0.0);
-            residualXZ = 0.0;
-            valid = false;
-        }
+        bestDisplacement = 0.0;
+        bestNormal = float3(0.0, 1.0, 0.0);
+        bestResidual = 0.0;
     }
 
     SurfaceQueryResult result;
-    // The output is expressed relative to the requested point so the C# side
-    // can use Position as the world-space water point under the camera/hull probe.
-    result.displacement = float4(residualXZ.x, displacement.y, residualXZ.y,
+    result.displacement = float4(bestResidual.x, bestDisplacement.y, bestResidual.y,
         valid ? 1.0 : 0.0);
-    result.normal = float4(normal, valid ? 1.0 : 0.0);
+    result.normal = float4(bestNormal, valid ? 1.0 : 0.0);
     _SurfaceQueryResults[index] = result;
 }
