@@ -53,6 +53,12 @@ public sealed class OceanBuoyancy : MonoBehaviour
     [SerializeField, Min(0.05f)] private float maximumSampleAge = 0.30f;
     [Tooltip("If enabled, only the most recently requested physics snapshot is used. Disable to accept every completed snapshot in sequence.")]
     [SerializeField] private bool preferNewestSnapshot = true;
+    [Tooltip("Maximum tangent-plane height correction when a hull point has moved since its asynchronous FFT sample.")]
+    [SerializeField, Range(0.5f, 12f)] private float maximumSlopeHeightCorrection = 5f;
+    [Tooltip("Maximum slope magnitude used to predict water height at a moving hull point.")]
+    [SerializeField, Range(1f, 12f)] private float maximumSampleSlope = 8f;
+    [Tooltip("Maximum magnitude allowed for the estimated water-particle velocity.")]
+    [SerializeField, Range(5f, 80f)] private float maximumEstimatedWaveVelocity = 55f;
 
     private Rigidbody body;
     private Vector3[] queryPositions;
@@ -85,6 +91,13 @@ public sealed class OceanBuoyancy : MonoBehaviour
     public bool HasAnyValidSamples => hasAnyValidSamples;
     public bool HasFreshSamples => hasAnyValidSamples && latestSamples != null &&
         SampleAge >= 0f && SampleAge <= maximumSampleAge;
+
+    /// <summary>
+    /// Highest current probe immersion (0 = no hull contact, 1 = at least one
+    /// probe is fully immersed). Used by the boat to distinguish floating from
+    /// airborne physics without damping natural rotation in mid-air.
+    /// </summary>
+    public float CurrentWaterImmersion => CalculateCurrentWaterImmersion();
 
     /// <summary>Raised whenever a newer physics snapshot has been accepted.</summary>
     public event Action<SpectralOceanFFT.SurfaceSample[]> SamplesUpdated;
@@ -119,6 +132,9 @@ public sealed class OceanBuoyancy : MonoBehaviour
         maxDragAcceleration = Mathf.Max(0f, maxDragAcceleration);
         maximumSampleAge = Mathf.Max(0.05f, maximumSampleAge);
         normalInfluence = Mathf.Clamp01(normalInfluence);
+        maximumSlopeHeightCorrection = Mathf.Clamp(maximumSlopeHeightCorrection, 0.5f, 12f);
+        maximumSampleSlope = Mathf.Clamp(maximumSampleSlope, 1f, 12f);
+        maximumEstimatedWaveVelocity = Mathf.Clamp(maximumEstimatedWaveVelocity, 5f, 80f);
         if (samplePoints == null || samplePoints.Length == 0)
         {
             samplePoints = new[]
@@ -194,25 +210,17 @@ public sealed class OceanBuoyancy : MonoBehaviour
             // FixedUpdate. Correct height at the body's current probe XZ using the
             // local tangent plane, avoiding force spikes when a fast hull moves
             // slightly while AsyncGPUReadback is in flight.
-            Vector3 sampledNormal = sample.Normal.sqrMagnitude > 0.001f
-                ? sample.Normal.normalized
-                : Vector3.up;
-            float normalY = Mathf.Max(sampledNormal.y, 0.2f);
-            Vector2 probeDelta = new Vector2(
-                probeWorld.x - sample.Position.x,
-                probeWorld.z - sample.Position.z);
-            Vector2 surfaceSlope = new Vector2(
-                -sampledNormal.x / normalY,
-                -sampledNormal.z / normalY);
-            float heightCorrection = Mathf.Clamp(
-                Vector2.Dot(surfaceSlope, probeDelta), -2f, 2f);
-            float waterHeightAtCurrentProbe = sample.Height + heightCorrection;
+            if (!TryGetWaterHeightAtProbe(sample, probeWorld, out float waterHeightAtCurrentProbe))
+                continue;
             float submergedDepth = waterHeightAtCurrentProbe - probeWorld.y;
             if (submergedDepth <= 0f)
                 continue;
 
             float immersion = Mathf.Clamp01(submergedDepth / buoyancyDepth);
             float normalizedWeight = weight / totalWeight;
+            Vector3 sampledNormal = sample.Normal.sqrMagnitude > 0.001f
+                ? sample.Normal.normalized
+                : Vector3.up;
             Vector3 forceDirection = Vector3.Slerp(
                 Vector3.up, sampledNormal, normalInfluence).normalized;
 
@@ -228,6 +236,65 @@ public sealed class OceanBuoyancy : MonoBehaviour
             dragAcceleration = Vector3.ClampMagnitude(dragAcceleration, maxDragAcceleration);
             body.AddForceAtPosition(dragAcceleration, probeWorld, ForceMode.Acceleration);
         }
+    }
+
+    private bool TryGetWaterHeightAtProbe(
+        SpectralOceanFFT.SurfaceSample sample, Vector3 probeWorld, out float waterHeight)
+    {
+        waterHeight = sample.Height;
+        if (!sample.IsValid || !IsFinite(sample.Height) || !IsFinite(sample.Normal.x) ||
+            !IsFinite(sample.Normal.y) || !IsFinite(sample.Normal.z))
+            return false;
+
+        Vector3 normal = sample.Normal.sqrMagnitude > 0.001f
+            ? sample.Normal.normalized
+            : Vector3.up;
+        if (normal.y < 0f)
+            normal = -normal;
+
+        float normalY = Mathf.Max(normal.y, 0.12f);
+        Vector2 delta = new Vector2(
+            probeWorld.x - sample.Position.x,
+            probeWorld.z - sample.Position.z);
+        Vector2 slope = new Vector2(-normal.x / normalY, -normal.z / normalY);
+        slope = Vector2.ClampMagnitude(slope, maximumSampleSlope);
+
+        float correction = Mathf.Clamp(
+            Vector2.Dot(slope, delta),
+            -maximumSlopeHeightCorrection,
+            maximumSlopeHeightCorrection);
+        waterHeight = sample.Height + correction;
+        return IsFinite(waterHeight);
+    }
+
+    private float CalculateCurrentWaterImmersion()
+    {
+        if (!HasFreshSamples || body == null || latestSamples == null || samplePoints == null)
+            return 0f;
+
+        float maximumImmersion = 0f;
+        int count = Mathf.Min(latestSamples.Length, samplePoints.Length);
+        for (int i = 0; i < count; i++)
+        {
+            SpectralOceanFFT.SurfaceSample sample = latestSamples[i];
+            if (!sample.IsValid || samplePoints[i].liftWeight <= 0f)
+                continue;
+
+            Vector3 probeWorld = body.transform.TransformPoint(samplePoints[i].localPosition);
+            if (!TryGetWaterHeightAtProbe(sample, probeWorld, out float waterHeight))
+                continue;
+
+            float submergedDepth = waterHeight - probeWorld.y;
+            float immersion = Mathf.Clamp01(submergedDepth / buoyancyDepth);
+            maximumImmersion = Mathf.Max(maximumImmersion, immersion);
+        }
+
+        return maximumImmersion;
+    }
+
+    private static bool IsFinite(float value)
+    {
+        return !float.IsNaN(value) && !float.IsInfinity(value);
     }
 
     private void OnSurfaceSamplesReceived(
@@ -284,18 +351,24 @@ public sealed class OceanBuoyancy : MonoBehaviour
             {
                 Vector3 rawVelocity = (averageWaveDisplacement - previousAverageWaveDisplacement)
                     / sampleDelta;
-                rawVelocity = Vector3.ClampMagnitude(rawVelocity, 30f);
+                rawVelocity = Vector3.ClampMagnitude(rawVelocity, maximumEstimatedWaveVelocity);
                 float velocityBlend = 1f - Mathf.Exp(-sampleDelta * 6f);
                 averageWaterVelocity = Vector3.Lerp(
                     averageWaterVelocity, rawVelocity, velocityBlend);
-            }
-            else
-            {
-                averageWaterVelocity = Vector3.zero;
-            }
 
-            previousAverageWaveDisplacement = averageWaveDisplacement;
-            previousAverageWaveSampleTime = latestSampleTime;
+                previousAverageWaveDisplacement = averageWaveDisplacement;
+                previousAverageWaveSampleTime = latestSampleTime;
+            }
+            else if (previousAverageWaveSampleTime <= 0f || sampleDelta >= 0.5f || sampleDelta < -0.005f)
+            {
+                // The FFT can be intentionally rate-limited (e.g. 30 Hz) while
+                // physics requests samples at 50 Hz. Repeated readbacks of the same
+                // map have an identical SampleTime; keep the last measured velocity
+                // rather than resetting it to zero on every duplicate snapshot.
+                averageWaterVelocity = Vector3.zero;
+                previousAverageWaveDisplacement = averageWaveDisplacement;
+                previousAverageWaveSampleTime = latestSampleTime;
+            }
 
             try
             {

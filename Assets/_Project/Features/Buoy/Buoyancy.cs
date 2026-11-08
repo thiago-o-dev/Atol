@@ -21,6 +21,7 @@ namespace Assets._Project.Features.Buoy
         public Vector3 AverageWaterNormal => oceanBuoyancy != null ? oceanBuoyancy.AverageWaterNormal : Vector3.up;
         public Vector3 AverageWaterVelocity => oceanBuoyancy != null ? oceanBuoyancy.AverageWaterVelocity : Vector3.zero;
         public float SampleAge => oceanBuoyancy != null ? oceanBuoyancy.SampleAge : float.PositiveInfinity;
+        public float CurrentWaterImmersion => oceanBuoyancy != null ? oceanBuoyancy.CurrentWaterImmersion : 0f;
 
         private void Awake()
         {

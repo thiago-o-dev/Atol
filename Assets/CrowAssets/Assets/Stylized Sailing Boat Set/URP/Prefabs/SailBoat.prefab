@@ -58,6 +58,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -79,9 +84,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &745668012697643421
 GameObject:
@@ -141,6 +148,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -162,9 +174,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &1487313479919363737
 GameObject:
@@ -224,6 +238,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -245,9 +264,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &3888712674121610133
 GameObject:
@@ -307,6 +328,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -328,9 +354,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &4424480785503984261
 GameObject:
@@ -390,6 +418,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -411,9 +444,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &4579657018479454999
 GameObject:
@@ -473,6 +508,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -494,9 +534,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &6569195960184298500
 GameObject:
@@ -599,6 +641,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -620,9 +667,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &7150140142630883163
 GameObject:
@@ -682,6 +731,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -703,9 +757,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &7193430309124187891
 GameObject:
@@ -765,6 +821,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -786,9 +847,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &7550936537764288228
 GameObject:
@@ -848,6 +911,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -869,9 +937,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &8112608398100248917
 GameObject:
@@ -931,6 +1001,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -952,9 +1027,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &9034583561956409614
 GameObject:
@@ -1014,6 +1091,11 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1035,9 +1117,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1001 &3012100761732313746
 PrefabInstance:
@@ -1047,198 +1131,159 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: -9212090591214106206, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -9212090591214106206, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_Name
       value: Tied Rope_01
       objectReference: {fileID: 0}
-    - target: {fileID: -9160896079488192594, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -9160896079488192594, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: c84bc5e61233bf842a60c01da222f9e9, type: 2}
-    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -8679921383154817045, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8460531041354886036, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -8460531041354886036, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: bfa80a08fb3f81c4b86a5ad7cea1dfaa, type: 2}
-    - target: {fileID: -8245435037572776097, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -8245435037572776097, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_Name
       value: HoldingBlock_01
       objectReference: {fileID: 0}
-    - target: {fileID: -8152342144526152924, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -8152342144526152924, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 865d123bf8faf45409d73eaaa4ea49d3, type: 2}
-    - target: {fileID: -7560819641672157582, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -7560819641672157582, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_Name
       value: Tied Rope_02
       objectReference: {fileID: 0}
-    - target: {fileID: -7347413588957321226, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -7347413588957321226, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: f181b12d781d9ae45bd1371284d50bc2, type: 2}
-    - target: {fileID: -7159097337458146900, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -7159097337458146900, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_Name
       value: Hanging Rope
       objectReference: {fileID: 0}
-    - target: {fileID: -6250829987935782347, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -6250829987935782347, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 83aa98d020ace044097ad91b4a62f4dd, type: 2}
-    - target: {fileID: -5865307507659644942, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -5865307507659644942, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 83aa98d020ace044097ad91b4a62f4dd, type: 2}
-    - target: {fileID: -4897732323685117858, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -4897732323685117858, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: fcdb4416b5e989c469d60f44529b7d00, type: 2}
-    - target: {fileID: -4630123149355234689, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -4630123149355234689, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_Name
       value: Tied Rope_06
       objectReference: {fileID: 0}
-    - target: {fileID: -4017958337548186850, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -4017958337548186850, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 83aa98d020ace044097ad91b4a62f4dd, type: 2}
-    - target: {fileID: -3891864884104376664, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -3891864884104376664, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 83aa98d020ace044097ad91b4a62f4dd, type: 2}
-    - target: {fileID: -3694704416589231033, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -3694704416589231033, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 83aa98d020ace044097ad91b4a62f4dd, type: 2}
-    - target: {fileID: -1871665939069713440, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -1871665939069713440, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 1aedb2d63ca0f014482e703ee3ea415d, type: 2}
-    - target: {fileID: -1152023309131482966, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: -1152023309131482966, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_Name
       value: Tied Rope_07
       objectReference: {fileID: 0}
-    - target: {fileID: -253496899457280484, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: -253496899457280484, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 83aa98d020ace044097ad91b4a62f4dd, type: 2}
-    - target: {fileID: 390028058840886967, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: 390028058840886967, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_Name
       value: Tied Rope_03
       objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: 919132149155446097, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_Name
       value: SailBoat
       objectReference: {fileID: 0}
-    - target: {fileID: 1561831892406121940, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: 1561831892406121940, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 7a9f45ebbbd3a664cb2ac46c4881c501, type: 2}
-    - target: {fileID: 1674565730239744927, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: 1674565730239744927, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 7a6abf53af2afb140a2620e95ed95eff, type: 2}
-    - target: {fileID: 2456708943149535288, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: 2456708943149535288, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 1dc7704a6645130478f5bb3fc8cecd72, type: 2}
-    - target: {fileID: 3860211059877422988, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: 3860211059877422988, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 83aa98d020ace044097ad91b4a62f4dd, type: 2}
-    - target: {fileID: 5742956374179528821, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: 5742956374179528821, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_Name
       value: Tied Rope_05
       objectReference: {fileID: 0}
-    - target: {fileID: 7290694716865716935, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: 7290694716865716935, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 865d123bf8faf45409d73eaaa4ea49d3, type: 2}
-    - target: {fileID: 7299539969827181230, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: 7299539969827181230, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_Name
       value: Tied Rope_04
       objectReference: {fileID: 0}
-    - target: {fileID: 8561244047175910793, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
+    - target: {fileID: 8561244047175910793, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 865d123bf8faf45409d73eaaa4ea49d3, type: 2}
-    - target: {fileID: 8866397003473841832, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - target: {fileID: 8866397003473841832, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       propertyPath: m_Name
       value: HoldingBlock_02
       objectReference: {fileID: 0}
@@ -1253,15 +1298,13 @@ PrefabInstance:
     - {fileID: -9212090591214106206, guid: e7a701cff3e90de47803336e494a146b, type: 3}
     - {fileID: -7159097337458146900, guid: e7a701cff3e90de47803336e494a146b, type: 3}
     m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 2960798976494035798, guid: e7a701cff3e90de47803336e494a146b,
-        type: 3}
+    - targetCorrespondingSourceObject: {fileID: 2960798976494035798, guid: e7a701cff3e90de47803336e494a146b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7855417405101672821}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e7a701cff3e90de47803336e494a146b, type: 3}
 --- !u!4 &61923758154748356 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 2960798976494035798, guid: e7a701cff3e90de47803336e494a146b,
-    type: 3}
+  m_CorrespondingSourceObject: {fileID: 2960798976494035798, guid: e7a701cff3e90de47803336e494a146b, type: 3}
   m_PrefabInstance: {fileID: 3012100761732313746}
   m_PrefabAsset: {fileID: 0}
