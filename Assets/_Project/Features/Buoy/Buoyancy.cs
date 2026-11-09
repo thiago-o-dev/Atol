@@ -21,6 +21,18 @@ namespace Assets._Project.Features.Buoy
         public Vector3 AverageWaterNormal => oceanBuoyancy != null ? oceanBuoyancy.AverageWaterNormal : Vector3.up;
         public Vector3 AverageWaterVelocity => oceanBuoyancy != null ? oceanBuoyancy.AverageWaterVelocity : Vector3.zero;
         public float SampleAge => oceanBuoyancy != null ? oceanBuoyancy.SampleAge : float.PositiveInfinity;
+        /// <summary>Wave-slope follow per axis (x roll, y pitch). See OceanBuoyancy.RuntimeSlopeFollow.</summary>
+        public Vector2 SlopeFollow
+        {
+            get => oceanBuoyancy != null ? oceanBuoyancy.RuntimeSlopeFollow : Vector2.one;
+            set { if (oceanBuoyancy != null) oceanBuoyancy.RuntimeSlopeFollow = value; }
+        }
+        /// <summary>Runtime multiplier on heave damping (see OceanBuoyancy.RuntimeDragScale).</summary>
+        public float DragScale
+        {
+            get => oceanBuoyancy != null ? oceanBuoyancy.RuntimeDragScale : 1f;
+            set { if (oceanBuoyancy != null) oceanBuoyancy.RuntimeDragScale = value; }
+        }
         public float CurrentWaterImmersion => oceanBuoyancy != null ? oceanBuoyancy.CurrentWaterImmersion : 0f;
 
         private void Awake()
@@ -38,6 +50,16 @@ namespace Assets._Project.Features.Buoy
         {
             if (oceanBuoyancy == null)
                 oceanBuoyancy = GetComponent<global::OceanBuoyancy>();
+        }
+
+        public bool TryGetLatticeDisplacement(out Vector2 displacement, out float sampleAge)
+        {
+            if (oceanBuoyancy != null)
+                return oceanBuoyancy.TryGetLatticeDisplacement(out displacement, out sampleAge);
+
+            displacement = Vector2.zero;
+            sampleAge = float.PositiveInfinity;
+            return false;
         }
 
         public bool TryGetWaterSurface(out Vector3 position, out Vector3 normal, out Vector3 waterVelocity, out float sampleAge)

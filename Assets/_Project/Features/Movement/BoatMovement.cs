@@ -55,7 +55,7 @@ public sealed class BoatMovement : MonoBehaviour, IMovement
         inputDirection = Vector2.ClampMagnitude(direction, 1f);
     }
 
-    public void Jump(bool released) { }
+    public void Jump(bool released) { } // Leaving the boat is handled by PlayerController.LeaveBoatWithJump.
 
     public void ApplyMovement()
     {

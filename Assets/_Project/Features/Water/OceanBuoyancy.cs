@@ -60,6 +60,32 @@ public sealed class OceanBuoyancy : MonoBehaviour
     [Tooltip("Maximum magnitude allowed for the estimated water-particle velocity.")]
     [SerializeField, Range(5f, 80f)] private float maximumEstimatedWaveVelocity = 55f;
 
+    /// <summary>Runtime multiplier on water drag (heave damping). 1 = serialized behaviour.</summary>
+    public float RuntimeDragScale { get; set; } = 1f;
+
+    /// <summary>
+    /// Runtime wave-slope follow per hull axis (x = roll, across the beam; y = pitch, along the
+    /// length). 1 = the probes ride the true wave surface (default, unchanged behaviour).
+    /// 0 = the probes only follow the mean wave height, so the hull heaves but stays level.
+    /// Implemented at the source of buoyancy, so it works whether or not the boat is manned.
+    /// </summary>
+    public Vector2 RuntimeSlopeFollow { get; set; } = Vector2.one;
+
+    private float[] slopeHeights;
+    private bool[] slopeValid;
+
+    /// <summary>Bounds of the sample points in local space (hull size estimate).</summary>
+    public bool TryGetProbeLocalBounds(out Bounds bounds)
+    {
+        bounds = default;
+        if (samplePoints == null || samplePoints.Length == 0)
+            return false;
+        bounds = new Bounds(samplePoints[0].localPosition, Vector3.zero);
+        for (int i = 1; i < samplePoints.Length; i++)
+            bounds.Encapsulate(samplePoints[i].localPosition);
+        return true;
+    }
+
     private Rigidbody body;
     private Vector3[] queryPositions;
     private SpectralOceanFFT.SurfaceSample[] latestSamples;
@@ -73,6 +99,7 @@ public sealed class OceanBuoyancy : MonoBehaviour
     private Vector3 averageWaterPosition;
     private Vector3 averageWaterNormal = Vector3.up;
     private Vector3 averageWaterVelocity;
+    private Vector2 averageLatticeDisplacement;
     private Vector3 previousAverageWaveDisplacement;
     private float previousAverageWaveSampleTime = -1000f;
 
@@ -97,7 +124,26 @@ public sealed class OceanBuoyancy : MonoBehaviour
     /// probe is fully immersed). Used by the boat to distinguish floating from
     /// airborne physics without damping natural rotation in mid-air.
     /// </summary>
-    public float CurrentWaterImmersion => CalculateCurrentWaterImmersion();
+    public float CurrentWaterImmersion
+    {
+        get
+        {
+            // Cached per physics step / frame: callers (boat, effects) read this several times.
+            int frame = Time.frameCount;
+            float fixedNow = Time.fixedTime;
+            if (frame != immersionCacheFrame || fixedNow != immersionCacheFixedTime)
+            {
+                immersionCache = CalculateCurrentWaterImmersion();
+                immersionCacheFrame = frame;
+                immersionCacheFixedTime = fixedNow;
+            }
+            return immersionCache;
+        }
+    }
+
+    private float immersionCache;
+    private int immersionCacheFrame = -1;
+    private float immersionCacheFixedTime = -1f;
 
     /// <summary>Raised whenever a newer physics snapshot has been accepted.</summary>
     public event Action<SpectralOceanFFT.SurfaceSample[]> SamplesUpdated;
@@ -173,12 +219,40 @@ public sealed class OceanBuoyancy : MonoBehaviour
         int snapshotId = ++nextSnapshotId;
         int generation = componentGeneration;
         outstandingSnapshots++;
-        bool queued = ocean.RequestSurfaceSamples(
-            queryPositions,
-            samples => OnSurfaceSamplesReceived(generation, snapshotId, samples));
+        SnapshotRequest request = snapshotPool.Count > 0 ? snapshotPool.Pop() : new SnapshotRequest(this);
+        request.generation = generation;
+        request.snapshotId = snapshotId;
+        bool queued = ocean.RequestSurfaceSamples(queryPositions, request.callback);
         if (!queued)
+        {
             outstandingSnapshots = Mathf.Max(0, outstandingSnapshots - 1);
+            snapshotPool.Push(request);
+        }
     }
+
+    // Pooled callback object: avoids allocating a closure every FixedUpdate.
+    private sealed class SnapshotRequest
+    {
+        public int generation;
+        public int snapshotId;
+        public readonly System.Action<SpectralOceanFFT.SurfaceSample[]> callback;
+        private readonly OceanBuoyancy owner;
+
+        public SnapshotRequest(OceanBuoyancy owner)
+        {
+            this.owner = owner;
+            callback = Invoke;
+        }
+
+        private void Invoke(SpectralOceanFFT.SurfaceSample[] samples)
+        {
+            owner.OnSurfaceSamplesReceived(generation, snapshotId, samples);
+            owner.snapshotPool.Push(this);
+        }
+    }
+
+    private readonly System.Collections.Generic.Stack<SnapshotRequest> snapshotPool =
+        new System.Collections.Generic.Stack<SnapshotRequest>(4);
 
     private void ApplyBuoyancyForces()
     {
@@ -196,6 +270,7 @@ public sealed class OceanBuoyancy : MonoBehaviour
         if (totalWeight <= 0f)
             return;
 
+        bool slopeActive = PrepareSlopeFollowHeights();
         float gravity = Physics.gravity.magnitude;
         for (int i = 0; i < latestSamples.Length; i++)
         {
@@ -210,8 +285,17 @@ public sealed class OceanBuoyancy : MonoBehaviour
             // FixedUpdate. Correct height at the body's current probe XZ using the
             // local tangent plane, avoiding force spikes when a fast hull moves
             // slightly while AsyncGPUReadback is in flight.
-            if (!TryGetWaterHeightAtProbe(sample, probeWorld, out float waterHeightAtCurrentProbe))
+            float waterHeightAtCurrentProbe;
+            if (slopeActive)
+            {
+                if (!slopeValid[i])
+                    continue;
+                waterHeightAtCurrentProbe = slopeHeights[i];
+            }
+            else if (!TryGetWaterHeightAtProbe(sample, probeWorld, out waterHeightAtCurrentProbe))
+            {
                 continue;
+            }
             float submergedDepth = waterHeightAtCurrentProbe - probeWorld.y;
             if (submergedDepth <= 0f)
                 continue;
@@ -232,10 +316,82 @@ public sealed class OceanBuoyancy : MonoBehaviour
 
             Vector3 pointVelocity = body.GetPointVelocity(probeWorld);
             Vector3 dragAcceleration = -pointVelocity
-                * (waterDrag * immersion * normalizedWeight);
-            dragAcceleration = Vector3.ClampMagnitude(dragAcceleration, maxDragAcceleration);
+                * (waterDrag * RuntimeDragScale * immersion * normalizedWeight);
+            dragAcceleration = Vector3.ClampMagnitude(dragAcceleration, maxDragAcceleration * RuntimeDragScale);
             body.AddForceAtPosition(dragAcceleration, probeWorld, ForceMode.Acceleration);
         }
+    }
+
+    /// <summary>
+    /// Fits a plane to the probe water heights (hull-local x/z) and rebuilds each height as
+    /// mean + follow.x * roll slope + follow.y * pitch slope + residual. The mean height is
+    /// always preserved, so heave is untouched. Returns false when follow is (1,1).
+    /// </summary>
+    private bool PrepareSlopeFollowHeights()
+    {
+        Vector2 follow = RuntimeSlopeFollow;
+        follow.x = Mathf.Clamp01(follow.x);
+        follow.y = Mathf.Clamp01(follow.y);
+        if (follow.x > 0.999f && follow.y > 0.999f)
+            return false;
+
+        int count = Mathf.Min(latestSamples.Length, samplePoints.Length);
+        if (slopeHeights == null || slopeHeights.Length < count)
+        {
+            slopeHeights = new float[count];
+            slopeValid = new bool[count];
+        }
+
+        float weightSum = 0f, meanHeight = 0f, centerX = 0f, centerZ = 0f;
+        for (int i = 0; i < count; i++)
+        {
+            slopeValid[i] = false;
+            float weight = Mathf.Max(0f, samplePoints[i].liftWeight);
+            if (weight <= 0f || !latestSamples[i].IsValid)
+                continue;
+            Vector3 probeWorld = body.transform.TransformPoint(samplePoints[i].localPosition);
+            if (!TryGetWaterHeightAtProbe(latestSamples[i], probeWorld, out float height))
+                continue;
+            slopeHeights[i] = height;
+            slopeValid[i] = true;
+            weightSum += weight;
+            meanHeight += weight * height;
+            centerX += weight * samplePoints[i].localPosition.x;
+            centerZ += weight * samplePoints[i].localPosition.z;
+        }
+        if (weightSum <= 0f)
+            return false;
+
+        meanHeight /= weightSum;
+        centerX /= weightSum;
+        centerZ /= weightSum;
+
+        float sxx = 0f, szz = 0f, sxh = 0f, szh = 0f;
+        for (int i = 0; i < count; i++)
+        {
+            if (!slopeValid[i]) continue;
+            float weight = Mathf.Max(0f, samplePoints[i].liftWeight);
+            float dx = samplePoints[i].localPosition.x - centerX;
+            float dz = samplePoints[i].localPosition.z - centerZ;
+            float dh = slopeHeights[i] - meanHeight;
+            sxx += weight * dx * dx; szz += weight * dz * dz;
+            sxh += weight * dx * dh; szh += weight * dz * dh;
+        }
+        float rollSlope = sxx > 0.0001f ? sxh / sxx : 0f;
+        float pitchSlope = szz > 0.0001f ? szh / szz : 0f;
+        float residualFollow = 0.5f * (follow.x + follow.y);
+
+        for (int i = 0; i < count; i++)
+        {
+            if (!slopeValid[i]) continue;
+            float dx = samplePoints[i].localPosition.x - centerX;
+            float dz = samplePoints[i].localPosition.z - centerZ;
+            float dh = slopeHeights[i] - meanHeight;
+            float plane = rollSlope * dx + pitchSlope * dz;
+            slopeHeights[i] = meanHeight + follow.x * rollSlope * dx
+                              + follow.y * pitchSlope * dz + residualFollow * (dh - plane);
+        }
+        return true;
     }
 
     private bool TryGetWaterHeightAtProbe(
@@ -265,6 +421,34 @@ public sealed class OceanBuoyancy : MonoBehaviour
             maximumSlopeHeightCorrection);
         waterHeight = sample.Height + correction;
         return IsFinite(waterHeight);
+    }
+
+    /// <summary>Number of buoyancy probes.</summary>
+    public int ProbeCount => samplePoints != null ? samplePoints.Length : 0;
+
+    /// <summary>
+    /// World position of probe <paramref name="index"/> and its signed immersion
+    /// (water height minus probe height) / buoyancyDepth: 0 = at the surface,
+    /// positive = under water, negative = above it. Used by effects (foam, spray).
+    /// </summary>
+    public bool TryGetProbeContact(int index, out Vector3 probeWorld, out float immersion)
+    {
+        probeWorld = default;
+        immersion = 0f;
+        if (body == null || latestSamples == null || samplePoints == null || !HasFreshSamples ||
+            index < 0 || index >= latestSamples.Length || index >= samplePoints.Length)
+            return false;
+
+        SpectralOceanFFT.SurfaceSample sample = latestSamples[index];
+        if (!sample.IsValid)
+            return false;
+
+        probeWorld = body.transform.TransformPoint(samplePoints[index].localPosition);
+        if (!TryGetWaterHeightAtProbe(sample, probeWorld, out float waterHeight))
+            return false;
+
+        immersion = Mathf.Clamp((waterHeight - probeWorld.y) / buoyancyDepth, -1f, 1f);
+        return true;
     }
 
     private float CalculateCurrentWaterImmersion()
@@ -304,6 +488,7 @@ public sealed class OceanBuoyancy : MonoBehaviour
             return;
 
         outstandingSnapshots = Mathf.Max(0, outstandingSnapshots - 1);
+        immersionCacheFrame = -1;
         if (!isActiveAndEnabled || samples == null || samples.Length != SamplePointCount)
             return;
         if (preferNewestSnapshot && snapshotId < latestAcceptedSnapshotId)
@@ -317,6 +502,7 @@ public sealed class OceanBuoyancy : MonoBehaviour
         Vector3 positionSum = Vector3.zero;
         Vector3 normalSum = Vector3.zero;
         Vector3 waveDisplacementSum = Vector3.zero;
+        Vector2 latticeSum = Vector2.zero;
         float heightSum = 0f;
         int validCount = 0;
         float meanWaterLevel = ocean != null ? ocean.WaterLevelY : 0f;
@@ -327,6 +513,7 @@ public sealed class OceanBuoyancy : MonoBehaviour
             positionSum += samples[i].Position;
             normalSum += samples[i].Normal;
             heightSum += samples[i].Height;
+            latticeSum += samples[i].LatticeDisplacementXZ;
             waveDisplacementSum += new Vector3(
                 samples[i].Position.x - samples[i].BasePosition.x,
                 samples[i].Position.y - meanWaterLevel,
@@ -339,6 +526,7 @@ public sealed class OceanBuoyancy : MonoBehaviour
         {
             hasAnyValidSamples = true;
             float inverseCount = 1f / validCount;
+            averageLatticeDisplacement = latticeSum * inverseCount;
             averageWaterPosition = positionSum * inverseCount;
             averageWaterHeight = heightSum * inverseCount;
             averageWaterNormal = normalSum.sqrMagnitude > 0.001f
@@ -395,8 +583,20 @@ public sealed class OceanBuoyancy : MonoBehaviour
         averageWaterPosition = Vector3.zero;
         averageWaterNormal = Vector3.up;
         averageWaterVelocity = Vector3.zero;
+        averageLatticeDisplacement = Vector2.zero;
         previousAverageWaveDisplacement = Vector3.zero;
         previousAverageWaveSampleTime = -1000f;
+    }
+
+    /// <summary>
+    /// Average horizontal displacement of the water particles under the hull probes
+    /// (what a Gerstner wave does to a floating body). Zero-mean over a wave cycle.
+    /// </summary>
+    public bool TryGetLatticeDisplacement(out Vector2 displacement, out float sampleAge)
+    {
+        sampleAge = SampleAge;
+        displacement = averageLatticeDisplacement;
+        return HasFreshSamples;
     }
 
     /// <summary>Returns the latest accepted sample for a specific hull probe.</summary>

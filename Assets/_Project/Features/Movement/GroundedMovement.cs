@@ -47,6 +47,14 @@ public class GroundedMovement : MonoBehaviour, IMovement, IPlanarVelocityMovemen
         _timeSinceLastGrounded = 0f;
     }
 
+    /// <summary>Launches the character with an initial planar velocity and a jump of the given height.</summary>
+    public void LaunchJump(Vector3 planarVelocity, float height)
+    {
+        SetPlanarVelocity(planarVelocity);
+        _velocity.y = Mathf.Sqrt(Mathf.Max(0f, height) * -2f * Physics.gravity.y);
+        _timeSinceLastGrounded = 0f;
+    }
+
     public void Jump(bool released)
     {
         if (released || Controller == null || !Controller.enabled)

@@ -1,5 +1,6 @@
 using Assets._Project.Features.Boat;
 using Assets._Project.Features.Movement;
+using Assets._Project.Features.StatusViewModels;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,6 +8,7 @@ using UnityEngine.InputSystem;
 /// Routes player input to grounded, swimming, or boat movement. Movement changes
 /// preserve the current input vector and planar velocity where supported.
 /// </summary>
+[RequireComponent(typeof(StaminaComponent))]
 public sealed class PlayerController : MonoBehaviour
 {
     [Header("Movement Types")]
@@ -17,7 +19,7 @@ public sealed class PlayerController : MonoBehaviour
     [Header("Input Actions")]
     public InputActionReference MovementAction;
     public InputActionReference JumpAction;
-    [Tooltip("Optional: hold to swim downward. JumpAction swims upward while held.")]
+    [Tooltip("Optional: hold to swim downward. While swimming, JumpAction performs a stamina-costing hop out of the water (SwimmingMovement.EnableJumpHop).")]
     public InputActionReference DiveAction;
 
     [Header("Boat Boarding")]
@@ -29,8 +31,13 @@ public sealed class PlayerController : MonoBehaviour
     [Min(0.25f)] public float DefaultBoatExitDistance = 1.75f;
     [Tooltip("Fraction of the boat's planar velocity inherited when stepping off.")]
     [Range(0f, 1.5f)] public float DisembarkVelocityInheritance = 1f;
-    [Tooltip("Tap E to leave the boat; holding E past this time rotates the sail instead.")]
-    [Min(0.05f)] public float SailRotationHoldThreshold = 0.22f;
+    [Header("Leaving The Boat (Jump key)")]
+    [Tooltip("Upward launch height (metres) when jumping off the boat.")]
+    [Min(0f)] public float BoatExitJumpHeight = 1.1f;
+    [Tooltip("Extra planar speed (m/s) added when jumping off, along input direction (or away from the hull when idle).")]
+    [Min(0f)] public float BoatExitJumpSpeed = 3f;
+    [Tooltip("Seconds the player does not collide with the boat after jumping off.")]
+    [Min(0f)] public float BoatExitIgnoreCollisionTime = 0.2f;
     [Tooltip("Layers checked when selecting a safe side of the boat to disembark.")]
     public LayerMask BoatExitObstructionMask = ~0;
     [Tooltip("Extra outward offsets tested when an ExitAnchor is close to terrain or another obstacle.")]
@@ -56,9 +63,19 @@ public sealed class PlayerController : MonoBehaviour
     private int waterSampleGeneration;
     private BoatControlHintUI boatControlHint;
     private bool interactionPressPending;
-    private bool interactionHoldConsumed;
-    private float interactionPressStartedAt;
+    private readonly System.Collections.Generic.List<Collider> ignoredBoatColliders = new System.Collections.Generic.List<Collider>(16);
+    private readonly System.Collections.Generic.List<Collider> ignoredPlayerColliders = new System.Collections.Generic.List<Collider>(4);
+    private float ignoreBoatCollisionUntil;
+    private bool boatCollisionIgnored;
+    private bool sailInputActive;
+    private float nextPromptPollTime;
+    private const float PromptPollInterval = 0.1f;
+    private int pendingSampleGeneration;
+    private System.Action<SpectralOceanFFT.SurfaceSample> sampleCallback;
     private readonly Collider[] exitOverlapBuffer = new Collider[32];
+
+    /// <summary>Stamina pool shared with SwimmingMovement (auto-added if missing on older prefabs).</summary>
+    public StaminaComponent Stamina { get; private set; }
 
     public IMovement ActiveMovement => activeMovement;
     public bool IsAboardBoat => isAboardBoat;
@@ -71,6 +88,10 @@ public sealed class PlayerController : MonoBehaviour
 
         if (Ocean == null)
             Ocean = Object.FindAnyObjectByType<SpectralOceanFFT>();
+
+        Stamina = StaminaComponent.Resolve(gameObject);
+        if (SwimmingMovement != null && SwimmingMovement.Stamina == null)
+            SwimmingMovement.Stamina = Stamina;
 
         boatControlHint = GetComponent<BoatControlHintUI>();
         if (boatControlHint == null)
@@ -125,6 +146,7 @@ public sealed class PlayerController : MonoBehaviour
         if (InteractAction == null)
             UpdateKeyboardFallbackInteraction();
 
+        UpdateBoatCollisionIgnore();
         UpdateSailRotationInput();
         UpdateNearbyBoatPrompt();
         UpdateAutomaticSwimming();
@@ -150,6 +172,7 @@ public sealed class PlayerController : MonoBehaviour
         DisableAction(DiveAction);
         DisableAction(InteractAction);
         CancelPendingWaterSample();
+        EndBoatCollisionIgnore();
 
         if (nearbyBoat != null && nearbyBoat.Prompt != null)
             nearbyBoat.Prompt.SetVisible(false);
@@ -158,7 +181,6 @@ public sealed class PlayerController : MonoBehaviour
         nearbyBoat = null;
         boatControlHint?.SetVisible(false);
         interactionPressPending = false;
-        interactionHoldConsumed = false;
 
         if (BoatMovement != null)
             BoatMovement.StopDriving();
@@ -283,12 +305,11 @@ public sealed class PlayerController : MonoBehaviour
         boat.Prompt?.SetVisible(false);
         boatControlHint?.SetVisible(true);
         interactionPressPending = false;
-        interactionHoldConsumed = false;
 
         return SetActiveMovement(BoatMovement);
     }
 
-    /// <summary>Leaves the boat. E is also used to unboard while already aboard.</summary>
+    /// <summary>Leaves the boat at an exit point (used for forced exits). The Jump key uses LeaveBoatWithJump.</summary>
     public void LeaveBoat(Transform exitPoint)
     {
         if (!isAboardBoat)
@@ -315,7 +336,7 @@ public sealed class PlayerController : MonoBehaviour
         LeaveBoatAtSafePose(position, rotation);
     }
 
-    private void LeaveBoatAtSafePose(Vector3 exitPosition, Quaternion exitRotation)
+    private void LeaveBoatAtSafePose(Vector3 exitPosition, Quaternion exitRotation, bool jump = false, Vector3 jumpPlanarVelocity = default)
     {
         if (!isAboardBoat)
             return;
@@ -348,16 +369,96 @@ public sealed class PlayerController : MonoBehaviour
         currentBoat = null;
         nearbyBoat = null;
         interactionPressPending = false;
-        interactionHoldConsumed = false;
         nextWaterCheckTime = Time.time + Mathf.Max(0.05f, WaterCheckInterval);
 
         if (GroundedMovement != null)
         {
             SetActiveMovement(GroundedMovement);
-            GroundedMovement.SetPlanarVelocity(boatPlanarVelocity);
-            GroundedMovement.ResetVerticalVelocity();
+            if (jump)
+            {
+                GroundedMovement.LaunchJump(boatPlanarVelocity + jumpPlanarVelocity, BoatExitJumpHeight);
+                BeginBoatCollisionIgnore(leavingBoat);
+            }
+            else
+            {
+                GroundedMovement.SetPlanarVelocity(boatPlanarVelocity);
+                GroundedMovement.ResetVerticalVelocity();
+            }
         }
     }
+
+    /// <summary>
+    /// Leaves the boat with a hop from the current seat position (no exit anchor).
+    /// The player ignores the boat's colliders for BoatExitIgnoreCollisionTime.
+    /// </summary>
+    public void LeaveBoatWithJump()
+    {
+        if (!isAboardBoat || currentBoat == null)
+            return;
+
+        Vector3 outward = Vector3.ProjectOnPlane(transform.position - currentBoat.transform.position, Vector3.up);
+        if (outward.sqrMagnitude < 0.0001f)
+            outward = transform.forward;
+        outward.Normalize();
+
+        Vector3 direction = outward;
+        if (latestDirection.sqrMagnitude > 0.04f)
+        {
+            float yaw = GroundedMovement != null && GroundedMovement.ReferenceTransform != null
+                ? GroundedMovement.ReferenceTransform.eulerAngles.y : 0f;
+            direction = Quaternion.Euler(0f, yaw, 0f) * new Vector3(latestDirection.x, 0f, latestDirection.y);
+            direction.Normalize();
+        }
+
+        LeaveBoatAtSafePose(
+            transform.position + Vector3.up * 0.1f,
+            Quaternion.Euler(0f, transform.eulerAngles.y, 0f),
+            true,
+            direction * BoatExitJumpSpeed);
+    }
+
+    private void BeginBoatCollisionIgnore(BoatController boat)
+    {
+        EndBoatCollisionIgnore();
+        if (boat == null || BoatExitIgnoreCollisionTime <= 0f)
+            return;
+
+        ignoredBoatColliders.Clear();
+        ignoredPlayerColliders.Clear();
+        boat.GetComponentsInChildren(true, ignoredBoatColliders);
+        GetComponentsInChildren(true, ignoredPlayerColliders);
+
+        for (int p = 0; p < ignoredPlayerColliders.Count; p++)
+            for (int b = 0; b < ignoredBoatColliders.Count; b++)
+                if (ignoredPlayerColliders[p] != null && ignoredBoatColliders[b] != null &&
+                    !ignoredBoatColliders[b].transform.IsChildOf(transform))
+                    Physics.IgnoreCollision(ignoredPlayerColliders[p], ignoredBoatColliders[b], true);
+
+        boatCollisionIgnored = true;
+        ignoreBoatCollisionUntil = Time.time + BoatExitIgnoreCollisionTime;
+    }
+
+    private void UpdateBoatCollisionIgnore()
+    {
+        if (boatCollisionIgnored && Time.time >= ignoreBoatCollisionUntil)
+            EndBoatCollisionIgnore();
+    }
+
+    private void EndBoatCollisionIgnore()
+    {
+        if (!boatCollisionIgnored)
+            return;
+
+        for (int p = 0; p < ignoredPlayerColliders.Count; p++)
+            for (int b = 0; b < ignoredBoatColliders.Count; b++)
+                if (ignoredPlayerColliders[p] != null && ignoredBoatColliders[b] != null)
+                    Physics.IgnoreCollision(ignoredPlayerColliders[p], ignoredBoatColliders[b], false);
+
+        ignoredPlayerColliders.Clear();
+        ignoredBoatColliders.Clear();
+        boatCollisionIgnored = false;
+    }
+
 
     /// <summary>
     /// Called by BoatController when its capsize recovery begins. Only the player
@@ -392,20 +493,11 @@ public sealed class PlayerController : MonoBehaviour
             return;
 
         interactionPressPending = true;
-        interactionHoldConsumed = false;
-        interactionPressStartedAt = Time.unscaledTime;
     }
 
     private void CompleteInteractionPress()
     {
-        if (!interactionPressPending)
-            return;
-
-        bool shouldLeave = isAboardBoat && !interactionHoldConsumed;
         interactionPressPending = false;
-        interactionHoldConsumed = false;
-        if (shouldLeave)
-            LeaveBoat(null);
     }
 
     private void UpdateKeyboardFallbackInteraction()
@@ -429,23 +521,23 @@ public sealed class PlayerController : MonoBehaviour
     {
         if (!isAboardBoat || BoatMovement == null)
         {
-            BoatMovement?.SetSailRotationInput(0f);
+            if (sailInputActive)
+            {
+                BoatMovement?.SetSailRotationInput(0f);
+                sailInputActive = false;
+            }
             return;
         }
 
-        if (interactionPressPending &&
-            Time.unscaledTime - interactionPressStartedAt >= Mathf.Max(0.05f, SailRotationHoldThreshold))
-        {
-            interactionHoldConsumed = true;
-        }
-
+        // Holding E rotates the sail immediately; Q rotates it the other way.
         float rotationInput = 0f;
         if (Keyboard.current != null && Keyboard.current.qKey.isPressed)
             rotationInput -= 1f;
-        if (interactionPressPending && interactionHoldConsumed)
+        if (interactionPressPending)
             rotationInput += 1f;
 
         BoatMovement.SetSailRotationInput(Mathf.Clamp(rotationInput, -1f, 1f));
+        sailInputActive = true;
     }
 
     private void UpdateNearbyBoatPrompt()
@@ -459,6 +551,11 @@ public sealed class PlayerController : MonoBehaviour
             boatControlHint?.SetVisible(true);
             return;
         }
+
+        // Boarding range does not need per-frame polling; 10 Hz is indistinguishable.
+        if (Time.unscaledTime < nextPromptPollTime)
+            return;
+        nextPromptPollTime = Time.unscaledTime + PromptPollInterval;
 
         BoatController candidate = BoatController.FindNearest(transform.position, out _);
         if (candidate == nearbyBoat)
@@ -687,20 +784,24 @@ public sealed class PlayerController : MonoBehaviour
             ? CharacterController.bounds.center
             : transform.position + Vector3.up * 0.9f;
 
-        bool queued = Ocean.RequestSurfaceSample(samplePosition, sample =>
-        {
-            if (generation != waterSampleGeneration)
-                return;
-
-            waterSamplePending = false;
-            if (!isActiveAndEnabled || !sample.IsValid)
-                return;
-
-            EvaluateSwimmingThreshold(sample.Height);
-        });
+        pendingSampleGeneration = generation;
+        sampleCallback ??= OnWaterSampleReady;
+        bool queued = Ocean.RequestSurfaceSample(samplePosition, sampleCallback);
 
         if (!queued)
             waterSamplePending = false;
+    }
+
+    private void OnWaterSampleReady(SpectralOceanFFT.SurfaceSample sample)
+    {
+        if (pendingSampleGeneration != waterSampleGeneration)
+            return;
+
+        waterSamplePending = false;
+        if (!isActiveAndEnabled || !sample.IsValid)
+            return;
+
+        EvaluateSwimmingThreshold(sample.Height);
     }
 
     private void EvaluateSwimmingThreshold(float surfaceHeight)
@@ -715,6 +816,7 @@ public sealed class PlayerController : MonoBehaviour
         if (!object.ReferenceEquals(activeMovement, SwimmingMovement) && surfaceHeight >= bodyMidpoint)
             EnterSwimming();
         else if (object.ReferenceEquals(activeMovement, SwimmingMovement) &&
+                 !SwimmingMovement.IsHopping &&
                  surfaceHeight < bodyMidpoint - Mathf.Max(0f, SwimmingExitHysteresis))
             ExitSwimming();
     }
@@ -726,6 +828,13 @@ public sealed class PlayerController : MonoBehaviour
 
     private void OnJumped(InputAction.CallbackContext context)
     {
+        if (isAboardBoat)
+        {
+            if (context.performed)
+                LeaveBoatWithJump();
+            return;
+        }
+
         activeMovement?.Jump(context.canceled);
     }
 
