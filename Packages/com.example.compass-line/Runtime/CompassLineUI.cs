@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -32,8 +33,18 @@ namespace CompassLine
             [Tooltip("Sprite displayed for this location. A missing sprite hides this marker.")]
             public Sprite icon;
 
-            [Tooltip("Turn off to hide this location without removing it from the list.")]
+            [Tooltip("Turn off to fade this location out without removing it from the list.")]
             public bool isActive = true;
+
+            [Header("Landmark")]
+            [Tooltip("Show an additional rotated-square diamond above the compass line for this location.")]
+            public bool isLandmark;
+
+            [Tooltip("Landmark diamond size in UI units before distance scaling.")]
+            [Min(1f)] public float landmarkDiamondSize = 10f;
+
+            [Tooltip("Landmark diamond vertical offset from the compass line. Positive values move it upward.")]
+            public float landmarkYOffset = 0f;
         }
 
         [Header("Heading and world reference")]
@@ -66,23 +77,46 @@ namespace CompassLine
         [Tooltip("The default generated line is 2 UI units tall. Increase this when using a custom background image.")]
         [SerializeField, Min(1f)] private float backgroundHeight = 2f;
         [SerializeField, Min(40f)] private float rootHeight = 104f;
+        [Header("Line edge decoration")]
+        [Tooltip("Show matching equilateral arrowhead triangles at both ends of the compass line.")]
+        [SerializeField] private bool showEdgeTriangles = true;
+        [Tooltip("Length of each equilateral triangle side, in UI units.")]
+        [SerializeField, Min(1f)] private float edgeTriangleSize = 12f;
 
         [Header("Visible compass range")]
         [Tooltip("Total horizontal field of view shown by the strip. 180 means 90 degrees to either side of forward.")]
         [SerializeField, Range(30f, 360f)] private float visibleArcDegrees = 180f;
         [Tooltip("Start fading overlays at this fraction of the half-width. 0.8 means the final 20% fades to transparent.")]
         [SerializeField, Range(0f, 0.99f)] private float edgeFadeStart = 0.78f;
+        [Tooltip("Angular hysteresis for marker visibility. After a marker leaves the visible arc, it must move this many degrees inside the arc before fading back in. This prevents boundary jitter from restarting fades every frame.")]
+        [SerializeField, Range(0f, 15f)] private float outsideArcHysteresisDegrees = 2f;
 
         [Header("Location markers")]
         [SerializeField] private List<CompassLocation> locations = new List<CompassLocation>();
         [Tooltip("Markers closer than this distance are hidden. Assumes 1 Unity unit = 1 metre.")]
         [SerializeField, Min(0f)] private float minimumVisibleDistance = 100f;
-        [Tooltip("When enabled, distance is measured on the XZ plane and ignores elevation.")]
-        [SerializeField] private bool useHorizontalDistance = true;
+        // Proximity filtering and distance-based sizing always use the XZ plane.
         [SerializeField, Min(4f)] private float markerSize = 24f;
         [Tooltip("Vertical UI offset of location icons relative to the line. Positive values move icons upward.")]
         [SerializeField] private float markerYOffset = 13f;
         [SerializeField] private Color markerTint = Color.white;
+        [SerializeField] private Color landmarkTint = Color.white;
+
+        [Header("Marker animation")]
+        [Tooltip("Duration in seconds for marker fade/scale transitions.")]
+        [SerializeField, Min(0f)] private float markerTransitionDuration = 0.2f;
+        [Tooltip("A marker grows to this scale multiplier while fading out because it is inside the minimum distance. It shrinks back to 1 when it reappears.")]
+        [SerializeField, Min(1f)] private float proximityHideScale = 1.25f;
+        [Tooltip("Use unscaled time so compass animations continue while gameplay is paused.")]
+        [SerializeField] private bool useUnscaledTime = true;
+
+        [Header("Distance-based marker sizing")]
+        [Tooltip("At or below this XZ distance, markers use their full intended size (scale 1).")]
+        [SerializeField, Min(0f)] private float distanceScaleStart = 150f;
+        [Tooltip("At or beyond this XZ distance, markers reach the configured minimum scale.")]
+        [SerializeField, Min(0.01f)] private float distanceScaleEnd = 700f;
+        [Tooltip("Smallest distance-based size multiplier. Maximum scale is always 1.")]
+        [SerializeField, Range(0.01f, 1f)] private float minimumDistanceScale = 0.5f;
 
         [Header("Vertical layout")]
         [SerializeField] private float cardinalLabelYOffset = 38f;
@@ -98,6 +132,11 @@ namespace CompassLine
         private Image backgroundImage;
         private Texture2D generatedLineTexture;
         private Sprite generatedLineSprite;
+        private Texture2D generatedTriangleTexture;
+        private Sprite generatedTriangleSprite;
+        private Image leftEdgeTriangle;
+        private Image rightEdgeTriangle;
+        private readonly Dictionary<string, Coroutine> pendingTargetDisables = new Dictionary<string, Coroutine>();
         private readonly List<MarkerView> markerViews = new List<MarkerView>();
         private readonly List<CardinalView> cardinalViews = new List<CardinalView>();
         private readonly List<DegreeView> degreeViews = new List<DegreeView>();
@@ -106,10 +145,39 @@ namespace CompassLine
 
         private static readonly float[] CardinalBearings = { 0f, 90f, 180f, 270f };
 
+        private enum MarkerVisibilityState
+        {
+            Unknown,
+            Visible,
+            Inactive,
+            Invalid,
+            TooClose,
+            OutsideArc
+        }
+
         private sealed class MarkerView
         {
             public RectTransform rect;
             public Image image;
+            public RectTransform diamondRect;
+            public Image diamond;
+
+            public MarkerVisibilityState state = MarkerVisibilityState.Unknown;
+            public bool hasState;
+            public float alpha = 1f;
+            public float animatedScale = 1f;
+            public float startAlpha = 1f;
+            public float targetAlpha = 1f;
+            public float startScale = 1f;
+            public float targetScale = 1f;
+            public float transitionElapsed;
+            public float transitionDuration;
+            // Latched separately from the transition state so an inactive/proximity
+            // state cannot clear the outside-arc dead band and cause boundary flicker.
+            public bool outsideArcLatched;
+            // Last spatial edge fade is retained through inactive/invalid transitions,
+            // preventing alpha from jumping back to 1 when target state changes mid-fade.
+            public float edgeFade = 1f;
         }
 
         private sealed class CardinalView
@@ -147,6 +215,7 @@ namespace CompassLine
 
         private void OnDestroy()
         {
+            ResetAllMarkerVisuals(disableGraphics: true);
             if (generatedLineSprite != null)
             {
                 Destroy(generatedLineSprite);
@@ -155,6 +224,16 @@ namespace CompassLine
             if (generatedLineTexture != null)
             {
                 Destroy(generatedLineTexture);
+            }
+
+            if (generatedTriangleSprite != null)
+            {
+                Destroy(generatedTriangleSprite);
+            }
+
+            if (generatedTriangleTexture != null)
+            {
+                Destroy(generatedTriangleTexture);
             }
         }
 
@@ -165,7 +244,7 @@ namespace CompassLine
                 return;
             }
 
-            if (rebuildWhenLocationCountChanges && lastLocationCount != locations.Count)
+            if ((rebuildWhenLocationCountChanges && lastLocationCount != locations.Count) || !AreMarkerViewsValid())
             {
                 RebuildLocationMarkers();
             }
@@ -235,6 +314,92 @@ namespace CompassLine
 
             locations[index].isActive = active;
             return true;
+        }
+
+        /// <summary>
+        /// Safely activates or deactivates the GameObject used by a location. When deactivating,
+        /// the location marker is first marked inactive and the target GameObject is disabled
+        /// only after its fade-out duration has elapsed. Use this instead of calling
+        /// target.gameObject.SetActive(false) directly when the marker should animate away.
+        /// </summary>
+        public bool SetLocationTargetActiveWithFade(string id, bool active)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < locations.Count; i++)
+            {
+                CompassLocation location = locations[i];
+                if (location == null || !string.Equals(location.id, id, StringComparison.Ordinal) || location.target == null)
+                {
+                    continue;
+                }
+
+                if (!active && (location.target == transform || transform.IsChildOf(location.target)))
+                {
+                    Debug.LogWarning("CompassLineUI cannot defer target deactivation when the target is the compass object or one of its parents. Disable the compass separately after handling its UI.", this);
+                    return false;
+                }
+
+                Coroutine pending;
+                if (pendingTargetDisables.TryGetValue(id, out pending) && pending != null)
+                {
+                    StopCoroutine(pending);
+                    pendingTargetDisables.Remove(id);
+                }
+
+                if (active)
+                {
+                    if (!location.target.gameObject.activeSelf)
+                    {
+                        location.target.gameObject.SetActive(true);
+                    }
+
+                    location.isActive = true;
+                    return true;
+                }
+
+                location.isActive = false;
+                if (markerTransitionDuration <= 0f)
+                {
+                    location.target.gameObject.SetActive(false);
+                }
+                else
+                {
+                    pendingTargetDisables[id] = StartCoroutine(DisableLocationTargetAfterFade(id, location, location.target));
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        private IEnumerator DisableLocationTargetAfterFade(string id, CompassLocation location, Transform target)
+        {
+            float duration = Mathf.Max(0f, markerTransitionDuration);
+            if (duration > 0f)
+            {
+                if (useUnscaledTime)
+                {
+                    yield return new WaitForSecondsRealtime(duration);
+                }
+                else
+                {
+                    yield return new WaitForSeconds(duration);
+                }
+            }
+
+            // A location may have been re-enabled, removed, or retargeted while waiting.
+            bool stillRegistered = locations.Contains(location);
+            bool sameTarget = location != null && location.target == target;
+            if (stillRegistered && sameTarget && !location.isActive && target != null)
+            {
+                target.gameObject.SetActive(false);
+            }
+
+            pendingTargetDisables.Remove(id);
         }
 
         /// <summary>Adds a location at runtime and refreshes the marker views.</summary>
@@ -315,6 +480,94 @@ namespace CompassLine
             backgroundImage.preserveAspect = false;
             backgroundImage.color = backgroundColor;
             SetRect(backgroundImage.rectTransform, Vector2.zero, new Vector2(compassWidth, backgroundHeight));
+
+            BuildEdgeTriangles();
+        }
+
+        private void BuildEdgeTriangles()
+        {
+            if (!showEdgeTriangles)
+            {
+                return;
+            }
+
+            Sprite triangleSprite = GetGeneratedTriangleSprite();
+            float side = Mathf.Max(1f, edgeTriangleSize);
+            float triangleWidth = side * 0.8660254f;
+            Vector2 triangleSize = new Vector2(triangleWidth, side);
+
+            leftEdgeTriangle = CreateImage("Compass Left Edge Triangle", rootRect);
+            leftEdgeTriangle.sprite = triangleSprite;
+            leftEdgeTriangle.type = Image.Type.Simple;
+            leftEdgeTriangle.preserveAspect = false;
+            leftEdgeTriangle.color = backgroundColor;
+            SetRect(leftEdgeTriangle.rectTransform,
+                new Vector2(-compassWidth * 0.5f + triangleWidth * 0.5f, 0f), triangleSize);
+            // The generated sprite points right, toward the center from the left edge.
+
+            rightEdgeTriangle = CreateImage("Compass Right Edge Triangle", rootRect);
+            rightEdgeTriangle.sprite = triangleSprite;
+            rightEdgeTriangle.type = Image.Type.Simple;
+            rightEdgeTriangle.preserveAspect = false;
+            rightEdgeTriangle.color = backgroundColor;
+            SetRect(rightEdgeTriangle.rectTransform,
+                new Vector2(compassWidth * 0.5f - triangleWidth * 0.5f, 0f), triangleSize);
+            rightEdgeTriangle.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 180f);
+        }
+
+        private Sprite GetGeneratedTriangleSprite()
+        {
+            if (generatedTriangleSprite != null)
+            {
+                return generatedTriangleSprite;
+            }
+
+            // A right-pointing equilateral triangle. Its vertical base is 128 px and
+            // its horizontal altitude is approximately 110.85 px (sqrt(3) / 2 * side).
+            const int width = 111;
+            const int height = 128;
+            generatedTriangleTexture = new Texture2D(width, height, TextureFormat.RGBA32, false)
+            {
+                name = "CompassLine_EquilateralEdgeTriangle",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.DontSave
+            };
+
+            Color32[] pixels = new Color32[width * height];
+            float tipX = width - 1f;
+            float bottomY = height - 1f;
+            float middleY = bottomY * 0.5f;
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    // Triangle vertices: (0,0), (0,height-1), (tipX,middleY).
+                    float px = x + 0.5f;
+                    float py = y + 0.5f;
+                    float normalizedHalfHeight = Mathf.Abs(py - middleY) / middleY;
+                    float maxX = tipX * (1f - normalizedHalfHeight);
+                    if (px <= maxX)
+                    {
+                        pixels[y * width + x] = new Color32(255, 255, 255, 255);
+                    }
+                    else
+                    {
+                        pixels[y * width + x] = new Color32(255, 255, 255, 0);
+                    }
+                }
+            }
+
+            generatedTriangleTexture.SetPixels32(pixels);
+            generatedTriangleTexture.Apply(false, true);
+            generatedTriangleSprite = Sprite.Create(
+                generatedTriangleTexture,
+                new Rect(0f, 0f, width, height),
+                new Vector2(0.5f, 0.5f),
+                100f);
+            generatedTriangleSprite.name = "CompassLine_EquilateralEdgeTriangle_Sprite";
+            generatedTriangleSprite.hideFlags = HideFlags.DontSave;
+            return generatedTriangleSprite;
         }
 
         private Sprite GetGeneratedLineSprite()
@@ -407,13 +660,37 @@ namespace CompassLine
             }
         }
 
+        private bool AreMarkerViewsValid()
+        {
+            // Count changes are controlled by rebuildWhenLocationCountChanges; this
+            // check only repairs UI children that were externally deleted or destroyed.
+            for (int i = 0; i < markerViews.Count; i++)
+            {
+                MarkerView view = markerViews[i];
+                if (view == null || view.rect == null || view.image == null ||
+                    view.diamondRect == null || view.diamond == null)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private void RebuildLocationMarkers()
         {
             for (int i = 0; i < markerViews.Count; i++)
             {
-                if (markerViews[i] != null && markerViews[i].image != null)
+                MarkerView oldView = markerViews[i];
+                ResetMarkerScale(oldView);
+                if (oldView.image != null)
                 {
-                    Destroy(markerViews[i].image.gameObject);
+                    Destroy(oldView.image.gameObject);
+                }
+
+                if (oldView.diamond != null)
+                {
+                    Destroy(oldView.diamond.gameObject);
                 }
             }
 
@@ -424,11 +701,25 @@ namespace CompassLine
                 Image image = CreateImage("Location Marker " + i, rootRect);
                 image.preserveAspect = true;
                 image.color = markerTint;
-                SetRect(image.rectTransform, new Vector2(0f, markerYOffset), new Vector2(markerSize, markerSize));
+                image.enabled = false;
+                RectTransform markerRect = image.rectTransform;
+                SetRect(markerRect, new Vector2(0f, markerYOffset), new Vector2(markerSize, markerSize));
+
+                // A separate UI square is used for landmarks. Its RectTransform is also
+                // animation-controlled, so no target/world object is ever scaled or rotated.
+                Image diamond = CreateImage("Landmark Diamond " + i, rootRect);
+                diamond.color = landmarkTint;
+                diamond.enabled = false;
+                RectTransform diamondRect = diamond.rectTransform;
+                SetRect(diamondRect, new Vector2(0f, 0f), new Vector2(10f, 10f));
+                diamondRect.localRotation = Quaternion.Euler(0f, 0f, 45f);
+
                 markerViews.Add(new MarkerView
                 {
-                    rect = image.rectTransform,
-                    image = image
+                    rect = markerRect,
+                    image = image,
+                    diamondRect = diamondRect,
+                    diamond = diamond
                 });
             }
 
@@ -473,49 +764,328 @@ namespace CompassLine
         private void UpdateLocationMarkers(float headingBearing)
         {
             Transform origin = distanceOrigin != null ? distanceOrigin : headingSource;
-            float minimumDistanceSquared = minimumVisibleDistance * minimumVisibleDistance;
+            float deltaTime = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
 
             for (int i = 0; i < markerViews.Count; i++)
             {
                 MarkerView view = markerViews[i];
+                if (view == null || view.rect == null || view.image == null ||
+                    view.diamondRect == null || view.diamond == null)
+                {
+                    continue;
+                }
+
                 CompassLocation location = i < locations.Count ? locations[i] : null;
 
-                if (location == null || !location.isActive || location.target == null ||
-                    !location.target.gameObject.activeInHierarchy || location.icon == null || origin == null)
-                {
-                    view.image.gameObject.SetActive(false);
-                    continue;
-                }
+                MarkerVisibilityState desiredState = MarkerVisibilityState.Invalid;
+                float x = view.rect.anchoredPosition.x;
+                float edgeFade = view.edgeFade;
+                float distanceScale = 1f;
+                float horizontalDistance = 0f;
 
-                Vector3 toTarget = location.target.position - origin.position;
-                if (useHorizontalDistance)
+                if (location == null)
                 {
+                    desiredState = MarkerVisibilityState.Invalid;
+                }
+                else if (!location.isActive || location.target == null ||
+                         !location.target.gameObject.activeInHierarchy || origin == null)
+                {
+                    desiredState = MarkerVisibilityState.Inactive;
+                }
+                else if (location.icon == null && !location.isLandmark)
+                {
+                    desiredState = MarkerVisibilityState.Invalid;
+                }
+                else
+                {
+                    Vector3 toTarget = location.target.position - origin.position;
+                    // Proximity filtering and distance sizing are deliberately XZ-only,
+                    // so elevation differences never affect either behavior.
                     toTarget.y = 0f;
+                    horizontalDistance = new Vector2(toTarget.x, toTarget.z).magnitude;
+
+                    if (horizontalDistance < minimumVisibleDistance || horizontalDistance < 0.0001f)
+                    {
+                        desiredState = MarkerVisibilityState.TooClose;
+                    }
+                    else
+                    {
+                        float bearing = Mathf.Repeat(
+                            Mathf.Atan2(toTarget.x, toTarget.z) * Mathf.Rad2Deg - northYawOffset,
+                            360f);
+
+                        distanceScale = GetDistanceScale(horizontalDistance);
+                        float markerExtent = Mathf.Max(
+                            markerSize,
+                            location.isLandmark ? Mathf.Max(1f, location.landmarkDiamondSize) : 0f) * distanceScale;
+                        float ignoredFade;
+                        bool inRange = TryGetMarkerStripPosition(
+                            view, bearing, headingBearing, markerExtent * 0.5f, out x, out ignoredFade);
+                        edgeFade = ignoredFade;
+                        view.edgeFade = edgeFade;
+                        if (!inRange)
+                        {
+                            desiredState = MarkerVisibilityState.OutsideArc;
+                        }
+                        else
+                        {
+                            desiredState = MarkerVisibilityState.Visible;
+                        }
+                    }
                 }
 
-                float distanceSquared = toTarget.sqrMagnitude;
-                if (distanceSquared < minimumDistanceSquared || distanceSquared < 0.0001f)
+                // Keep a valid marker positioned safely inside the strip edge while it
+                // fades out of range. If the Transform is moved outside the arc, do not
+                // freeze it at its last in-range position or let RectMask2D clip it early.
+                if (location != null && desiredState != MarkerVisibilityState.Invalid &&
+                    desiredState != MarkerVisibilityState.Inactive)
                 {
-                    view.image.gameObject.SetActive(false);
-                    continue;
-                }
+                    view.rect.anchoredPosition = new Vector2(x, markerYOffset);
+                    view.rect.sizeDelta = new Vector2(markerSize * distanceScale, markerSize * distanceScale);
 
-                float bearing = Mathf.Repeat(Mathf.Atan2(toTarget.x, toTarget.z) * Mathf.Rad2Deg - northYawOffset, 360f);
-                float x;
-                float fade;
-                bool inRange = TryGetStripPosition(bearing, headingBearing, out x, out fade);
-                if (!inRange || fade <= 0.001f)
-                {
-                    view.image.gameObject.SetActive(false);
-                    continue;
-                }
+                    view.image.sprite = location.icon;
 
-                view.image.sprite = location.icon;
-                view.rect.anchoredPosition = new Vector2(x, markerYOffset);
-                view.rect.sizeDelta = new Vector2(markerSize, markerSize);
-                SetGraphicAlpha(view.image, markerTint, fade);
-                view.image.gameObject.SetActive(true);
+                    float diamondSize = Mathf.Max(1f, location.landmarkDiamondSize) * distanceScale;
+                    view.diamondRect.anchoredPosition = new Vector2(x, location.landmarkYOffset);
+                    view.diamondRect.sizeDelta = new Vector2(diamondSize, diamondSize);
+                    view.diamondRect.localRotation = Quaternion.Euler(0f, 0f, 45f);
+                }
+                UpdateMarkerTransition(view, desiredState, deltaTime);
+
+                // Preserve the spatial edge fade even while the marker is in the
+                // OutsideArc transition. Dropping edgeFade on the first out-of-range
+                // frame used to make alpha jump back up before the state fade ran.
+                float finalAlpha = view.alpha * edgeFade;
+                SetGraphicAlpha(view.image, markerTint, finalAlpha);
+                SetGraphicAlpha(view.diamond, landmarkTint, finalAlpha);
+
+                // Keep the CanvasRenderer enabled for the complete transition. Using
+                // finalAlpha here caused an enable/disable edge toggle when the marker
+                // crossed the arc boundary or edge-fade threshold due to tiny yaw changes.
+                // The Graphic's color alpha handles opacity; the Graphic is disabled only
+                // once its transition has actually reached zero.
+                bool transitionStillVisible = view.alpha > 0.001f || desiredState == MarkerVisibilityState.Visible;
+                bool iconShouldRender = location != null && location.icon != null && transitionStillVisible;
+                bool diamondShouldRender = location != null && location.isLandmark && transitionStillVisible;
+                view.image.enabled = iconShouldRender;
+                view.diamond.enabled = diamondShouldRender;
+
+                ApplyAnimatedScale(view);
             }
+        }
+
+        private float GetDistanceScale(float horizontalDistance)
+        {
+            float minimumScale = Mathf.Clamp(minimumDistanceScale, 0.01f, 1f);
+            float start = Mathf.Max(0f, distanceScaleStart);
+            float end = Mathf.Max(start + 0.01f, distanceScaleEnd);
+            float t = Mathf.InverseLerp(start, end, horizontalDistance);
+            // The maximum is clamped to exactly 1; beyond the end range the marker
+            // remains at the configured minimum rather than shrinking indefinitely.
+            return Mathf.Clamp(Mathf.Lerp(1f, minimumScale, t), minimumScale, 1f);
+        }
+
+        private void UpdateMarkerTransition(MarkerView view, MarkerVisibilityState desiredState, float deltaTime)
+        {
+            if (!view.hasState)
+            {
+                view.hasState = true;
+                view.state = desiredState;
+                view.alpha = desiredState == MarkerVisibilityState.Visible ? 1f : 0f;
+                view.animatedScale = 1f;
+                view.startAlpha = view.targetAlpha = view.alpha;
+                view.startScale = view.targetScale = 1f;
+                view.transitionElapsed = 0f;
+                view.transitionDuration = 0f;
+                return;
+            }
+
+            if (view.state != desiredState)
+            {
+                view.state = desiredState;
+                view.startAlpha = view.alpha;
+                view.targetAlpha = desiredState == MarkerVisibilityState.Visible ? 1f : 0f;
+                view.startScale = view.animatedScale;
+                view.targetScale = desiredState == MarkerVisibilityState.TooClose
+                    ? Mathf.Max(1f, proximityHideScale)
+                    : 1f;
+                view.transitionElapsed = 0f;
+                view.transitionDuration = Mathf.Max(0f, markerTransitionDuration);
+
+                if (view.transitionDuration <= 0f)
+                {
+                    view.alpha = view.targetAlpha;
+                    view.animatedScale = view.targetScale;
+                }
+            }
+
+            if (view.transitionElapsed < view.transitionDuration)
+            {
+                view.transitionElapsed += Mathf.Max(0f, deltaTime);
+                float t = view.transitionDuration <= 0f
+                    ? 1f
+                    : Mathf.Clamp01(view.transitionElapsed / view.transitionDuration);
+                // SmoothStep gives the fade and scale a gentle ease at both ends.
+                float eased = t * t * (3f - 2f * t);
+                view.alpha = Mathf.Lerp(view.startAlpha, view.targetAlpha, eased);
+                view.animatedScale = Mathf.Lerp(view.startScale, view.targetScale, eased);
+
+                if (t >= 1f)
+                {
+                    view.alpha = view.targetAlpha;
+                    view.animatedScale = view.targetScale;
+                }
+            }
+        }
+
+        private static void ApplyAnimatedScale(MarkerView view)
+        {
+            if (view.rect != null)
+            {
+                if (Mathf.Approximately(view.animatedScale, 1f))
+                {
+                    // Explicitly restore the identity scale at the end of normal transitions.
+                    view.rect.localScale = Vector3.one;
+                }
+                else
+                {
+                    view.rect.localScale = Vector3.one * view.animatedScale;
+                }
+            }
+
+            if (view.diamondRect != null)
+            {
+                if (Mathf.Approximately(view.animatedScale, 1f))
+                {
+                    view.diamondRect.localScale = Vector3.one;
+                }
+                else
+                {
+                    view.diamondRect.localScale = Vector3.one * view.animatedScale;
+                }
+            }
+        }
+
+        private static void ResetMarkerScale(MarkerView view)
+        {
+            if (view == null)
+            {
+                return;
+            }
+
+            if (view.rect != null)
+            {
+                view.rect.localScale = Vector3.one;
+            }
+
+            if (view.diamondRect != null)
+            {
+                view.diamondRect.localScale = Vector3.one;
+                view.diamondRect.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            }
+
+            view.animatedScale = 1f;
+            view.startScale = 1f;
+            view.targetScale = 1f;
+        }
+
+        private void ResetAllMarkerVisuals(bool disableGraphics)
+        {
+            for (int i = 0; i < markerViews.Count; i++)
+            {
+                MarkerView view = markerViews[i];
+                ResetMarkerScale(view);
+                view.alpha = 1f;
+                view.hasState = false;
+                view.state = MarkerVisibilityState.Unknown;
+                view.transitionElapsed = 0f;
+                view.transitionDuration = 0f;
+                view.outsideArcLatched = false;
+                view.edgeFade = 1f;
+
+                if (disableGraphics)
+                {
+                    if (view.image != null)
+                    {
+                        view.image.enabled = false;
+                        SetGraphicAlpha(view.image, markerTint, 0f);
+                    }
+
+                    if (view.diamond != null)
+                    {
+                        view.diamond.enabled = false;
+                        SetGraphicAlpha(view.diamond, landmarkTint, 0f);
+                    }
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Marker-specific range test with hysteresis. A marker exits at the configured
+        /// arc boundary, but cannot re-enter until it is safely inside by the hysteresis
+        /// angle. This prevents rapid Visible/OutsideArc state reversals caused by tiny
+        /// camera-yaw or target-position changes at the edge.
+        /// </summary>
+        private bool TryGetMarkerStripPosition(
+            MarkerView view,
+            float targetBearing,
+            float headingBearing,
+            float markerHalfExtent,
+            out float x,
+            out float fade)
+        {
+            float relativeBearing = Mathf.DeltaAngle(headingBearing, targetBearing);
+            float halfArc = Mathf.Max(0.5f, visibleArcDegrees * 0.5f);
+            float absoluteRelative = Mathf.Abs(relativeBearing);
+
+            // A 360-degree compass has no outside region; don't create a dead band
+            // around the +/-180-degree wrap point.
+            if (visibleArcDegrees >= 359.9f)
+            {
+                view.outsideArcLatched = false;
+                x = (relativeBearing / 180f) * (compassWidth * 0.5f);
+                fade = 1f;
+                return true;
+            }
+
+            float hysteresis = Mathf.Clamp(outsideArcHysteresisDegrees, 0f, Mathf.Max(0f, halfArc - 0.1f));
+            if (view.outsideArcLatched)
+            {
+                // Stay outside until the target is well inside the visible arc.
+                if (absoluteRelative <= halfArc - hysteresis)
+                {
+                    view.outsideArcLatched = false;
+                }
+            }
+            else if (absoluteRelative > halfArc)
+            {
+                // Latch the exit; small movement around the boundary cannot restart it.
+                view.outsideArcLatched = true;
+            }
+
+            float normalized = absoluteRelative / halfArc;
+            float rawX = (relativeBearing / halfArc) * (compassWidth * 0.5f);
+            // Keep the fading icon within RectMask2D instead of letting it jump outside
+            // the viewport and get clipped before its fade can finish.
+            float halfWidth = compassWidth * 0.5f;
+            float safeHalfWidth = Mathf.Max(0f, halfWidth - Mathf.Max(0f, markerHalfExtent));
+            x = Mathf.Clamp(rawX, -safeHalfWidth, safeHalfWidth);
+
+            // Continue the same edge fade just beyond the nominal arc boundary.
+            // Because the fade's end is extended by the hysteresis angle, crossing
+            // from Visible to OutsideArc never resets opacity from edge-faded to full.
+            float fadeEndNormalized = 1f + (hysteresis / halfArc);
+            if (normalized <= edgeFadeStart)
+            {
+                fade = 1f;
+            }
+            else
+            {
+                fade = 1f - Mathf.InverseLerp(edgeFadeStart, fadeEndNormalized, normalized);
+            }
+
+            return !view.outsideArcLatched;
         }
 
         private bool TryGetStripPosition(float targetBearing, float headingBearing, out float x, out float fade)
@@ -624,6 +1194,11 @@ namespace CompassLine
 
         private static void SetGraphicAlpha(Graphic graphic, Color baseColor, float alphaMultiplier)
         {
+            if (graphic == null)
+            {
+                return;
+            }
+
             Color color = baseColor;
             color.a *= Mathf.Clamp01(alphaMultiplier);
             graphic.color = color;
@@ -653,11 +1228,29 @@ namespace CompassLine
             compassWidth = Mathf.Max(1f, compassWidth);
             backgroundHeight = Mathf.Max(1f, backgroundHeight);
             rootHeight = Mathf.Max(40f, rootHeight);
+            edgeTriangleSize = Mathf.Max(1f, edgeTriangleSize);
             visibleArcDegrees = Mathf.Clamp(visibleArcDegrees, 30f, 360f);
+            outsideArcHysteresisDegrees = Mathf.Clamp(outsideArcHysteresisDegrees, 0f, 15f);
             degreeStep = Mathf.Clamp(degreeStep, 1, 180);
             minimumVisibleDistance = Mathf.Max(0f, minimumVisibleDistance);
             markerSize = Mathf.Max(4f, markerSize);
+            markerTransitionDuration = Mathf.Max(0f, markerTransitionDuration);
+            proximityHideScale = Mathf.Max(1f, proximityHideScale);
+            distanceScaleStart = Mathf.Max(0f, distanceScaleStart);
+            distanceScaleEnd = Mathf.Max(distanceScaleStart + 0.01f, distanceScaleEnd);
+            minimumDistanceScale = Mathf.Clamp(minimumDistanceScale, 0.01f, 1f);
             tickLength = Mathf.Max(1f, tickLength);
+
+            if (locations != null)
+            {
+                for (int i = 0; i < locations.Count; i++)
+                {
+                    if (locations[i] != null)
+                    {
+                        locations[i].landmarkDiamondSize = Mathf.Max(1f, locations[i].landmarkDiamondSize);
+                    }
+                }
+            }
         }
 #endif
     }
