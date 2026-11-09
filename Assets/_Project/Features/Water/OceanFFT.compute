@@ -48,6 +48,7 @@ struct SurfaceQueryResult
 {
     float4 displacement; // xyz = world displacement, w = valid
     float4 normal;       // xyz = world normal, w = valid
+    float4 lattice;      // xy = horizontal displacement of the water particle under the query (v8), zw = unused
 };
 RWStructuredBuffer<SurfaceQueryResult> _SurfaceQueryResults;
 
@@ -972,5 +973,8 @@ void SampleSurface(uint3 id : SV_DispatchThreadID)
     result.displacement = float4(bestResidual.x, bestDisplacement.y, bestResidual.y,
         valid ? 1.0 : 0.0);
     result.normal = float4(bestNormal, valid ? 1.0 : 0.0);
+    // The water particle (lattice point) currently under the query XZ and how far the
+    // waves have carried it horizontally. Zero-mean over a wave cycle: boats use it to orbit.
+    result.lattice = float4(valid ? bestDisplacement.xz : float2(0.0, 0.0), 0.0, 0.0);
     _SurfaceQueryResults[index] = result;
 }

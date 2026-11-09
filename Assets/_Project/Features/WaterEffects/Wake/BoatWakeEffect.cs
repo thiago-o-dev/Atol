@@ -1,6 +1,7 @@
+using Assets._Project.Features.Boat;
 using UnityEngine;
 
-namespace Assets._Project.Features.Boat
+namespace Assets._Project.Features.WaterEffects
 {
     /// <summary>
     /// Optional visual-only boat wake. Reads motion and rudder/sail input from

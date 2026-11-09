@@ -74,7 +74,8 @@ Shader "Custom/Wave"
         {
             "RenderType" = "Opaque"
             "RenderPipeline" = "UniversalPipeline"
-            "Queue" = "Geometry"
+            // Geometry+2: after opaque boats and the HullWaterMask stencil stamp (Geometry+1).
+            "Queue" = "Geometry+2"
         }
 
         Pass
@@ -83,6 +84,15 @@ Shader "Custom/Wave"
             Tags { "LightMode" = "UniversalForward" }
             Cull Off
             ZWrite On
+
+            // Skip pixels stamped by HullWaterMask (keeps water out of the boat interior).
+            Stencil
+            {
+                Ref 1
+                ReadMask 1
+                Comp NotEqual
+                Pass Keep
+            }
 
             HLSLPROGRAM
 
@@ -112,6 +122,12 @@ Shader "Custom/Wave"
             SAMPLER(sampler_OceanNormal1);
             TEXTURE2D(_OceanNormal2);
             SAMPLER(sampler_OceanNormal2);
+
+            // Contact foam painted by Features/WaterEffects (WaterFoamField). Global, set per frame.
+            // _WaterFoamFieldParams = (window min X, window min Z, 1 / window size, enabled).
+            TEXTURE2D(_WaterFoamField);
+            SAMPLER(sampler_WaterFoamField);
+            float4 _WaterFoamFieldParams;
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
@@ -216,6 +232,76 @@ Shader "Custom/Wave"
                 float c = Hash21(cell + float2(0.0, 1.0));
                 float d = Hash21(cell + float2(1.0, 1.0));
                 return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+            }
+
+            // Expanding ripple rings from Features/WaterEffects (WaterFoamField.EmitRipple).
+            // Mostly a water-surface effect (normal tilt + faint tint); foam flecks are rare and small.
+            #define MAX_WATER_RIPPLES 32
+            float4 _WaterRippleDataA[MAX_WATER_RIPPLES]; // xy = centre XZ, z = start time, w = start radius
+            float4 _WaterRippleDataB[MAX_WATER_RIPPLES]; // x = max radius, y = strength, z = foam amount, w = lifetime
+            float4 _WaterRippleDataC[MAX_WATER_RIPPLES]; // xy = facing direction XZ, z = arc (0 full circle, 1 half circle)
+            float4 _WaterRippleParams;               // x = count, y = current time
+
+            void EvaluateRipples(float2 p, out float2 slope, out float tint, out float foamBits)
+            {
+                slope = 0.0;
+                tint = 0.0;
+                foamBits = 0.0;
+
+                int count = (int)_WaterRippleParams.x;
+                if (count <= 0)
+                    return;
+
+                float now = _WaterRippleParams.y;
+                float lace = ValueNoise(p * 5.0) * 0.6 + ValueNoise(p * 13.0 + 7.1) * 0.4;
+
+                [loop]
+                for (int k = 0; k < count; k++)
+                {
+                    float4 a = _WaterRippleDataA[k];
+                    float4 b = _WaterRippleDataB[k];
+                    float age = now - a.z;
+                    float life = max(b.w, 0.1);
+                    if (age < 0.0 || age > life)
+                        continue;
+
+                    float u = age / life;
+                    float2 d = p - a.xy;
+                    float r = length(d);
+
+                    // Ring radius decelerates as it spreads.
+                    float ringRadius = lerp(a.w, b.x, 1.0 - pow(1.0 - u, 1.7));
+                    float width = lerp(0.14, 0.42, u) * max(1.0, b.x * 0.09);
+                    float x = (r - ringRadius) / width;
+                    if (abs(x) > 3.0)
+                        continue;
+
+                    float2 dir = d / max(r, 1e-3);
+
+                    // Half-circle ripples (moving objects) only exist on the facing side.
+                    float side = dot(dir, _WaterRippleDataC[k].xy);
+                    float arcMask = lerp(1.0, smoothstep(-0.25, 0.35, side), _WaterRippleDataC[k].z);
+                    if (arcMask <= 0.001)
+                        continue;
+
+                    // Short wave packet: ~3 crests under a soft envelope.
+                    float envelope = exp(-0.5 * x * x);
+                    float phase = x * 3.6;
+                    float h = cos(phase) * envelope;
+                    float dhdr = (-sin(phase) * 3.6 * envelope - x * h) / width;
+
+                    // Visible for the whole life, fading smoothly to nothing; thins as it spreads.
+                    float fade = (1.0 - u) * (1.0 - u * u) * b.y * arcMask
+                               * rsqrt(max(r / max(a.w, 0.1), 1.0));
+
+                    slope += dir * dhdr * fade * 0.06;
+                    tint += abs(h) * fade;
+
+                    // Rare small flecks, only on strong crests of big, fresh ripples.
+                    float crest = saturate(h);
+                    foamBits = max(foamBits,
+                        smoothstep(0.82, 0.98, crest * (0.55 + lace * 0.9)) * b.z * saturate(fade * 1.5));
+                }
             }
 
             float ShoreFoamBoundaryNoise(float2 worldXZ)
@@ -604,6 +690,12 @@ Shader "Custom/Wave"
                     n0.xz / max(n0.y, 0.12) +
                     n1.xz / max(n1.y, 0.12) +
                     n2.xz / max(n2.y, 0.12)) * normalScale;
+
+                float2 rippleSlope;
+                float rippleTint;
+                float rippleFoam;
+                EvaluateRipples(IN.positionWS.xz, rippleSlope, rippleTint, rippleFoam);
+                combinedSlope += rippleSlope;
                 float3 normalWS = normalize(float3(
                     combinedSlope.x, 1.0, combinedSlope.y));
                 if (!all(isfinite(normalWS)))
@@ -681,6 +773,7 @@ Shader "Custom/Wave"
                     _SpecularPower) * _SpecularStrength;
                 waterColor += _SunColor.rgb * specular;
                 waterColor += _FresnelColor.rgb * fresnel * _FresnelStrength;
+                waterColor += _ShallowColor.rgb * rippleTint * 0.12;
 
                 float foam = 0.0;
                 if (_OceanEnabled > 0.5)
@@ -727,6 +820,27 @@ Shader "Custom/Wave"
                         max(washFoam, breakingFoam)));
                 }
 
+                // Player / boat contact foam, read from the top-down foam field so it sits
+                // exactly on the displaced water surface. Noise breaks the soft stamp
+                // edges into lacy foam; it is skipped entirely when no field is active.
+                if (_WaterFoamFieldParams.w > 0.0)
+                {
+                    float2 foamUV = (IN.positionWS.xz - _WaterFoamFieldParams.xy)
+                                    * _WaterFoamFieldParams.z;
+                    float2 edge = min(foamUV, 1.0 - foamUV);
+                    float insideField = saturate(min(edge.x, edge.y) * 24.0);
+                    float contact = SAMPLE_TEXTURE2D_LOD(
+                        _WaterFoamField, sampler_WaterFoamField, foamUV, 0).r
+                        * _WaterFoamFieldParams.w * insideField;
+
+                    float2 noiseP = IN.positionWS.xz;
+                    float lace = 0.6 * ValueNoise(noiseP * 1.9 + _Time.y * 0.35)
+                               + 0.4 * ValueNoise(noiseP * 6.3 - _Time.y * 0.6);
+                    float contactFoam = smoothstep(0.05, 0.4, contact * (0.6 + 0.8 * lace));
+                    foam = saturate(max(foam, contactFoam));
+                }
+
+                foam = saturate(max(foam, rippleFoam));
                 waterColor = lerp(waterColor, _FoamColor.rgb, foam);
 
                 return half4(waterColor, 1.0);

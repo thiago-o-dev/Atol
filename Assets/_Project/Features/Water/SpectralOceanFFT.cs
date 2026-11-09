@@ -16,6 +16,72 @@ using UnityEngine.Rendering;
 [RequireComponent(typeof(MeshRenderer))]
 public sealed class SpectralOceanFFT : MonoBehaviour
 {
+    /// <summary>Cached shader property IDs (avoids per-call string hashing).</summary>
+    private static class PropID
+    {
+        public static readonly int SampleResolution = Shader.PropertyToID("_SampleResolution");
+        public static readonly int SampleCount = Shader.PropertyToID("_SampleCount");
+        public static readonly int SamplePatchLength0 = Shader.PropertyToID("_SamplePatchLength0");
+        public static readonly int SamplePatchLength1 = Shader.PropertyToID("_SamplePatchLength1");
+        public static readonly int SamplePatchLength2 = Shader.PropertyToID("_SamplePatchLength2");
+        public static readonly int SampleShoreMapOriginXZ = Shader.PropertyToID("_SampleShoreMapOriginXZ");
+        public static readonly int SampleShoreMapSizeXZ = Shader.PropertyToID("_SampleShoreMapSizeXZ");
+        public static readonly int SampleShoreMapFlipV = Shader.PropertyToID("_SampleShoreMapFlipV");
+        public static readonly int SampleShoreDistanceRangeMeters = Shader.PropertyToID("_SampleShoreDistanceRangeMeters");
+        public static readonly int SampleShoreMaxDepthMeters = Shader.PropertyToID("_SampleShoreMaxDepthMeters");
+        public static readonly int SampleShoreFadeStartMeters = Shader.PropertyToID("_SampleShoreFadeStartMeters");
+        public static readonly int SampleShoreFadeEndMeters = Shader.PropertyToID("_SampleShoreFadeEndMeters");
+        public static readonly int SampleNearShoreWaveStrength = Shader.PropertyToID("_SampleNearShoreWaveStrength");
+        public static readonly int SampleShoreEdgeFadeMeters = Shader.PropertyToID("_SampleShoreEdgeFadeMeters");
+        public static readonly int SampleShoreBreakStartMeters = Shader.PropertyToID("_SampleShoreBreakStartMeters");
+        public static readonly int SampleShoreBreakPeakMeters = Shader.PropertyToID("_SampleShoreBreakPeakMeters");
+        public static readonly int SampleShoreBreakEndMeters = Shader.PropertyToID("_SampleShoreBreakEndMeters");
+        public static readonly int SampleShoreDepthPerMeter = Shader.PropertyToID("_SampleShoreDepthPerMeter");
+        public static readonly int SampleBreakerHeightToDepth = Shader.PropertyToID("_SampleBreakerHeightToDepth");
+        public static readonly int SampleShoreShoalingScale = Shader.PropertyToID("_SampleShoreShoalingScale");
+        public static readonly int SampleShoreHorizontalFloor = Shader.PropertyToID("_SampleShoreHorizontalFloor");
+        public static readonly int SampleShoreHorizontalDrive = Shader.PropertyToID("_SampleShoreHorizontalDrive");
+        public static readonly int SampleShoreChoppiness = Shader.PropertyToID("_SampleShoreChoppiness");
+        public static readonly int SampleShoreNormalBoost = Shader.PropertyToID("_SampleShoreNormalBoost");
+        public static readonly int SampleDisplacement0 = Shader.PropertyToID("_SampleDisplacement0");
+        public static readonly int SampleDisplacement1 = Shader.PropertyToID("_SampleDisplacement1");
+        public static readonly int SampleDisplacement2 = Shader.PropertyToID("_SampleDisplacement2");
+        public static readonly int SampleNormal0 = Shader.PropertyToID("_SampleNormal0");
+        public static readonly int SampleNormal1 = Shader.PropertyToID("_SampleNormal1");
+        public static readonly int SampleNormal2 = Shader.PropertyToID("_SampleNormal2");
+        public static readonly int SampleShoreDistance = Shader.PropertyToID("_SampleShoreDistance");
+        public static readonly int SampleShoreDepth = Shader.PropertyToID("_SampleShoreDepth");
+        public static readonly int SurfaceQueryPositions = Shader.PropertyToID("_SurfaceQueryPositions");
+        public static readonly int SurfaceQueryResults = Shader.PropertyToID("_SurfaceQueryResults");
+        public static readonly int Resolution = Shader.PropertyToID("_Resolution");
+        public static readonly int Log2Resolution = Shader.PropertyToID("_Log2Resolution");
+        public static readonly int Seed = Shader.PropertyToID("_Seed");
+        public static readonly int WindDirection = Shader.PropertyToID("_WindDirection");
+        public static readonly int WindSpeed = Shader.PropertyToID("_WindSpeed");
+        public static readonly int WindStrength = Shader.PropertyToID("_WindStrength");
+        public static readonly int WindWaveStrength = Shader.PropertyToID("_WindWaveStrength");
+        public static readonly int PhillipsAmplitude = Shader.PropertyToID("_PhillipsAmplitude");
+        public static readonly int SmallWaveDamping = Shader.PropertyToID("_SmallWaveDamping");
+        public static readonly int BackwindDamping = Shader.PropertyToID("_BackwindDamping");
+        public static readonly int TimeSeconds = Shader.PropertyToID("_TimeSeconds");
+        public static readonly int FoamBias = Shader.PropertyToID("_FoamBias");
+        public static readonly int FoamGain = Shader.PropertyToID("_FoamGain");
+        public static readonly int SeaStateStrength = Shader.PropertyToID("_SeaStateStrength");
+        public static readonly int Choppiness = Shader.PropertyToID("_Choppiness");
+        public static readonly int PatchLength = Shader.PropertyToID("_PatchLength");
+        public static readonly int MinWavelength = Shader.PropertyToID("_MinWavelength");
+        public static readonly int MaxWavelength = Shader.PropertyToID("_MaxWavelength");
+        public static readonly int CascadeScale = Shader.PropertyToID("_CascadeScale");
+        public static readonly int H0Write = Shader.PropertyToID("_H0Write");
+        public static readonly int H0Read = Shader.PropertyToID("_H0Read");
+        public static readonly int FFT0Write = Shader.PropertyToID("_FFT0Write");
+        public static readonly int FFTZWrite = Shader.PropertyToID("_FFTZWrite");
+        public static readonly int FFT0Read = Shader.PropertyToID("_FFT0Read");
+        public static readonly int FFTZRead = Shader.PropertyToID("_FFTZRead");
+        public static readonly int DisplacementWrite = Shader.PropertyToID("_DisplacementWrite");
+        public static readonly int NormalWrite = Shader.PropertyToID("_NormalWrite");
+    }
+
     public enum ShoreDebugView
     {
         Final = 0,
@@ -38,6 +104,8 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         public Vector3 Normal;
         public bool IsValid;
         public float SampleTime;
+        /// <summary>Horizontal (Gerstner-style) displacement of the water particle under this point. Zero-mean over a wave cycle.</summary>
+        public Vector2 LatticeDisplacementXZ;
         public float Height => Position.y;
     }
 
@@ -52,6 +120,7 @@ public sealed class SpectralOceanFFT : MonoBehaviour
     {
         public Vector4 displacement;
         public Vector4 normal;
+        public Vector4 lattice;
     }
 
     private sealed class PendingSurfaceQuery
@@ -879,45 +948,45 @@ public sealed class SpectralOceanFFT : MonoBehaviour
 
     private void BindSurfaceQueryParameters(SurfaceQuerySlot slot, int sampleCount)
     {
-        oceanCompute.SetInt("_SampleResolution", resolution);
-        oceanCompute.SetInt("_SampleCount", sampleCount);
-        oceanCompute.SetFloat("_SamplePatchLength0", cascades[0].patchLength);
-        oceanCompute.SetFloat("_SamplePatchLength1", cascades[1].patchLength);
-        oceanCompute.SetFloat("_SamplePatchLength2", cascades[2].patchLength);
-        oceanCompute.SetVector("_SampleShoreMapOriginXZ",
+        oceanCompute.SetInt(PropID.SampleResolution, resolution);
+        oceanCompute.SetInt(PropID.SampleCount, sampleCount);
+        oceanCompute.SetFloat(PropID.SamplePatchLength0, cascades[0].patchLength);
+        oceanCompute.SetFloat(PropID.SamplePatchLength1, cascades[1].patchLength);
+        oceanCompute.SetFloat(PropID.SamplePatchLength2, cascades[2].patchLength);
+        oceanCompute.SetVector(PropID.SampleShoreMapOriginXZ,
             new Vector4(shoreMapOriginXZ.x, shoreMapOriginXZ.y, 0f, 0f));
-        oceanCompute.SetVector("_SampleShoreMapSizeXZ",
+        oceanCompute.SetVector(PropID.SampleShoreMapSizeXZ,
             new Vector4(Mathf.Max(1f, shoreMapSizeXZ.x), Mathf.Max(1f, shoreMapSizeXZ.y), 0f, 0f));
-        oceanCompute.SetFloat("_SampleShoreMapFlipV", shoreMapFlipV ? 1f : 0f);
-        oceanCompute.SetFloat("_SampleShoreDistanceRangeMeters", shoreDistanceRangeMeters);
-        oceanCompute.SetFloat("_SampleShoreMaxDepthMeters", shoreMaxDepthMeters);
-        oceanCompute.SetFloat("_SampleShoreFadeStartMeters", shoreFadeStartMeters);
-        oceanCompute.SetFloat("_SampleShoreFadeEndMeters", shoreFadeEndMeters);
-        oceanCompute.SetFloat("_SampleNearShoreWaveStrength", nearShoreWaveStrength);
-        oceanCompute.SetFloat("_SampleShoreEdgeFadeMeters", shoreEdgeFadeMeters);
-        oceanCompute.SetFloat("_SampleShoreBreakStartMeters", shoreBreakStartMeters);
-        oceanCompute.SetFloat("_SampleShoreBreakPeakMeters", shoreBreakPeakMeters);
-        oceanCompute.SetFloat("_SampleShoreBreakEndMeters", shoreBreakEndMeters);
-        oceanCompute.SetFloat("_SampleShoreDepthPerMeter", shoreDepthPerMeter);
-        oceanCompute.SetFloat("_SampleBreakerHeightToDepth", breakerHeightToDepth);
-        oceanCompute.SetFloat("_SampleShoreShoalingScale", shoreShoalingScale);
-        oceanCompute.SetFloat("_SampleShoreHorizontalFloor", shoreHorizontalFloor);
-        oceanCompute.SetFloat("_SampleShoreHorizontalDrive", shoreHorizontalDrive);
-        oceanCompute.SetFloat("_SampleShoreChoppiness", shoreChoppiness);
-        oceanCompute.SetFloat("_SampleShoreNormalBoost", shoreNormalBoost);
+        oceanCompute.SetFloat(PropID.SampleShoreMapFlipV, shoreMapFlipV ? 1f : 0f);
+        oceanCompute.SetFloat(PropID.SampleShoreDistanceRangeMeters, shoreDistanceRangeMeters);
+        oceanCompute.SetFloat(PropID.SampleShoreMaxDepthMeters, shoreMaxDepthMeters);
+        oceanCompute.SetFloat(PropID.SampleShoreFadeStartMeters, shoreFadeStartMeters);
+        oceanCompute.SetFloat(PropID.SampleShoreFadeEndMeters, shoreFadeEndMeters);
+        oceanCompute.SetFloat(PropID.SampleNearShoreWaveStrength, nearShoreWaveStrength);
+        oceanCompute.SetFloat(PropID.SampleShoreEdgeFadeMeters, shoreEdgeFadeMeters);
+        oceanCompute.SetFloat(PropID.SampleShoreBreakStartMeters, shoreBreakStartMeters);
+        oceanCompute.SetFloat(PropID.SampleShoreBreakPeakMeters, shoreBreakPeakMeters);
+        oceanCompute.SetFloat(PropID.SampleShoreBreakEndMeters, shoreBreakEndMeters);
+        oceanCompute.SetFloat(PropID.SampleShoreDepthPerMeter, shoreDepthPerMeter);
+        oceanCompute.SetFloat(PropID.SampleBreakerHeightToDepth, breakerHeightToDepth);
+        oceanCompute.SetFloat(PropID.SampleShoreShoalingScale, shoreShoalingScale);
+        oceanCompute.SetFloat(PropID.SampleShoreHorizontalFloor, shoreHorizontalFloor);
+        oceanCompute.SetFloat(PropID.SampleShoreHorizontalDrive, shoreHorizontalDrive);
+        oceanCompute.SetFloat(PropID.SampleShoreChoppiness, shoreChoppiness);
+        oceanCompute.SetFloat(PropID.SampleShoreNormalBoost, shoreNormalBoost);
 
-        oceanCompute.SetTexture(kernelSampleSurface, "_SampleDisplacement0", cascades[0].displacement);
-        oceanCompute.SetTexture(kernelSampleSurface, "_SampleDisplacement1", cascades[1].displacement);
-        oceanCompute.SetTexture(kernelSampleSurface, "_SampleDisplacement2", cascades[2].displacement);
-        oceanCompute.SetTexture(kernelSampleSurface, "_SampleNormal0", cascades[0].normal);
-        oceanCompute.SetTexture(kernelSampleSurface, "_SampleNormal1", cascades[1].normal);
-        oceanCompute.SetTexture(kernelSampleSurface, "_SampleNormal2", cascades[2].normal);
-        oceanCompute.SetTexture(kernelSampleSurface, "_SampleShoreDistance",
+        oceanCompute.SetTexture(kernelSampleSurface, PropID.SampleDisplacement0, cascades[0].displacement);
+        oceanCompute.SetTexture(kernelSampleSurface, PropID.SampleDisplacement1, cascades[1].displacement);
+        oceanCompute.SetTexture(kernelSampleSurface, PropID.SampleDisplacement2, cascades[2].displacement);
+        oceanCompute.SetTexture(kernelSampleSurface, PropID.SampleNormal0, cascades[0].normal);
+        oceanCompute.SetTexture(kernelSampleSurface, PropID.SampleNormal1, cascades[1].normal);
+        oceanCompute.SetTexture(kernelSampleSurface, PropID.SampleNormal2, cascades[2].normal);
+        oceanCompute.SetTexture(kernelSampleSurface, PropID.SampleShoreDistance,
             shoreDistanceTexture != null ? shoreDistanceTexture : Texture2D.whiteTexture);
-        oceanCompute.SetTexture(kernelSampleSurface, "_SampleShoreDepth",
+        oceanCompute.SetTexture(kernelSampleSurface, PropID.SampleShoreDepth,
             shoreDepthModifierTexture != null ? shoreDepthModifierTexture : Texture2D.whiteTexture);
-        oceanCompute.SetBuffer(kernelSampleSurface, "_SurfaceQueryPositions", slot.positions);
-        oceanCompute.SetBuffer(kernelSampleSurface, "_SurfaceQueryResults", slot.results);
+        oceanCompute.SetBuffer(kernelSampleSurface, PropID.SurfaceQueryPositions, slot.positions);
+        oceanCompute.SetBuffer(kernelSampleSurface, PropID.SurfaceQueryResults, slot.results);
     }
 
     private void CompleteSurfaceSampleReadback(
@@ -983,7 +1052,10 @@ public sealed class SpectralOceanFFT : MonoBehaviour
                             basePosition.z + displacement.z),
                         Normal = normal,
                         IsValid = valid,
-                        SampleTime = slice.sampleTime
+                        SampleTime = slice.sampleTime,
+                        LatticeDisplacementXZ = valid && IsFinite(gpu.lattice)
+                            ? new Vector2(gpu.lattice.x, gpu.lattice.y)
+                            : Vector2.zero
                     };
                 }
 
@@ -1255,36 +1327,36 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         float windChopScale = Mathf.Lerp(0.65f, 1.35f, normalizedWind);
         float windFoamScale = Mathf.Lerp(0.55f, 1.5f, normalizedWind);
 
-        oceanCompute.SetInt("_Resolution", resolution);
-        oceanCompute.SetInt("_Log2Resolution", log2Resolution);
-        oceanCompute.SetInt("_Seed", randomSeed);
-        oceanCompute.SetVector("_WindDirection", new Vector4(wind.x, wind.y, 0f, 0f));
-        oceanCompute.SetFloat("_WindSpeed", windSpeed);
-        oceanCompute.SetFloat("_WindStrength", normalizedWind);
-        oceanCompute.SetFloat("_WindWaveStrength", windWaveScale);
-        oceanCompute.SetFloat("_PhillipsAmplitude", phillipsAmplitude);
-        oceanCompute.SetFloat("_SmallWaveDamping", smallWaveDamping);
-        oceanCompute.SetFloat("_BackwindDamping", backwindDamping);
-        oceanCompute.SetFloat("_TimeSeconds", Time.time);
-        oceanCompute.SetFloat("_FoamBias", foamBias);
-        oceanCompute.SetFloat("_FoamGain", foamGain * GetStormFoamMultiplier() * windFoamScale);
-        oceanCompute.SetFloat("_SeaStateStrength", currentSeaStateStrength);
-        oceanCompute.SetFloat("_Choppiness", choppiness * GetStormChoppinessMultiplier() * windChopScale);
+        oceanCompute.SetInt(PropID.Resolution, resolution);
+        oceanCompute.SetInt(PropID.Log2Resolution, log2Resolution);
+        oceanCompute.SetInt(PropID.Seed, randomSeed);
+        oceanCompute.SetVector(PropID.WindDirection, new Vector4(wind.x, wind.y, 0f, 0f));
+        oceanCompute.SetFloat(PropID.WindSpeed, windSpeed);
+        oceanCompute.SetFloat(PropID.WindStrength, normalizedWind);
+        oceanCompute.SetFloat(PropID.WindWaveStrength, windWaveScale);
+        oceanCompute.SetFloat(PropID.PhillipsAmplitude, phillipsAmplitude);
+        oceanCompute.SetFloat(PropID.SmallWaveDamping, smallWaveDamping);
+        oceanCompute.SetFloat(PropID.BackwindDamping, backwindDamping);
+        oceanCompute.SetFloat(PropID.TimeSeconds, Time.time);
+        oceanCompute.SetFloat(PropID.FoamBias, foamBias);
+        oceanCompute.SetFloat(PropID.FoamGain, foamGain * GetStormFoamMultiplier() * windFoamScale);
+        oceanCompute.SetFloat(PropID.SeaStateStrength, currentSeaStateStrength);
+        oceanCompute.SetFloat(PropID.Choppiness, choppiness * GetStormChoppinessMultiplier() * windChopScale);
     }
 
     private void SetCascadeParameters(CascadeSettings c, int cascadeIndex)
     {
-        oceanCompute.SetFloat("_PatchLength", c.patchLength);
-        oceanCompute.SetFloat("_MinWavelength", c.minWavelength);
-        oceanCompute.SetFloat("_MaxWavelength", c.maxWavelength);
-        oceanCompute.SetFloat("_CascadeScale", c.amplitudeScale);
-        oceanCompute.SetInt("_Seed", unchecked(randomSeed + cascadeIndex * 92821));
+        oceanCompute.SetFloat(PropID.PatchLength, c.patchLength);
+        oceanCompute.SetFloat(PropID.MinWavelength, c.minWavelength);
+        oceanCompute.SetFloat(PropID.MaxWavelength, c.maxWavelength);
+        oceanCompute.SetFloat(PropID.CascadeScale, c.amplitudeScale);
+        oceanCompute.SetInt(PropID.Seed, unchecked(randomSeed + cascadeIndex * 92821));
     }
 
     private void GenerateInitialSpectrum(CascadeSettings c, int cascadeIndex)
     {
         SetCascadeParameters(c, cascadeIndex);
-        oceanCompute.SetTexture(kernelInit, "_H0Write", c.h0);
+        oceanCompute.SetTexture(kernelInit, PropID.H0Write, c.h0);
         oceanCompute.Dispatch(kernelInit, resolution / 8, resolution / 8, 1);
     }
 
@@ -1293,30 +1365,30 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         SetCascadeParameters(c, cascadeIndex);
 
         // Evolve h0(k) into h(k,t), plus the two horizontal displacement spectra.
-        oceanCompute.SetTexture(kernelEvolve, "_H0Read", c.h0);
-        oceanCompute.SetTexture(kernelEvolve, "_FFT0Write", c.fft0A);
-        oceanCompute.SetTexture(kernelEvolve, "_FFTZWrite", c.fftZA);
+        oceanCompute.SetTexture(kernelEvolve, PropID.H0Read, c.h0);
+        oceanCompute.SetTexture(kernelEvolve, PropID.FFT0Write, c.fft0A);
+        oceanCompute.SetTexture(kernelEvolve, PropID.FFTZWrite, c.fftZA);
         oceanCompute.Dispatch(kernelEvolve, resolution / 8, resolution / 8, 1);
 
         // Inverse FFT along X: one group per row.
-        oceanCompute.SetTexture(kernelFftX, "_FFT0Read", c.fft0A);
-        oceanCompute.SetTexture(kernelFftX, "_FFTZRead", c.fftZA);
-        oceanCompute.SetTexture(kernelFftX, "_FFT0Write", c.fft0B);
-        oceanCompute.SetTexture(kernelFftX, "_FFTZWrite", c.fftZB);
+        oceanCompute.SetTexture(kernelFftX, PropID.FFT0Read, c.fft0A);
+        oceanCompute.SetTexture(kernelFftX, PropID.FFTZRead, c.fftZA);
+        oceanCompute.SetTexture(kernelFftX, PropID.FFT0Write, c.fft0B);
+        oceanCompute.SetTexture(kernelFftX, PropID.FFTZWrite, c.fftZB);
         oceanCompute.Dispatch(kernelFftX, 1, resolution, 1);
 
         // Inverse FFT along Z: one group per column.
-        oceanCompute.SetTexture(kernelFftY, "_FFT0Read", c.fft0B);
-        oceanCompute.SetTexture(kernelFftY, "_FFTZRead", c.fftZB);
-        oceanCompute.SetTexture(kernelFftY, "_FFT0Write", c.fft0A);
-        oceanCompute.SetTexture(kernelFftY, "_FFTZWrite", c.fftZA);
+        oceanCompute.SetTexture(kernelFftY, PropID.FFT0Read, c.fft0B);
+        oceanCompute.SetTexture(kernelFftY, PropID.FFTZRead, c.fftZB);
+        oceanCompute.SetTexture(kernelFftY, PropID.FFT0Write, c.fft0A);
+        oceanCompute.SetTexture(kernelFftY, PropID.FFTZWrite, c.fftZA);
         oceanCompute.Dispatch(kernelFftY, resolution, 1, 1);
 
         // Convert inverse-FFT output into displacement, normals and whitecap mask.
-        oceanCompute.SetTexture(kernelBuildMaps, "_FFT0Read", c.fft0A);
-        oceanCompute.SetTexture(kernelBuildMaps, "_FFTZRead", c.fftZA);
-        oceanCompute.SetTexture(kernelBuildMaps, "_DisplacementWrite", c.displacement);
-        oceanCompute.SetTexture(kernelBuildMaps, "_NormalWrite", c.normal);
+        oceanCompute.SetTexture(kernelBuildMaps, PropID.FFT0Read, c.fft0A);
+        oceanCompute.SetTexture(kernelBuildMaps, PropID.FFTZRead, c.fftZA);
+        oceanCompute.SetTexture(kernelBuildMaps, PropID.DisplacementWrite, c.displacement);
+        oceanCompute.SetTexture(kernelBuildMaps, PropID.NormalWrite, c.normal);
         oceanCompute.Dispatch(kernelBuildMaps, resolution / 8, resolution / 8, 1);
 
         // The maps are sampled at multiple distances in the fragment shader.

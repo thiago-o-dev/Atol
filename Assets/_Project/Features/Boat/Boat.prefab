@@ -40,8 +40,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2278009449737809209}
-  - component: {fileID: 4697046720752186531}
-  - component: {fileID: 3773629953784176868}
   - component: {fileID: 3934120525640583770}
   - component: {fileID: 8321853169579619478}
   - component: {fileID: 3262405023938500733}
@@ -74,63 +72,6 @@ Transform:
   - {fileID: 3860144107059973389}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &4697046720752186531
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2941124647483597383}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &3773629953784176868
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2941124647483597383}
-  m_Enabled: 0
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!65 &3934120525640583770
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -240,59 +181,99 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 356d2aa889842604680b69accf3f6eba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.Boat.BoatController
+  weight:
+    hullMass: 450
+    crewMass: 80
+    centerOfMass: {x: 0, y: -0.25, z: 0}
+    hullSize: {x: 0, y: 0, z: 0}
+    hullHeight: 1
+  yaw:
+    inertiaScale: 0.25
+    damping: 0.9
+    quadraticDamping: 0.5
+    maxRate: 90
+    directionalStability: 0.9
+    weatherHelm: 0.9
+    broaching: 24
+  pitch:
+    inertiaScale: 1.5
+    damping: 1.6
+    quadraticDamping: 0.8
+    maxRate: 80
+    stability: 5
+    waveFollow: 0.8
+    bowLift: 0.6
+  roll:
+    inertiaScale: 1.5
+    damping: 2.2
+    quadraticDamping: 1
+    maxRate: 100
+    stability: 6
+    waveFollow: 0.7
+    vanishingAngle: 110
+    sailHeel: 1.6
+    turnLean: 0.12
+    comfortableHeel: 22
+    maximumHeel: 55
+    heelDriveLoss: 0.5
+    heelRudderLoss: 0.3
+  sailPower: 7
+  sailTrimRate: 0.65
+  startingSailTrim: 0.8
+  noGoAngle: 42
+  sailSideForce: 0.55
+  sailRotationSpeed: 72
+  maximumSailRotation: 78
+  startingSailRotation: 0
+  gustStrength: 0.35
+  gustFrequency: 0.18
+  rudderMaxYawRate: 38
+  rudderResponse: 2.6
+  rudderTorque: 6
+  rudderFullSpeed: 3
+  rudderMinAuthority: 0.08
+  maximumSpeed: 14
+  surgeDrag: 0.05
+  surgeQuadraticDrag: 0.04
+  swayDrag: 1.65
+  swayQuadraticDrag: 0.25
+  heaveProbeDamping: 2
+  heaveWaveFollow: 0.5
+  heaveDamping: 1.5
+  heaveQuadraticDamping: 0.344
+  airborneDampingFraction: 0.1
+  enableWaveDrift: 1
+  waveDriftFollow: 0.6
+  waveDriftResponse: 2.6
+  waveDriftDepth: 0.35
+  driftAffectsAnchoredBoat: 1
+  airborneGravity: 2
+  airborneGraceTime: 0.18
+  airborneRampTime: 0.35
+  maximumFallSpeed: 30.1
+  landingLevelling: 1.4
+  slamStartSpeed: 4
+  slamCushion: 0.9
+  slamEventSpeed: 6
+  maxRiseAcceleration: 16
+  maxRiseSpeed: 3
   body: {fileID: 8321853169579619478}
   buoyancy: {fileID: 1143980588799794662}
   ocean: {fileID: 0}
   boardingAnchor: {fileID: 4268148953584448575}
   exitAnchorLeft: {fileID: 3860144107059973389}
   exitAnchorRight: {fileID: 2052670796862404682}
-  exitAnchor: {fileID: 2052670796862404682}
   interactionRange: 3.25
   proximityPrompt: {fileID: 0}
-  maximumSailAcceleration: 4.5
-  sailPowerMultiplier: 1.7
-  sailTrimRate: 0.65
-  startingSailTrim: 0.8
-  noGoZoneHalfAngle: 42
-  sailLeewayAcceleration: 0.55
-  sailRotationSpeed: 72
-  maximumSailRotation: 78
-  startingSailRotation: 0
-  rudderAcceleration: 2.8
-  rudderFullEffectSpeed: 3.5
-  lowSpeedRudderFactor: 0.18
-  yawDamping: 1.4
-  maximumYawRate: 42
-  maximumYawRateMultiplier: 1.25
-  rudderRateResponse: 4
-  rudderResponseMultiplier: 1.35
-  lowSpeedRudderFactorFloor: 0.45
-  lateralWaterDamping: 6.08
-  speedLimitDamping: 1.5
-  maximumForwardSpeed: 15
-  speedLimitMultiplier: 1.5
-  waterCurrentInfluence: 0.15
-  minimumEffectiveMass: 450
-  verticalWaveFollow: 0.18
-  verticalBobDamping: 3.5
-  maximumVerticalStabilityAcceleration: 7
-  highWindStabilityAccelerationBonus: 3
-  pitchRollDamping: 3.5
-  airborneBlend: 0.07
-  airborneGravityMultiplier: 1.2
-  highWindAirborneGravityBonus: 0.3
-  fullWaterSupportImmersion: 0.22
   anchorWhenUnoccupied: 1
-  anchorPositionSpring: 12
-  anchorPositionDamping: 7
-  anchorYawSpring: 5
-  anchorYawDamping: 3
-  upsideDownDotThreshold: -0.65
-  upsideDownConfirmationTime: 0.35
-  rightingCompleteDotThreshold: 0.9
-  rightingTorqueStrength: 14
-  rightingTorqueDamping: 5
-  maximumRightingAngularAcceleration: 24
+  anchorSpring: 12
+  anchorDamping: 7
+  spawnContactFoam: 1
+  capsizeAngle: 130
+  capsizeConfirmTime: 0.35
+  capsizeRecoveryTime: 6
+  capsizeRightingTorque: 18
+  capsizeRightingDamping: 6
   sailTrim: 0
   sailRotationDegrees: 0
   isAnchored: 1
