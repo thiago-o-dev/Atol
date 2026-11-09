@@ -1,5 +1,13 @@
 {
   "dependencies": {
+    "com.example.compass-line": {
+      "version": "file:com.example.compass-line",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.ugui": "2.5.0"
+      }
+    },
     "com.mischief.markdownviewer": {
       "version": "https://github.com/gwaredd/UnityMarkdownViewer.git",
       "depth": 0,

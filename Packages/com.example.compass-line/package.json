@@ -1,0 +1,10 @@
+{
+  "name": "com.example.compass-line",
+  "version": "1.0.1",
+  "displayName": "Compass Line UI",
+  "description": "A configurable horizontal compass strip with cardinal labels, world-space location markers, edge fading, and bearing ticks.",
+  "unity": "6000.5",
+  "dependencies": {
+    "com.unity.ugui": "2.5.0"
+  }
+}
