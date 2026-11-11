@@ -17,6 +17,10 @@ public sealed class BoatMovement : MonoBehaviour, IMovement
     private float sailRotationInput;
 
     public BoatController Boat => boat;
+    /// <summary>World-space planar velocity used by the animation bridge.</summary>
+    public Vector3 AnimationPlanarVelocity => boat != null && boat.Body != null
+        ? Vector3.ProjectOnPlane(boat.Body.linearVelocity, Vector3.up)
+        : Vector3.zero;
 
     public void AssignBoat(BoatController targetBoat)
     {

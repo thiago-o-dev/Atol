@@ -102,6 +102,11 @@ GameObject:
   - component: {fileID: 5597441788725092936}
   - component: {fileID: 8797379442825105498}
   - component: {fileID: 3683730610663036522}
+  - component: {fileID: 6691349078233350827}
+  - component: {fileID: 7266475739418501036}
+  - component: {fileID: 8657221663229615731}
+  - component: {fileID: 4880123821736701158}
+  - component: {fileID: 1943209821000374001}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -120,7 +125,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4846237997634002855}
   - {fileID: 6981162543374608517}
@@ -165,8 +170,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInputHandler
   GroundedMovement: {fileID: 3683730610663036522}
+  SwimmingMovement: {fileID: 7266475739418501036}
+  BoatMovement: {fileID: 8657221663229615731}
   MovementAction: {fileID: -1680190386980627800, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   JumpAction: {fileID: -2099379676528639254, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  DiveAction: {fileID: 0}
+  CharacterController: {fileID: 5597441788725092936}
+  InteractAction: {fileID: 0}
+  DefaultBoatExitDistance: 1.75
+  DisembarkVelocityInheritance: 1
+  BoatExitJumpHeight: 1.1
+  BoatExitJumpSpeed: 3
+  BoatExitIgnoreCollisionTime: 0.2
+  BoatExitObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  BoatExitClearanceStep: 0.45
+  AutoEnterSwimming: 1
+  Ocean: {fileID: 0}
+  WaterCheckInterval: 0.15
+  SwimmingExitHysteresis: 0.25
 --- !u!114 &3683730610663036522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -189,6 +212,130 @@ MonoBehaviour:
   Deceleration: 25
   UseCoyoteTiming: 1
   CoyoteTime: 0.1
+--- !u!114 &6691349078233350827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45dbd42f77762974589e77804b705858, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.StatusViewModels.StaminaComponent
+  maximum: 100
+  startingFraction: 1
+  regenPerSecond: 6
+  regenDelay: 1.5
+  exhaustedRegenMultiplier: 0.6
+  current: 0
+--- !u!114 &7266475739418501036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81a94ee6db45c7b41be9878100f5daa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SwimmingMovement
+  MovementRoot: {fileID: 0}
+  Controller: {fileID: 5597441788725092936}
+  Body: {fileID: 0}
+  BodyCollider: {fileID: 0}
+  ReferenceTransform: {fileID: 0}
+  Speed: 3.8
+  Acceleration: 8
+  Deceleration: 5
+  TurnSmoothTime: 0.12
+  Ocean: {fileID: 0}
+  TargetSubmersion: 0.55
+  AssumedBodyHeight: 1.8
+  AssumedBodyCenterOffset: 0.9
+  SurfaceSpring: 5
+  VerticalDamping: 3.5
+  WaveLiftMultiplier: 1.6
+  WaveVelocityFollow: 0.85
+  MaximumWaveVerticalSpeed: 3.5
+  ExtraBuoyancyAcceleration: 8
+  DrowningPullAcceleration: 16
+  DrowningBuoyancyRetention: 0.18
+  DrowningWaveResponse: 0.3
+  MaximumUpwardAcceleration: 24
+  MaximumDownwardAcceleration: 22
+  MaximumUpwardSpeed: 2.8
+  MaximumDownwardSpeed: 3
+  VerticalSwimAcceleration: 8
+  EnableWaveDrift: 1
+  WaveDriftFollow: 0.8
+  WaveDriftResponse: 3.2
+  WaveDriftDamping: 0.9
+  WaveDriftMaxOffset: 3
+  DriftFadeStart: 0.7
+  DriftFadeEnd: 1
+  EmitFoam: 1
+  FoamFullSpeed: 3
+  FoamRadius: {x: 0.18, y: 0.4}
+  FoamRate: 6
+  FoamEmitHz: 18
+  FoamLeadOffset: 0.35
+  EnableJumpHop: 1
+  Stamina: {fileID: 0}
+  JumpStaminaCost: 25
+  JumpDelay: 0.18
+  JumpCooldown: 1.2
+  JumpVelocity: 3.4
+  JumpSpeedBoost: 1.6
+  JumpAirControl: 0.25
+  JumpGravity: 9.81
+  JumpWindupDip: 0.2
+  JumpMaxDepthError: 0.45
+  JumpLandingGrace: 0.5
+  SurfaceSampleInterval: 0.12
+  MaximumSurfaceSampleAge: 0.5
+  WaveVelocitySmoothing: 0.4
+--- !u!114 &8657221663229615731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73390b2de3df16d43a7d5b79e22b284b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BoatMovement
+  boat: {fileID: 0}
+--- !u!114 &4880123821736701158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16e02b87c157c0d4da157bde229ed76b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindParticleField
+  ocean: {fileID: 0}
+  followTarget: {fileID: 3276620587067567657}
+  particleMaterial: {fileID: 2100000, guid: 513091f996b3915429ce16025e69d1e0, type: 2}
+  particleShader: {fileID: 4800000, guid: 1a2133bb5ef884841ba86171a507a622, type: 3}
+  spawnVolume: {x: 16, y: 3.2, z: 16}
+  heightAboveTarget: 2.5
+  followSharpness: 14
+  lightWindSpeed: 3.5
+  strongWindSpeed: 10
+  minimumLifetime: 0.65
+  maximumLifetime: 1.15
+  turbulence: 0.18
+  baseEmissionRate: 11
+  maximumParticles: 96
 --- !u!1 &1251915431351904075
 GameObject:
   m_ObjectHideFlags: 0
@@ -352,6 +499,7 @@ GameObject:
   - component: {fileID: 2459767113613431875}
   - component: {fileID: 2297651328916204478}
   - component: {fileID: 1690043424413402783}
+  - component: {fileID: 6591528548865814736}
   m_Layer: 0
   m_Name: FreeLook Camera
   m_TagString: Untagged
@@ -367,8 +515,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6581715764922298619}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.10450153, y: -0.000000014819564, z: 0.0000000015571933, w: 0.9945247}
-  m_LocalPosition: {x: 0.5, y: 1.25, z: -4}
+  m_LocalRotation: {x: 0.004558321, y: 0.9935782, z: -0.104401916, w: 0.043380894}
+  m_LocalPosition: {x: 0.15137377, y: 1.25, z: 3.984779}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -647,6 +795,24 @@ MonoBehaviour:
       m_Bits: 65
     MaximumRaycast: 10
     Damping: 0.5
+--- !u!114 &6591528548865814736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6581715764922298619}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b5ab49cfc0cf76478faebfa26339782, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  OrbitalFollow: {fileID: 6113607378039255195}
+  zoomSpeed: 50
+  minRadius: 4
+  maxRadius: 8
+  minHeight: 3.5
+  maxHeight: 7
 --- !u!1 &7282339514725207314
 GameObject:
   m_ObjectHideFlags: 0
@@ -678,3 +844,36 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3276620587067567657}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1943209821000374001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f5d8a0a7a9e4dc2a8cb4b8421c50a11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationController
+  player: {fileID: 8797379442825105498}
+  animator: {fileID: 0}
+  movementModeParameter: MovementMode
+  moveSpeedParameter: MoveSpeed
+  moveXParameter: MoveX
+  moveYParameter: MoveY
+  verticalSpeedParameter: VerticalSpeed
+  groundedParameter: Grounded
+  jumpingParameter: Jumping
+  fallingParameter: Falling
+  swimmingParameter: Swimming
+  boatParameter: InBoat
+  jumpTriggerParameter: Jump
+  landTriggerParameter: Land
+  swimHopTriggerParameter: SwimHop
+  swimLandTriggerParameter: SwimLand
+  speedDampTime: 0.12
+  directionDampTime: 0.1
+  verticalSpeedDampTime: 0.08
+  boatMaxAnimationSpeed: 8
+  airborneThreshold: 0.1

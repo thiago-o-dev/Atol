@@ -74,7 +74,7 @@ Shader "Custom/Wave"
         {
             "RenderType" = "Opaque"
             "RenderPipeline" = "UniversalPipeline"
-            // Geometry+2: after opaque boats and the HullWaterMask stencil stamp (Geometry+1).
+            // Geometry+2: after opaque boats and the HullWaterMask depth plane (Geometry+1).
             "Queue" = "Geometry+2"
         }
 
@@ -84,15 +84,6 @@ Shader "Custom/Wave"
             Tags { "LightMode" = "UniversalForward" }
             Cull Off
             ZWrite On
-
-            // Skip pixels stamped by HullWaterMask (keeps water out of the boat interior).
-            Stencil
-            {
-                Ref 1
-                ReadMask 1
-                Comp NotEqual
-                Pass Keep
-            }
 
             HLSLPROGRAM
 
@@ -268,10 +259,12 @@ Shader "Custom/Wave"
                     float u = age / life;
                     float2 d = p - a.xy;
                     float r = length(d);
+                    if (r > b.x * 1.15)
+                        continue;
 
                     // Ring radius decelerates as it spreads.
                     float ringRadius = lerp(a.w, b.x, 1.0 - pow(1.0 - u, 1.7));
-                    float width = lerp(0.14, 0.42, u) * max(1.0, b.x * 0.09);
+                    float width = lerp(0.2, 0.6, u) * max(1.0, b.x * 0.06);
                     float x = (r - ringRadius) / width;
                     if (abs(x) > 3.0)
                         continue;
@@ -294,7 +287,7 @@ Shader "Custom/Wave"
                     float fade = (1.0 - u) * (1.0 - u * u) * b.y * arcMask
                                * rsqrt(max(r / max(a.w, 0.1), 1.0));
 
-                    slope += dir * dhdr * fade * 0.06;
+                    slope += dir * dhdr * fade * 0.06 * (1.0 + 0.04 * b.x);
                     tint += abs(h) * fade;
 
                     // Rare small flecks, only on strong crests of big, fresh ripples.

@@ -26,14 +26,14 @@ namespace Assets._Project.Features.WaterEffects
         [SerializeField, Range(0f, 1f)] private float burstStrength = 0.85f;
 
         [Header("Ripples (expanding rings)")]
-        [Tooltip("Ring radius (m) reached by the smallest ripple.")]
-        [SerializeField, Min(0.2f)] private float rippleRadiusMin = 1.5f;
+        [Tooltip("Ring radius (m) reached by the smallest ripple (before the per-call range scale).")]
+        [SerializeField, Min(0.2f)] private float rippleRadiusSmall = 4f;
         [Tooltip("Ring radius (m) reached by the largest (size 1) ripple.")]
-        [SerializeField, Min(0.5f)] private float rippleRadiusMax = 9f;
+        [SerializeField, Min(0.5f)] private float rippleRadiusLarge = 30f;
         [Tooltip("Seconds a small ripple lasts.")]
-        [SerializeField, Min(0.3f)] private float rippleLifetimeMin = 3f;
+        [SerializeField, Min(0.3f)] private float rippleLifeShort = 5f;
         [Tooltip("Seconds a large ripple lasts.")]
-        [SerializeField, Min(0.3f)] private float rippleLifetimeMax = 7f;
+        [SerializeField, Min(0.3f)] private float rippleLifeLong = 10f;
         [Tooltip("Normal tilt / brightness of the ring at strength 1.")]
         [SerializeField, Range(0f, 2f)] private float rippleStrength = 1f;
         [Tooltip("Small foam flecks shed by the ring crest (0 = pure water ripple). Scales with ripple size.")]
@@ -52,9 +52,22 @@ namespace Assets._Project.Features.WaterEffects
             if (!EmitFoam || intensity <= 0.001f)
                 return;
 
+            EmitTrail(from, to, intensity, dt, trailRadiusMin, trailRadiusMax, trailFoamRate);
+        }
+
+        /// <summary>
+        /// Trail with explicit size/rate, for actors that need their own tuning (e.g. the swimmer)
+        /// without a second component. Radii in metres, rate = foam per second at full intensity.
+        /// </summary>
+        public void EmitTrail(Vector3 from, Vector3 to, float intensity, float dt,
+            float radiusMin, float radiusMax, float ratePerSecond)
+        {
+            if (!EmitFoam || intensity <= 0.001f)
+                return;
+
             intensity = Mathf.Clamp01(intensity);
-            float radius = Mathf.Lerp(trailRadiusMin, trailRadiusMax, intensity);
-            float strength = intensity * trailFoamRate * Mathf.Min(dt, 0.1f);
+            float radius = Mathf.Lerp(radiusMin, radiusMax, intensity);
+            float strength = intensity * ratePerSecond * Mathf.Min(dt, 0.1f);
             WaterFoamField.Emit(from, to, radius, strength);
         }
 
@@ -72,31 +85,38 @@ namespace Assets._Project.Features.WaterEffects
         /// arc 1 gives a half-circle that spreads away on that side (moving objects); zero facing = full circle.
         /// </summary>
         public void EmitRipple(Vector3 center, float startRadius, float size01, float strength01,
-            Vector3 facing, float arc)
+            Vector3 facing, float arc, float foamScale = 1f, float rangeScale = 1f)
         {
             if (!EmitFoam || strength01 <= 0.01f)
                 return;
 
             size01 = Mathf.Clamp01(size01);
+            rangeScale = Mathf.Clamp01(rangeScale);
             WaterFoamField.EmitRipple(
                 center,
                 startRadius,
-                Mathf.Max(startRadius + 0.5f, Mathf.Lerp(rippleRadiusMin, rippleRadiusMax, size01)),
+                Mathf.Max(startRadius + 0.5f, RippleMaxRadius(size01) * rangeScale),
                 Mathf.Clamp01(strength01) * rippleStrength,
-                rippleFoam * size01 * size01,
-                Mathf.Lerp(rippleLifetimeMin, rippleLifetimeMax, size01),
+                rippleFoam * foamScale * size01 * size01,
+                Mathf.Lerp(rippleLifeShort, rippleLifeLong, size01) * Mathf.Lerp(0.4f, 1f, rangeScale),
                 new Vector2(facing.x, facing.z),
                 arc);
         }
 
+        /// <summary>Ring radius (m) a ripple of the given size reaches (range scale 1).</summary>
+        public float RippleMaxRadius(float size01)
+        {
+            return Mathf.Lerp(rippleRadiusSmall, rippleRadiusLarge, Mathf.Clamp01(size01));
+        }
+
         /// <summary>One soft splash blob at a point (hull slam, jump take-off or landing).</summary>
-        public void EmitBurst(Vector3 point, float intensity)
+        public void EmitBurst(Vector3 point, float intensity, float sizeScale = 1f)
         {
             if (!EmitFoam || intensity <= 0.001f)
                 return;
 
             intensity = Mathf.Clamp01(intensity);
-            WaterFoamField.Emit(point, point, burstRadius * Mathf.Lerp(0.35f, 1f, intensity), burstStrength * intensity);
+            WaterFoamField.Emit(point, point, burstRadius * sizeScale * Mathf.Lerp(0.35f, 1f, intensity), burstStrength * intensity);
         }
     }
 }

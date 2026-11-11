@@ -85,6 +85,14 @@ public sealed class SwimmingMovement : MonoBehaviour, IMovement, IPlanarVelocity
     public bool EmitFoam = true;
     [Tooltip("Planar speed (m/s) at which swim foam is at full intensity.")]
     [Min(0.1f)] public float FoamFullSpeed = 3f;
+    [Tooltip("Swim foam stamp radius (m) at low / full speed. Small: a swimmer pushes little water.")]
+    public Vector2 FoamRadius = new Vector2(0.18f, 0.4f);
+    [Tooltip("Foam added per second at full speed.")]
+    [Min(0f)] public float FoamRate = 6f;
+    [Tooltip("Foam stamps per second (fixed rate, independent of physics steps).")]
+    [Range(5f, 60f)] public float FoamEmitHz = 18f;
+    [Tooltip("Metres ahead of the body where the chest pushes the water; foam is stamped there.")]
+    [Min(0f)] public float FoamLeadOffset = 0.35f;
 
     [Header("Jump Hop (out of the water)")]
     [Tooltip("Jump becomes a small hop out of the water that costs stamina. Off = legacy hold-to-swim-up.")]
@@ -138,11 +146,13 @@ public sealed class SwimmingMovement : MonoBehaviour, IMovement, IPlanarVelocity
     private float jumpWindupTimer = -1f;
     private float nextJumpTime;
     private bool hopAirborne;
+    private bool hopLandedOnGround;
     private float hopLandedTime = -1000f;
     private WaterContactFoam foam;
     private Vector3 lastFoamPoint;
     private bool hasFoamPoint;
     private float rippleTimer;
+    private float foamAccumulator;
 
     private bool bodyGravityWasEnabled;
     private bool bodyGravityCached;
@@ -161,7 +171,7 @@ public sealed class SwimmingMovement : MonoBehaviour, IMovement, IPlanarVelocity
     public Vector3 PlanarVelocity => Vector3.ProjectOnPlane(horizontalVelocity, Vector3.up);
     public float VerticalVelocity => verticalVelocity;
     public float CurrentBuoyancyInput => buoyancyInput;
-    /// <summary>True during the jump wind-up, the hop itself and a short landing grace.</summary>
+    /// <summary>True during the jump wind-up, the hop itself and a short grace after water or ground landing.</summary>
     public bool IsHopping => jumpWindupTimer >= 0f || hopAirborne ||
                              Time.time - hopLandedTime < JumpLandingGrace;
     public bool IsAirborne => hopAirborne;
@@ -170,7 +180,7 @@ public sealed class SwimmingMovement : MonoBehaviour, IMovement, IPlanarVelocity
     public Vector3 WaveDriftOffset => new Vector3(driftOffset.x, 0f, driftOffset.y);
     /// <summary>Raised when the hop starts leaving the water.</summary>
     public event System.Action HopStarted;
-    /// <summary>Raised when the swimmer re-enters the water after a hop. Argument = impact speed.</summary>
+    /// <summary>Raised when a hop lands in water or on solid ground. Argument = impact speed.</summary>
     public event System.Action<float> HopLanded;
     /// <summary>Raised when a jump is refused (cooldown, stamina, too deep). Argument = reason.</summary>
     public event System.Action<string> HopRefused;
@@ -203,6 +213,8 @@ public sealed class SwimmingMovement : MonoBehaviour, IMovement, IPlanarVelocity
         driftVelocity = Vector2.zero;
         jumpWindupTimer = -1f;
         hopAirborne = false;
+        hopLandedOnGround = false;
+        hopLandedTime = -1000f;
         SetRigidbodyGravityControlled(false);
     }
 
@@ -293,6 +305,7 @@ public sealed class SwimmingMovement : MonoBehaviour, IMovement, IPlanarVelocity
         }
 
         jumpWindupTimer = 0f;
+        hopLandedOnGround = false;
         nextJumpTime = Time.time + JumpDelay + JumpCooldown;
         return true;
     }
@@ -373,46 +386,65 @@ public sealed class SwimmingMovement : MonoBehaviour, IMovement, IPlanarVelocity
         if (hopAirborne)
         {
             verticalVelocity = Mathf.Max(verticalVelocity - JumpGravity * dt, -MaximumDownwardSpeed * 3f);
-            if (verticalVelocity <= 0f && heightError >= 0f)
+            // A hop can finish in either the water or on dry terrain. Requiring
+            // heightError >= 0 alone leaves hopAirborne stuck forever when the
+            // ground is higher than the water's floating height.
+            bool landedOnSolidGround = Controller != null && Controller.enabled && Controller.isGrounded;
+            bool reachedWaterLandingHeight = heightError >= 0f;
+            if (verticalVelocity <= 0f && (landedOnSolidGround || reachedWaterLandingHeight))
             {
                 hopAirborne = false;
+                hopLandedOnGround = landedOnSolidGround;
                 hopLandedTime = Time.time;
                 float impact = -verticalVelocity;
-                verticalVelocity = Mathf.Max(verticalVelocity, -MaximumDownwardSpeed);
-                EmitHopSplash(Mathf.Clamp01(0.35f + impact / 8f));
+                verticalVelocity = landedOnSolidGround
+                    ? 0f
+                    : Mathf.Max(verticalVelocity, -MaximumDownwardSpeed);
+                if (!landedOnSolidGround)
+                    EmitHopSplash(Mathf.Clamp01(0.35f + impact / 8f));
                 HopLanded?.Invoke(impact);
             }
         }
 
-        if (!hopAirborne)
+        // Do not let the water spring pull the character down through a shore
+        // collider during the landing grace period. If the player remains in the
+        // swimming mode (for example, after touching an underwater floor), normal
+        // buoyancy resumes when the grace period ends.
+        bool holdingSolidGroundLanding = hopLandedOnGround &&
+                                         Time.time - hopLandedTime < JumpLandingGrace &&
+                                         Controller != null && Controller.enabled && Controller.isGrounded;
+        if (holdingSolidGroundLanding)
+            verticalVelocity = 0f;
+
+        if (!hopAirborne && !holdingSolidGroundLanding)
         {
-        float drowningAmount = Mathf.Max(0f, -buoyancyInput);
-        float springRetention = Mathf.Lerp(1f, DrowningBuoyancyRetention, drowningAmount);
-        float springAcceleration = heightError * SurfaceSpring * springRetention;
+            float drowningAmount = Mathf.Max(0f, -buoyancyInput);
+            float springRetention = Mathf.Lerp(1f, DrowningBuoyancyRetention, drowningAmount);
+            float springAcceleration = heightError * SurfaceSpring * springRetention;
 
-        // Treat the ocean surface as a moving reference frame. Damping is applied
-        // against the sampled wave's vertical velocity, not against world-zero.
-        // This makes the swimmer travel DOWN with a receding trough just as readily
-        // as it rises with an approaching crest, preventing the body being left
-        // suspended above a falling wave.
-        float waveResponse = Mathf.Lerp(1f, DrowningWaveResponse, drowningAmount);
-        float freshWaveVelocity = GetCurrentSurfaceVerticalVelocity();
-        float targetWaveVelocity = freshWaveVelocity * WaveVelocityFollow
-                                   * WaveLiftMultiplier * waveResponse;
-        float dampingAcceleration = (targetWaveVelocity - verticalVelocity) * VerticalDamping;
-        float swimAcceleration = verticalInput * VerticalSwimAcceleration;
-        float buoyancyControlAcceleration = buoyancyInput >= 0f
-            ? buoyancyInput * ExtraBuoyancyAcceleration
-            : buoyancyInput * DrowningPullAcceleration;
+            // Treat the ocean surface as a moving reference frame. Damping is applied
+            // against the sampled wave's vertical velocity, not against world-zero.
+            // This makes the swimmer travel DOWN with a receding trough just as readily
+            // as it rises with an approaching crest, preventing the body being left
+            // suspended above a falling wave.
+            float waveResponse = Mathf.Lerp(1f, DrowningWaveResponse, drowningAmount);
+            float freshWaveVelocity = GetCurrentSurfaceVerticalVelocity();
+            float targetWaveVelocity = freshWaveVelocity * WaveVelocityFollow
+                                       * WaveLiftMultiplier * waveResponse;
+            float dampingAcceleration = (targetWaveVelocity - verticalVelocity) * VerticalDamping;
+            float swimAcceleration = verticalInput * VerticalSwimAcceleration;
+            float buoyancyControlAcceleration = buoyancyInput >= 0f
+                ? buoyancyInput * ExtraBuoyancyAcceleration
+                : buoyancyInput * DrowningPullAcceleration;
 
-        float verticalAcceleration = springAcceleration + dampingAcceleration
-                                     + swimAcceleration + buoyancyControlAcceleration;
-        verticalAcceleration = Mathf.Clamp(
-            verticalAcceleration, -MaximumDownwardAcceleration, MaximumUpwardAcceleration);
-        verticalVelocity = Mathf.Clamp(
-            verticalVelocity + verticalAcceleration * dt,
-            -MaximumDownwardSpeed,
-            MaximumUpwardSpeed);
+            float verticalAcceleration = springAcceleration + dampingAcceleration
+                                         + swimAcceleration + buoyancyControlAcceleration;
+            verticalAcceleration = Mathf.Clamp(
+                verticalAcceleration, -MaximumDownwardAcceleration, MaximumUpwardAcceleration);
+            verticalVelocity = Mathf.Clamp(
+                verticalVelocity + verticalAcceleration * dt,
+                -MaximumDownwardSpeed,
+                MaximumUpwardSpeed);
         }
 
         UpdateContactFoam(dt, actor, surfaceHeight);
@@ -451,9 +483,32 @@ public sealed class SwimmingMovement : MonoBehaviour, IMovement, IPlanarVelocity
         Vector3 point = actor.position;
         point.y = surfaceHeight;
         float speed01 = hopAirborne ? 0f : Mathf.Clamp01(horizontalVelocity.magnitude / FoamFullSpeed);
-        // Idle swimmers still disturb the water a little.
-        float intensity = hopAirborne ? 0f : Mathf.Max(speed01, 0.35f);
-        foam.EmitTrail(hasFoamPoint ? lastFoamPoint : point, point, intensity, dt);
+
+        // Foam only when actually moving (squared smoothstep: slow swimming gives almost none),
+        // stamped at a fixed rate ahead of the chest. Treading water is shown by ripples only.
+        foamAccumulator += dt;
+        float emitInterval = 1f / Mathf.Max(5f, FoamEmitHz);
+        if (foamAccumulator >= emitInterval)
+        {
+            float step = foamAccumulator;
+            foamAccumulator = 0f;
+
+            float curve = Mathf.SmoothStep(0.2f, 1f, speed01);
+            curve *= curve;
+            if (curve > 0.001f)
+            {
+                Vector3 dir = horizontalVelocity.sqrMagnitude > 0.01f ? horizontalVelocity.normalized : actor.forward;
+                Vector3 lead = point + dir * FoamLeadOffset;
+                foam.EmitTrail(hasFoamPoint ? lastFoamPoint : lead, lead, curve, step,
+                    FoamRadius.x, FoamRadius.y, FoamRate);
+                lastFoamPoint = lead;
+                hasFoamPoint = true;
+            }
+            else
+            {
+                hasFoamPoint = false;
+            }
+        }
 
         // Small rings: faster while swimming, rare while treading water.
         rippleTimer += dt;
@@ -462,10 +517,10 @@ public sealed class SwimmingMovement : MonoBehaviour, IMovement, IPlanarVelocity
         {
             rippleTimer = 0f;
             Vector3 behind = speed01 > 0.15f ? -horizontalVelocity : Vector3.zero;
-            foam.EmitRipple(point, 0.25f, 0.12f + 0.1f * speed01, 0.45f + 0.35f * speed01, behind, 1f);
+            foam.EmitRipple(point, 0.25f, 0.12f + 0.1f * speed01, 0.45f + 0.35f * speed01, behind, 1f, 0f, 0.2f);
         }
-        lastFoamPoint = point;
-        hasFoamPoint = !hopAirborne;
+        if (hopAirborne)
+            hasFoamPoint = false;
     }
 
     private void EmitHopSplash(float intensity)
@@ -474,14 +529,15 @@ public sealed class SwimmingMovement : MonoBehaviour, IMovement, IPlanarVelocity
             return;
         Vector3 point = ActorTransform != null ? ActorTransform.position : transform.position;
         point.y = GetCurrentSurfaceHeight(ActorTransform != null ? ActorTransform : transform);
-        foam.EmitBurst(point, intensity);
-        foam.EmitRipple(point, 0.3f, 0.2f + 0.3f * intensity, 0.6f + 0.4f * intensity);
+        foam.EmitBurst(point, intensity, 0.55f);
+        foam.EmitRipple(point, 0.3f, 0.2f + 0.3f * intensity, 0.6f + 0.4f * intensity, Vector3.zero, 0f, 0.3f, 0.25f);
     }
 
     private void LaunchHop(Vector3 desiredDirection, Transform actor)
     {
         jumpWindupTimer = -1f;
         hopAirborne = true;
+        hopLandedOnGround = false;
         verticalVelocity = JumpVelocity;
 
         Vector3 direction = desiredDirection;

@@ -51,8 +51,10 @@ namespace Assets._Project.Features.WaterEffects
         [SerializeField, Min(0f)] private float contactSlack = 0.15f;
 
         [Header("Ripples")]
-        [Tooltip("Metres travelled between ripples at size 0.5 (scaled by size).")]
-        [SerializeField, Min(0.5f)] private float rippleSpacing = 3.5f;
+        [Tooltip("Metres travelled between ripples, as a fraction of the ripple's final radius (bigger rings are emitted less often).")]
+        [SerializeField, Range(0.1f, 1.5f)] private float rippleSpacingPerRadius = 0.4f;
+        [Tooltip("Lifts the size estimate so even a small boat makes clearly visible rings: size = floor + (1 - floor) * estimate.")]
+        [SerializeField, Range(0f, 0.9f)] private float rippleSizeFloor = 0.35f;
         [Tooltip("Which way moving ripples (half circles) spread: behind the boat like a trail, or ahead like a bow wave.")]
         [SerializeField] private ArcSide arcSide = ArcSide.Behind;
         [Tooltip("Seconds between small ripples while drifting or idle.")]
@@ -71,6 +73,7 @@ namespace Assets._Project.Features.WaterEffects
         private Vector3 hullHalfSize;    // boat local half extents
         private bool hullMeasured;
         private float sizeEstimate01 = 0.5f;
+        private float rippleSize01 = 0.5f;
         private Vector2[] outlineLocal;
         private Vector2[] outlineNormal;
 
@@ -144,6 +147,7 @@ namespace Assets._Project.Features.WaterEffects
             float mass = boat != null && boat.Body != null ? boat.Body.mass : 0f;
             float massTerm = mass > 0f ? Mathf.InverseLerp(massRange.x, massRange.y, mass) : sizeTerm;
             sizeEstimate01 = Mathf.Clamp01(0.6f * sizeTerm + 0.4f * massTerm);
+            rippleSize01 = Mathf.Lerp(rippleSizeFloor, 1f, sizeEstimate01);
         }
 
         private float EstimateProbeFootprint()
@@ -274,24 +278,30 @@ namespace Assets._Project.Features.WaterEffects
                 return;
             centerWorld.y = waterY;
 
-            float startRadius = Mathf.Max(0.3f, Mathf.Min(hullHalfSize.x, hullHalfSize.z) * 0.9f);
+            // Rings start clearly outside the hull: at least 60% of the half-length.
+            float startRadius = Mathf.Max(0.3f, Mathf.Max(hullHalfSize.x, 0.6f * hullHalfSize.z));
+            float size = rippleSize01;
 
-            // Moving: a half-circle ring every few metres, spreading away behind (or ahead of) the hull.
+            // Moving: a half-circle ring every so often, spreading away behind (or ahead of) the hull.
+            // Spacing grows with ring size so large rings do not pile up.
             travelled += speed * dt;
-            float spacing = rippleSpacing * Mathf.Lerp(1.3f, 0.7f, sizeEstimate01);
+            float spacing = Mathf.Max(1.5f, rippleSpacingPerRadius * foam.RippleMaxRadius(size));
             if (speed01 > 0.05f && travelled >= spacing && travelDir.sqrMagnitude > 0.01f)
             {
                 travelled = 0f;
-                Vector3 facing = arcSide == ArcSide.Behind ? -travelDir : travelDir;
-                foam.EmitRipple(centerWorld, startRadius, sizeEstimate01 * Mathf.Lerp(0.6f, 1f, speed01),
-                    Mathf.Lerp(0.5f, 1f, speed01), facing, 1f);
+                bool behind = arcSide == ArcSide.Behind;
+                Vector3 facing = behind ? -travelDir : travelDir;
+                // Behind: emit from the stern end so the arc leaves the hull's wake; Ahead: from the bow end.
+                Vector3 origin = centerWorld + travelDir * (behind ? -0.5f : 0.5f) * hullHalfSize.z;
+                foam.EmitRipple(origin, startRadius, size * Mathf.Lerp(0.75f, 1f, speed01),
+                    Mathf.Lerp(0.55f, 1f, speed01), facing, 1f);
             }
 
             // Idle / drifting: faint full circles from the bobbing hull.
             if (Time.time >= nextIdleRippleTime)
             {
                 nextIdleRippleTime = Time.time + idleRippleInterval * Mathf.Lerp(1.3f, 0.8f, sizeEstimate01);
-                foam.EmitRipple(centerWorld, startRadius, sizeEstimate01 * 0.45f, 0.4f);
+                foam.EmitRipple(centerWorld, startRadius, size * 0.5f, 0.4f);
             }
         }
 
@@ -313,8 +323,8 @@ namespace Assets._Project.Features.WaterEffects
                 foam.EmitBurst(new Vector3(world.x, waterY, world.z), intensity);
             }
 
-            float startRadius = Mathf.Max(0.3f, Mathf.Min(hullHalfSize.x, hullHalfSize.z));
-            foam.EmitRipple(centerWorld, startRadius, Mathf.Clamp01(sizeEstimate01 * 0.5f + intensity * 0.6f), 0.6f + 0.4f * intensity);
+            float startRadius = Mathf.Max(0.3f, Mathf.Max(hullHalfSize.x, 0.6f * hullHalfSize.z));
+            foam.EmitRipple(centerWorld, startRadius, Mathf.Clamp01(rippleSize01 * 0.6f + intensity * 0.5f), 0.65f + 0.35f * intensity);
         }
     }
 }

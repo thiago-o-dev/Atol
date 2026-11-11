@@ -1,5 +1,5 @@
-using Assets._Project.Features.Boat;
 using UnityEngine;
+using Assets._Project.Features.Boat;
 
 namespace Assets._Project.Features.WaterEffects
 {

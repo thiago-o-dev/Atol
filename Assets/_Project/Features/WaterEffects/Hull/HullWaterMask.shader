@@ -1,7 +1,7 @@
-// Draws nothing visible. It stamps stencil bit 0 wherever this mesh is visible (depth-tested
-// against the opaque hull), and Wave.shader skips pixels with that bit set. Result: a hull
-// interior without ocean water, while the hull walls, floor and player still render normally.
-// Queue Geometry+1 so it runs after the opaque boat and before the water (Geometry+2).
+// Draws nothing visible; it only writes DEPTH. Queue Geometry+1 runs after the opaque boat
+// (so walls, floor and player are already drawn and never hidden) and before the water
+// (Geometry+2). The water's normal depth test then rejects water that lies BEHIND this plane
+// (inside the hull) while water in FRONT of it (a wave crest between camera and boat) still draws.
 Shader "CoastalBreakers/Hull Water Mask"
 {
     Properties { }
@@ -19,18 +19,9 @@ Shader "CoastalBreakers/Hull Water Mask"
         {
             Name "HullWaterMask"
             Cull Off
-            ZWrite Off
+            ZWrite On
             ZTest LEqual
             ColorMask 0
-
-            Stencil
-            {
-                Ref 1
-                ReadMask 1
-                WriteMask 1
-                Comp Always
-                Pass Replace
-            }
 
             HLSLPROGRAM
             #pragma vertex vert

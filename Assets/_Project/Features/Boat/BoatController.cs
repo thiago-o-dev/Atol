@@ -46,8 +46,6 @@ namespace Assets._Project.Features.Boat
         [Header("Effects")]
         [Tooltip("Adds BoatFoamEmitter at runtime so the hull leaves foam on the water surface.")]
         [SerializeField] private bool spawnContactFoam = true;
-        [Tooltip("Adds HullWaterMask at runtime so no ocean water renders inside the hull.")]
-        [SerializeField] private bool spawnHullWaterMask = true;
 
         [Header("Capsize Recovery")]
         [Tooltip("Tilt from upright (degrees) beyond which the hull counts as capsized.")]
@@ -451,8 +449,6 @@ namespace Assets._Project.Features.Boat
             // Soft foam where the hull touches the water (see Features/WaterEffects).
             if (Application.isPlaying && spawnContactFoam && GetComponent<WaterEffects.BoatFoamEmitter>() == null)
                 gameObject.AddComponent<WaterEffects.BoatFoamEmitter>();
-            if (Application.isPlaying && spawnHullWaterMask && GetComponent<WaterEffects.HullWaterMask>() == null)
-                gameObject.AddComponent<WaterEffects.HullWaterMask>();
         }
 
         private void ResolveExitAnchors()

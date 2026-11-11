@@ -22,6 +22,9 @@ public class GroundedMovement : MonoBehaviour, IMovement, IPlanarVelocityMovemen
     private Vector3 _velocity;
 
     public Vector3 PlanarVelocity => new Vector3(_velocity.x, 0f, _velocity.z);
+    public Vector3 Velocity => _velocity;
+    public float VerticalVelocity => _velocity.y;
+    public bool IsGrounded => Controller != null && Controller.enabled && Controller.isGrounded;
 
     public void Move(Vector2 inputDirection)
     {
