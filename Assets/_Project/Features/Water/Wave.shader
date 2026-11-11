@@ -55,6 +55,26 @@ Shader "Custom/Wave"
         _SpecularPower("Specular Power", Range(8, 256)) = 72
         _SpecularStrength("Specular Strength", Range(0, 5)) = 1.8
 
+        [Header(Skybox Reflection)]
+        _SkyReflectionStrength("Skybox Reflectivity", Range(0, 1)) = 0.7
+        _SkyReflectionFresnel("Skybox Fresnel Influence (0 = uniform, 1 = grazing only)", Range(0, 1)) = 0.35
+        _SkyReflectionIntensity("Skybox Reflection Brightness", Range(0, 4)) = 1.0
+        [Toggle] _SkyUseCustomCube("Use Custom Cubemap Instead Of Scene Reflection", Float) = 0
+        [NoScaleOffset] _SkyCube("Custom Sky Cubemap (HDR ok)", Cube) = "" {}
+        _SkyReflectionRoughness("Skybox Blur (0 = mirror)", Range(0, 1)) = 0.12
+
+        [Header(Foam Surface)]
+        _FoamNormalStrength("Foam Normal Strength (0 = flat foam)", Range(0, 4)) = 1.0
+        _FoamHeight("Foam Apparent Height (m)", Range(0, 0.5)) = 0.06
+        _FoamBubbleDetail("Foam Bubble Bumpiness", Range(0, 1)) = 0.5
+
+        [Header(Shallow Transparency)]
+        // Uses the real scene depth (URP: enable Depth Texture on the URP asset / camera).
+        // Opacity = 1 - exp(-3 * waterPathLength / depth): ~95% opaque at "Opaque Depth".
+        _ShallowTransparencyDepth("Water Opaque Depth (m of water along view ray)", Range(0.05, 30)) = 2.0
+        _ShallowMinOpacity("Minimum Opacity (water touching ground)", Range(0, 1)) = 0.0
+        _ShallowTransparencyPower("Transparency Falloff", Range(0.2, 4)) = 1.0
+
         [HideInInspector] _OceanDisplacement0("Ocean Displacement 0", 2D) = "black" {}
         [HideInInspector] _OceanDisplacement1("Ocean Displacement 1", 2D) = "black" {}
         [HideInInspector] _OceanDisplacement2("Ocean Displacement 2", 2D) = "black" {}
@@ -72,10 +92,11 @@ Shader "Custom/Wave"
     {
         Tags
         {
-            "RenderType" = "Opaque"
+            "RenderType" = "Transparent"
             "RenderPipeline" = "UniversalPipeline"
-            // Geometry+2: after opaque boats and the HullWaterMask depth plane (Geometry+1).
-            "Queue" = "Geometry+2"
+            // Drawn after all opaques (so the camera depth texture holds the ground, boats
+            // and the HullWaterMask plane) but before other transparents such as wind wisps.
+            "Queue" = "Transparent-100"
         }
 
         Pass
@@ -84,6 +105,8 @@ Shader "Custom/Wave"
             Tags { "LightMode" = "UniversalForward" }
             Cull Off
             ZWrite On
+            // Alpha is only < 1 in very shallow water (near the ground); foam stays opaque.
+            Blend SrcAlpha OneMinusSrcAlpha
 
             HLSLPROGRAM
 
@@ -92,9 +115,12 @@ Shader "Custom/Wave"
             #pragma fragment frag
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
+            TEXTURECUBE(_SkyCube);
+            SAMPLER(sampler_SkyCube);
             TEXTURE2D(_ShoreDistance);
             SAMPLER(sampler_ShoreDistance);
             TEXTURE2D(_ShoreDepthModifier);
@@ -136,6 +162,18 @@ Shader "Custom/Wave"
                 float _SubsurfaceStrength;
                 float _SpecularPower;
                 float _SpecularStrength;
+
+                float _SkyReflectionStrength;
+                float _SkyReflectionFresnel;
+                float _SkyReflectionIntensity;
+                float _SkyUseCustomCube;
+                float _SkyReflectionRoughness;
+                float _FoamNormalStrength;
+                float _FoamHeight;
+                float _FoamBubbleDetail;
+                float _ShallowTransparencyDepth;
+                float _ShallowMinOpacity;
+                float _ShallowTransparencyPower;
 
                 float _OceanPatchLength0;
                 float _OceanPatchLength1;
@@ -223,6 +261,24 @@ Shader "Custom/Wave"
                 float c = Hash21(cell + float2(0.0, 1.0));
                 float d = Hash21(cell + float2(1.0, 1.0));
                 return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+            }
+
+            // Skybox reflection from URP's environment reflection probe (unity_SpecCube0),
+            // which is the skybox unless the Lighting window overrides it. Decode + roughness
+            // to mip mapping are inlined so only Core.hlsl is needed.
+            half3 SampleSkyReflection(float3 reflectDir, float roughness)
+            {
+                float perceptualRoughness = saturate(roughness);
+                float mip = perceptualRoughness * (1.7 - 0.7 * perceptualRoughness) * 6.0;
+                if (_SkyUseCustomCube > 0.5)
+                {
+                    half4 c = SAMPLE_TEXTURECUBE_LOD(_SkyCube, sampler_SkyCube, reflectDir, mip);
+                    return c.rgb;
+                }
+                half4 encoded = SAMPLE_TEXTURECUBE_LOD(
+                    unity_SpecCube0, samplerunity_SpecCube0, reflectDir, mip);
+                half alpha = max(unity_SpecCube0_HDR.w * (encoded.a - 1.0) + 1.0, 0.0);
+                return (unity_SpecCube0_HDR.x * pow(alpha, unity_SpecCube0_HDR.y)) * encoded.rgb;
             }
 
             // Expanding ripple rings from Features/WaterEffects (WaterFoamField.EmitRipple).
@@ -689,17 +745,13 @@ Shader "Custom/Wave"
                 float rippleFoam;
                 EvaluateRipples(IN.positionWS.xz, rippleSlope, rippleTint, rippleFoam);
                 combinedSlope += rippleSlope;
-                float3 normalWS = normalize(float3(
+                float3 waveNormalWS = normalize(float3(
                     combinedSlope.x, 1.0, combinedSlope.y));
-                if (!all(isfinite(normalWS)))
-                    normalWS = float3(0.0, 1.0, 0.0);
+                if (!all(isfinite(waveNormalWS)))
+                    waveNormalWS = float3(0.0, 1.0, 0.0);
 
                 float3 viewDir = normalize(GetWorldSpaceViewDir(IN.positionWS));
                 float3 sunDir = normalize(_SunDirection.xyz);
-                float nDotV = saturate(dot(normalWS, viewDir));
-                float nDotL = saturate(dot(normalWS, sunDir));
-
-                float fresnel = pow(1.0 - nDotV, _FresnelPower);
 
                 // Peak mechanics combine three physically useful cues:
                 // compression (Jacobian), steep face angle, and crest height relative
@@ -749,25 +801,7 @@ Shader "Custom/Wave"
                     * (1.0 - depthBreakerPeak * 0.72);
                 float crestPeak = saturate(geometricPeak);
 
-                // Subsurface color brightens at steep, compressed crests, but the
-                // mask is strongest around shore break rather than everywhere.
-                float peakMask = crestPeak * fragmentShoreBreak;
-                float subsurface = saturate(
-                    peakMask * _SubsurfaceStrength + (1.0 - nDotV) * 0.16);
-
-                half3 waterColor = lerp(
-                    _DeepColor.rgb, _ShallowColor.rgb, subsurface);
-                waterColor *= baseSample.rgb;
-                waterColor *= 0.35 + 0.65 * nDotL;
-
-                float3 halfVector = normalize(viewDir + sunDir);
-                float specular = pow(
-                    saturate(dot(normalWS, halfVector)),
-                    _SpecularPower) * _SpecularStrength;
-                waterColor += _SunColor.rgb * specular;
-                waterColor += _FresnelColor.rgb * fresnel * _FresnelStrength;
-                waterColor += _ShallowColor.rgb * rippleTint * 0.12;
-
+                // ---- Foam coverage (computed before lighting so foam can bend the normal) ----
                 float foam = 0.0;
                 if (_OceanEnabled > 0.5)
                 {
@@ -834,9 +868,100 @@ Shader "Custom/Wave"
                 }
 
                 foam = saturate(max(foam, rippleFoam));
-                waterColor = lerp(waterColor, _FoamColor.rgb, foam);
 
-                return half4(waterColor, 1.0);
+                // ---- Foam as a raised surface ----
+                // Treat foam coverage as a small height field and fold its screen-space
+                // gradient into the normal (surface-gradient bump mapping). The foam edge
+                // becomes a visible rim, and a fine bubble noise makes the interior lumpy,
+                // so the foam reads as sitting above the water around it.
+                float bubbleFade = 1.0 - SmootherStep(
+                    20.0, 90.0, length(GetWorldSpaceViewDir(IN.positionWS)));
+                float2 bubbleP = IN.positionWS.xz;
+                float bubbles = 0.6 * ValueNoise(bubbleP * 3.1 + _Time.y * 0.12)
+                              + 0.4 * ValueNoise(bubbleP * 9.7 - _Time.y * 0.20);
+                float bubbleMod = 1.0 - _FoamBubbleDetail * bubbleFade * (1.0 - bubbles);
+                float foamShaped = foam * foam * (3.0 - 2.0 * foam);
+                float foamHeightM = foamShaped * bubbleMod * _FoamHeight;
+
+                float3 normalWS = waveNormalWS;
+                {
+                    float3 dpdx = ddx(IN.positionWS);
+                    float3 dpdy = ddy(IN.positionWS);
+                    float3 r1 = cross(dpdy, waveNormalWS);
+                    float3 r2 = cross(waveNormalWS, dpdx);
+                    float det = dot(dpdx, r1);
+                    float3 surfGrad = sign(det) * (ddx(foamHeightM) * r1 + ddy(foamHeightM) * r2);
+                    float3 bumped = normalize(
+                        abs(det) * waveNormalWS - surfGrad * _FoamNormalStrength);
+                    normalWS = all(isfinite(bumped)) ? bumped : waveNormalWS;
+                }
+
+                float nDotV = saturate(dot(normalWS, viewDir));
+                float nDotL = saturate(dot(normalWS, sunDir));
+                float fresnel = pow(1.0 - nDotV, _FresnelPower);
+
+                // Subsurface color brightens at steep, compressed crests, but the
+                // mask is strongest around shore break rather than everywhere.
+                float peakMask = crestPeak * fragmentShoreBreak;
+                float subsurface = saturate(
+                    peakMask * _SubsurfaceStrength + (1.0 - nDotV) * 0.16);
+
+                half3 waterColor = lerp(
+                    _DeepColor.rgb, _ShallowColor.rgb, subsurface);
+                waterColor *= baseSample.rgb;
+                waterColor *= 0.35 + 0.65 * nDotL;
+
+                float3 halfVector = normalize(viewDir + sunDir);
+                float specular = pow(
+                    saturate(dot(normalWS, halfVector)),
+                    _SpecularPower) * _SpecularStrength;
+                waterColor += _SunColor.rgb * specular;
+                waterColor += _FresnelColor.rgb * fresnel * _FresnelStrength;
+                waterColor += _ShallowColor.rgb * rippleTint * 0.12;
+
+                // Skybox reflection. Reflect about the (foam-bumped) normal, mirror
+                // below-horizon vectors upward, and weight by a Schlick-style Fresnel so
+                // grazing angles reflect most. Foam is diffuse, so it does not reflect.
+                float3 reflectDir = reflect(-viewDir, normalWS);
+                reflectDir.y = abs(reflectDir.y);
+                half3 skyColor = SampleSkyReflection(reflectDir, _SkyReflectionRoughness)
+                               * _SkyReflectionIntensity;
+                float schlick = 0.04 + 0.96 * pow(1.0 - nDotV, 5.0);
+                float skyAmount = saturate(_SkyReflectionStrength
+                    * lerp(1.0, schlick, _SkyReflectionFresnel)) * (1.0 - foam);
+                waterColor = lerp(waterColor, skyColor, skyAmount);
+
+                // Foam is lit with the bumped normal. The ratio is relative to a flat
+                // surface so flat foam keeps exactly the old _FoamColor brightness.
+                float flatLight = 0.55 + 0.45 * saturate(sunDir.y);
+                float foamShade = clamp(
+                    (0.55 + 0.45 * nDotL) / max(flatLight, 0.05), 0.45, 1.35);
+                half3 foamColorLit = _FoamColor.rgb * foamShade;
+                waterColor = lerp(waterColor, foamColorLit, foam);
+
+                // Shallow-water transparency: opacity follows the inferred water depth
+                // (shore distance field x painted seabed depth), so water thins out
+                // toward the ground and the beach shows through. Reflections, sun glints
+                // and foam stay opaque so they are not washed out with the water body.
+                // Real scene depth: length of the view ray that travels through water
+                // (ground / boat depth minus water surface depth). Beer-Lambert style
+                // absorption, so thin water over the beach is clear and deep water is opaque.
+                float2 screenUV = IN.positionHCS.xy / _ScaledScreenParams.xy;
+                float rawSceneDepth = SampleSceneDepth(screenUV);
+                float sceneEyeDepth = LinearEyeDepth(rawSceneDepth, _ZBufferParams);
+                float surfaceEyeDepth = IN.positionHCS.w;
+                // No depth texture (raw depth 0 on reversed-Z) -> treat as infinitely deep.
+                float waterPath = (rawSceneDepth <= 0.0)
+                    ? 1000.0 : max(sceneEyeDepth - surfaceEyeDepth, 0.0);
+                float absorption = 1.0 - exp(-3.0 * waterPath / max(_ShallowTransparencyDepth, 0.01));
+                float depthOpacity = lerp(
+                    saturate(_ShallowMinOpacity), 1.0,
+                    pow(saturate(absorption), max(_ShallowTransparencyPower, 0.01)));
+                float opacity = max(depthOpacity, skyAmount * schlick);
+                opacity = max(opacity, saturate(specular));
+                opacity = saturate(max(opacity, foam));
+
+                return half4(waterColor, opacity);
             }
 
             ENDHLSL

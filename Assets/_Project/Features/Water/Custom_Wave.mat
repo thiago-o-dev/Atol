@@ -12,7 +12,8 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _SKYUSECUSTOMCUBE_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -51,12 +52,24 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ShoreDepthModifier:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ShoreDistance:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SkyCube:
+        m_Texture: {fileID: 8900000, guid: d8b9a114dc91e7d4e9885d54ca9d957f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BreakerHeightToDepth: 0.78
+    - _FoamBubbleDetail: 0.5
+    - _FoamHeight: 0.06
+    - _FoamNormalStrength: 1
     - _FresnelPower: 2.94
     - _FresnelStrength: 1.27
     - _NearShoreWaveStrength: 0.35
@@ -66,18 +79,49 @@ Material:
     - _OceanPatchLength1: 512
     - _OceanPatchLength2: 128
     - _OpenOceanFoamMultiplier: 0.08
+    - _ShallowMinOpacity: 0.361
+    - _ShallowTransparencyDepth: 1.3
+    - _ShallowTransparencyPower: 4
     - _ShoreBreakEndDistance: 0.42
+    - _ShoreBreakEndMeters: 90
     - _ShoreBreakPeakDistance: 0.12
+    - _ShoreBreakPeakMeters: 22
     - _ShoreBreakStartDistance: 0.015
+    - _ShoreBreakStartMeters: 2
     - _ShoreChoppiness: 3.5
+    - _ShoreCrestCompressionGain: 8
+    - _ShoreCrestHeightGain: 0.45
+    - _ShoreCrestJacobianThreshold: 0.94
+    - _ShoreDebugView: 0
+    - _ShoreDepthPerMeter: 0.12
+    - _ShoreDistanceRangeMeters: 150
+    - _ShoreEdgeFadeMeters: 3.5
     - _ShoreFadeEnd: 0.45
+    - _ShoreFadeEndMeters: 100
     - _ShoreFadeStart: 0.02
+    - _ShoreFadeStartMeters: 0
+    - _ShoreFoamBlackSoftness: 0.18
+    - _ShoreFoamBlackThreshold: 0.45
+    - _ShoreFoamEdgeFeatherMeters: 85
+    - _ShoreFoamEdgeNoiseMeters: 14
     - _ShoreFoamGain: 5
     - _ShoreFoamThreshold: 0.98
+    - _ShoreFoamWidthMeters: 65
     - _ShoreHeightBoost: 1.55
+    - _ShoreHorizontalDrive: 0.45
     - _ShoreHorizontalFloor: 0.65
     - _ShoreMapFlipV: 0
+    - _ShoreMaxDepthMeters: 60
     - _ShoreNormalBoost: 1.65
+    - _ShoreShoalingScale: 1.18
+    - _ShoreWashPulseStrength: 0.65
+    - _ShoreWashSpacingMeters: 42
+    - _ShoreWashSpeed: 2.2
+    - _SkyReflectionFresnel: 0.7
+    - _SkyReflectionIntensity: 1
+    - _SkyReflectionRoughness: 0
+    - _SkyReflectionStrength: 0.538
+    - _SkyUseCustomCube: 1
     - _SpecularPower: 96
     - _SpecularStrength: 1.8
     - _SubsurfaceStrength: 0.9

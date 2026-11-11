@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2016644464129663549}
   - component: {fileID: 6330130872283513492}
   - component: {fileID: 1714155984375597575}
+  - component: {fileID: 5444443122260910459}
   - component: {fileID: 3798075987593443356}
   m_Layer: 0
   m_Name: Water
@@ -91,6 +92,19 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &5444443122260910459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3625377787630510905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d31d382749ac714cbfde9f842aa1125, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: _Project.Framework::FollowXY
+  ReferenceTransform: {fileID: 0}
 --- !u!114 &3798075987593443356
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -111,7 +125,7 @@ MonoBehaviour:
   rendererBoundsPaddingMeters: 250
   windDirectionXZ: {x: 0.98893636, y: 0.14834046}
   windSpeed: 26
-  windStrength: 0.65
+  windStrength: 0
   phillipsAmplitude: 0.0008
   smallWaveDamping: 0.3
   backwindDamping: 0.07
