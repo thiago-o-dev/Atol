@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ebb193eee9e482c4fa8aef8ba55b779e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 323302
+  packageName: Free Galaxy Shader - URP
+  packageVersion: 1.0.1
+  assetPath: Assets/Vefects/Free Galaxy Shader URP/Galaxy/Materials/M_VFX_URP_Stylized_Galaxy_03_Reflection.mat
+  uploadId: 764497
