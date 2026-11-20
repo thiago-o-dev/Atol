@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2c23eff6eca456c479393a9a2bbc469c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/DynamicExpressionSet/tongueLeft_Right_ExpressionDNA.asset
+  uploadId: 985770

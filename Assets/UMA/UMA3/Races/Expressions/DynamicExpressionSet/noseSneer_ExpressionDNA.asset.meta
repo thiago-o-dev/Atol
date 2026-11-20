@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 14bd005d9455f7e44baa8f13ec045a4a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/DynamicExpressionSet/noseSneer_ExpressionDNA.asset
+  uploadId: 985770

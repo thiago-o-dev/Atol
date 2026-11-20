@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 72c61065c290a1d4cac4cc1c26739a17
+timeCreated: 1551733736
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMADismemberment/Runtime/UmaDismemberment.cs
+  uploadId: 985770

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 70f7bcf3740c78740b28069decd79933
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UMAMeshBaselineSnapshot.cs
+  uploadId: 985770

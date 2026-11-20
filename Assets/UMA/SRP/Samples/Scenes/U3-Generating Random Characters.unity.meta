@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: e16770e4b1321ea1815872bdfd0d81d2
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-Generating Random Characters.unity
+  uploadId: 985770

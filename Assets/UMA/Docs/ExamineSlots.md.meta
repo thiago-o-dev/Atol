@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: afdbd9235ba9469b82ec9a815fdca16d
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/ExamineSlots.md
+  uploadId: 985770

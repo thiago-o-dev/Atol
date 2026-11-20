@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 906bfaf39ffa46e40a5cd916ceea7ba7
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UMAWardrobeRecipeEditor.CopyValuesExtension.cs
+  uploadId: 985770

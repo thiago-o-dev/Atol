@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2940f3dbefbe26548aebefe660c2e6d3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/BonePoses/JawForward.asset
+  uploadId: 985770

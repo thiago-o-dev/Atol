@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: c62f59b7bc54f1743898038799a58ebf
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/UMATextureSaver.cs
+  uploadId: 985770

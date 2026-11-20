@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d1391bb0d6247ec4ba00b45adc6f49f2
+timeCreated: 1459430677
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Prefabs/Textures/HeadCamRenderTexture.renderTexture
+  uploadId: 985770

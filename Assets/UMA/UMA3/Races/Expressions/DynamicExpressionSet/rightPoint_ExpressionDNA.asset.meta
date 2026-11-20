@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e4038711abe664f4eb1c42fe2019fa21
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/DynamicExpressionSet/rightPoint_ExpressionDNA.asset
+  uploadId: 985770

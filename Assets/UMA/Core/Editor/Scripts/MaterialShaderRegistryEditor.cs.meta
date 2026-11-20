@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 6e600a7be2f2d344caa1a3768abb7263
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/MaterialShaderRegistryEditor.cs
+  uploadId: 985770

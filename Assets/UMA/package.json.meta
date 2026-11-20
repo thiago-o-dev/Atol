@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 65b8ca84f3054c1499b6c69eddfcc88c
+PackageManifestImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/package.json
+  uploadId: 985770

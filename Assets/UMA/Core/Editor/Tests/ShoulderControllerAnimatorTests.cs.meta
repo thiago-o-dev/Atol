@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: c4c1876ba79249fab06067da1b6a76a8
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/ShoulderControllerAnimatorTests.cs
+  uploadId: 985770

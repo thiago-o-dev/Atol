@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 0a05f502740e47d085250aeda9494a92
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UnitySpringJointAnimatorTests.cs
+  uploadId: 985770

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 8bd4cce9c6a047f6a75940a0a28f61fd
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Editor/Tests/TexturePaintGpuGoldenTests.cs
+  uploadId: 985770

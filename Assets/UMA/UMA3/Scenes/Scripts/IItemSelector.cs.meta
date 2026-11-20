@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: f9da20e55dd662341a4787e01af03344
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Scripts/IItemSelector.cs
+  uploadId: 985770

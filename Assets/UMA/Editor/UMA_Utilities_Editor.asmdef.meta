@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5a86249baa4b438e82ac61cfb97b83bd
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Editor/UMA_Utilities_Editor.asmdef
+  uploadId: 985770

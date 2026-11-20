@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 5357eedff7ee425cb76fa3d0c99bbde7
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SourceMask.shader
+  uploadId: 985770

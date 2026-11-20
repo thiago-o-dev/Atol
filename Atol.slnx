@@ -1,5 +1,28 @@
 ﻿<Solution>
   <Project Path="Assembly-CSharp-Editor.csproj" />
-  <Project Path="_Project.Framework.csproj" />
+  <Project Path="UMA_Core_Editor.csproj" />
+  <Project Path="UMA_Core.csproj" />
+  <Project Path="UMA.TexturePaint.Editor.Tests.csproj" />
+  <Project Path="UMA.Dismemberment.Runtime.csproj" />
+  <Project Path="UMA.TexturePaint.Tests.csproj" />
+  <Project Path="UMA3.Samples.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="UMA.TexturePaint.Editor.csproj" />
+  <Project Path="UMA.TexturePaint.Runtime.csproj" />
+  <Project Path="_Project.Framework.csproj" />
+  <Project Path="UMA_Core_Editor_Tests.csproj" />
+  <Project Path="UMA_Editor.csproj" />
+  <Project Path="UMA.Dismemberment.Editor.csproj" />
+  <Project Path="UMA.TexturePaint.Examples.csproj" />
+  <Project Path="UMA_Utilities_Editor.csproj" />
+  <Project Path="UMA.TestRunner.Editor.csproj" />
+  <Project Path="Shaderpackager-editor.csproj" />
+  <Project Path="UMA.Dismemberment.Samples.csproj" />
+  <Project Path="UMA.SRP.SkyCar.Samples.csproj" />
+  <Project Path="UMA.Dismemberment.Editor.Tests.csproj" />
+  <Project Path="UMA.PackageSupport.Editor.csproj" />
+  <Project Path="UMA3.Samples.Editor.csproj" />
+  <Project Path="com.example.compass-line.Runtime.csproj" />
+  <Project Path="UMA_Core_Runtime_Tests.csproj" />
+  <Project Path="com.example.compass-line.Editor.csproj" />
 </Solution>

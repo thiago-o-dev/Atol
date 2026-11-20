@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ee6d0a26d9217a04abaf570d3e760130
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/UMASimpleLOD.md
+  uploadId: 985770

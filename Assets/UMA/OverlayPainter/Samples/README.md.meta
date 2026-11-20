@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: b78578120e875564b92be79bd6df84d4
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Samples/README.md
+  uploadId: 985770

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: e49d1f1f11e74fd29d6ac14b462d2618
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/Testing/UMAReleaseValidationRepairUtility.cs
+  uploadId: 985770

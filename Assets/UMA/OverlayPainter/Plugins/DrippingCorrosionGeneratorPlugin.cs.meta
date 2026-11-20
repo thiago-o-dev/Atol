@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: c7ee118b575b7c244b763b2d6b9a0ecf
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Plugins/DrippingCorrosionGeneratorPlugin.cs
+  uploadId: 985770

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 56de2b79077dee2448925764f9945981
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Samples/SlotMaskExample.asset
+  uploadId: 985770

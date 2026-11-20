@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: bb79d6fa6b3ee65903d27cf021396846
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-How to Load and Save a DCA to a string.unity
+  uploadId: 985770

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 921ba701f6adda446b977fce3f0bfb1f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/DynamicExpressionSet/tongueCurl_ExpressionDNA.asset
+  uploadId: 985770

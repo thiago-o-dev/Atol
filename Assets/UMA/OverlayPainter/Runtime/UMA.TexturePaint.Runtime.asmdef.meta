@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5c6f0a5dd59bf6744b8e4482e30b59ad
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Runtime/UMA.TexturePaint.Runtime.asmdef
+  uploadId: 985770

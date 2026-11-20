@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4e508e709e8c5ac42975be876aade554
+timeCreated: 1459436361
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Prefabs/Textures/BodyCamRenderTexture.renderTexture
+  uploadId: 985770

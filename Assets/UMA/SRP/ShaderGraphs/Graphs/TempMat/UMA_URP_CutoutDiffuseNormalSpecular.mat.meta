@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bb0ef7f12ca044840ba3c9423e7c601b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/Graphs/TempMat/UMA_URP_CutoutDiffuseNormalSpecular.mat
+  uploadId: 985770

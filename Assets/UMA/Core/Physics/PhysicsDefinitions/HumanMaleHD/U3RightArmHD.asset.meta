@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bf5d45a8923dda9499773c357e3164da
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Physics/PhysicsDefinitions/HumanMaleHD/U3RightArmHD.asset
+  uploadId: 985770

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f6e4963793aaff649aa9b4693e9a82e9
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/UMA_Core_NoBurst.dat
+  uploadId: 985770

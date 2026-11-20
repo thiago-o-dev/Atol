@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 6af0a2c1c12943bca462fdc78badf905
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Plugins/WeatheringGeneratorPlugins.cs
+  uploadId: 985770

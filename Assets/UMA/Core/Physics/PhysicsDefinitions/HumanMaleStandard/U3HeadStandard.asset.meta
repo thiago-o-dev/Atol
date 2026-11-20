@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ed270f08dadd0a543a04c7836dc2d7e2
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Physics/PhysicsDefinitions/HumanMaleStandard/U3HeadStandard.asset
+  uploadId: 985770

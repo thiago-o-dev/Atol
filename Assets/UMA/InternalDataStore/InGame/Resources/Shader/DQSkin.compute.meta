@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c6af964ea35e58b41ad9c77b0bdd8c8a
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/InternalDataStore/InGame/Resources/Shader/DQSkin.compute
+  uploadId: 985770

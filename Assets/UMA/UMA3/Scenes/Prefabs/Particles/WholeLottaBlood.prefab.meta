@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: b6f7e82b9ffa0e140a2b791436c54e5c
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Prefabs/Particles/WholeLottaBlood.prefab
+  uploadId: 985770

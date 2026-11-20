@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2071b43eda5781a418c26cba68620eef
+timeCreated: 1508447462
+licenseType: Free
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/Materials/UMA_Cutout_Diffuse_Normal_Metallic_Occlusion.asset
+  uploadId: 985770

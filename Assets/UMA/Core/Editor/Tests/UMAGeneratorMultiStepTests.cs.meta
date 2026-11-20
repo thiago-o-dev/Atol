@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 4f092b36157f8bb4c9ae27a7dc4dda9b
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UMAGeneratorMultiStepTests.cs
+  uploadId: 985770

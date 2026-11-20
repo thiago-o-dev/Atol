@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 6f518abe386d848449cf34a1811a277e
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/ContentCreation.md
+  uploadId: 985770

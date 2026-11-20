@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 399081fd3b3412f4290d17c5b4be36b4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/DynamicExpressionSet/headLeft_Right_ExpressionDNA.asset
+  uploadId: 985770

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: d9f31f3b25aa47e9b6ea9b2c8204a6d8
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Plugins/AAAOrganicGeneratorPlugins.cs
+  uploadId: 985770

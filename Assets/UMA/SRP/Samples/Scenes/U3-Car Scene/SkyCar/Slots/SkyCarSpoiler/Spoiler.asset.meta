@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 43df16764282e3058c9ee3895c682483
+timeCreated: 1540928369
+licenseType: Free
+NativeFormatImporter:
+  mainObjectFileID: 4300000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-Car Scene/SkyCar/Slots/SkyCarSpoiler/Spoiler.asset
+  uploadId: 985770

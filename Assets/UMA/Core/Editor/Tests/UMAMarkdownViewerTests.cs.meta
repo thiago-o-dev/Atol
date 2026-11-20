@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 570897bdccca420a87d8ca90a200d719
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UMAMarkdownViewerTests.cs
+  uploadId: 985770

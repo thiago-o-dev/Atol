@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: ffcf431f34731ea4aba13f01ec5111e5
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/Editors/SlotMasterEditor.cs
+  uploadId: 985770

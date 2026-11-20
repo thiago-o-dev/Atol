@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 40307702d879bbd4ab01db8945ade355
+timeCreated: 1427138559
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/Materials/UMA_Mat_Cutout_Diffuse_Normal_Metallic.mat
+  uploadId: 985770

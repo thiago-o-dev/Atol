@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c620c32ddb80447cbe275f883a9d9328
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMADismemberment/Runtime/UMA.Dismemberment.Runtime.asmdef
+  uploadId: 985770

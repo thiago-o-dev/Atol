@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: f67a6ddc22ee45c798673893604eea18
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/StageUtils/UmaTouchupWeightsWindow.cs
+  uploadId: 985770

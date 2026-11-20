@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 20017812bc934af8a8b2863d5fd59f02
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UMATaskListWindow.cs
+  uploadId: 985770

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 3b02b6183745b8f4182751bdbbbce653
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/DynamicExpressionSet/UMA 30 Expression
+    Set_ExpressionGroup.asset
+  uploadId: 985770

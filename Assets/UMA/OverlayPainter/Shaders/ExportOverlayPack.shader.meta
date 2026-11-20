@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 6e48acbbd30b4f04ab583625aad2089a
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Shaders/ExportOverlayPack.shader
+  uploadId: 985770

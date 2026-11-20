@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f4cb446fd3d05a84798e1e643ba62cbc
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Prefabs/GUI/HeaderLabel.prefab
+  uploadId: 985770

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 6c04f648d8172c6439d46503e0a9525d
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Runtime/TexturePaintBaker.cs
+  uploadId: 985770

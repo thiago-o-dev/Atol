@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 94f753488abf4bc5974aed6c89413456
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Tests/Runtime/UMA_Core_Runtime_Tests.asmdef
+  uploadId: 985770

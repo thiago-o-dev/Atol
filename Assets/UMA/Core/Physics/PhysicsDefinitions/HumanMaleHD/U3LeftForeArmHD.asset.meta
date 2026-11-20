@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 303479ea68aea2940a1a412d1e318c95
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Physics/PhysicsDefinitions/HumanMaleHD/U3LeftForeArmHD.asset
+  uploadId: 985770

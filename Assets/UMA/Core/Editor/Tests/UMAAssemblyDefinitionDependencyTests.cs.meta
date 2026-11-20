@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: f6fb812da9ca4acdb7a4e23750bdf05c
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UMAAssemblyDefinitionDependencyTests.cs
+  uploadId: 985770

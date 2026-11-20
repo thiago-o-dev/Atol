@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 7fe8d7b5abe504642be0b979253c15db
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UMAWardrobeRecipeGraphEditorWindow.cs
+  uploadId: 985770

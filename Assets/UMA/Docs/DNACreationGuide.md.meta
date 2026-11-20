@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: debfac6bb3e246e0a9427df42e1bc7fa
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/DNACreationGuide.md
+  uploadId: 985770

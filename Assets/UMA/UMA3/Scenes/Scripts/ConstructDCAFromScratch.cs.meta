@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: f318c4ecd53c7b5408b756c1a296e6a3
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Scripts/ConstructDCAFromScratch.cs
+  uploadId: 985770

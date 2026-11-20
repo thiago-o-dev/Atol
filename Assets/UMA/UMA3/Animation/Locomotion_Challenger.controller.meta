@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d91797513f5e07542a68e8321501dabb
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Animation/Locomotion_Challenger.controller
+  uploadId: 985770

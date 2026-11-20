@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: fbe04fa7a96643d2a8328af05bd373c2
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/UMAAddressableEditorBridge.cs
+  uploadId: 985770

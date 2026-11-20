@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: afebc970464393141a01ac5c6a7ba9e5
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/SlotDataAssetGltfExporter.cs
+  uploadId: 985770

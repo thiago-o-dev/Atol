@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9d92d05e8b35694438ad80df5c4eb7b4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_SRP_DiffuseNormalMetallic.asset
+  uploadId: 985770

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5cb153eefb0289049a935936034d2a0d
+ComputeShaderImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Shaders/PluginGenerators.compute
+  uploadId: 985770

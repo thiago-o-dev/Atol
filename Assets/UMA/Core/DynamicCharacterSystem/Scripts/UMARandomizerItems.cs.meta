@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 121728b06cb5d9f4fb90625307c227cc
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/DynamicCharacterSystem/Scripts/UMARandomizerItems.cs
+  uploadId: 985770

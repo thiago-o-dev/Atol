@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 46e9a6d8d7aa4988bb3d3cb5148e76d3
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UMARenderTextureDiagnosticsWindow.cs
+  uploadId: 985770

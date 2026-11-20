@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 142d74092b078ee4c8a91f6b2f9f2ce8
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/DynamicCharacterSystem/Scripts/UMARandomAvatarV2.cs
+  uploadId: 985770

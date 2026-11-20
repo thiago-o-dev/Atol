@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: d3ff846510154275833e11a9f85e661a
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Plugins/TextGeneratorPlugin.cs
+  uploadId: 985770

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 29fbe5fb3e07cf041bb4207a6f635863
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/Graphs/TempMat/UMA_URP_CutoutDiffuseNormalSpecularOcclusion.mat
+  uploadId: 985770

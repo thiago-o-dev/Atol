@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a0a5f12233b75004396e49583e82ec2b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/Graphs/TempMat/UMA_URP_CutoutDiffuse.mat
+  uploadId: 985770

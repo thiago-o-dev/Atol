@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: fc7e170973c06494196f22c32afc7de2
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/OverlayDataAsset.md
+  uploadId: 985770

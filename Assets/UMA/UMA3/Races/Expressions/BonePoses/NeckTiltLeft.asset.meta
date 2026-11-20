@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2eb70ad5f8b391e4cb9af678a37426cb
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/BonePoses/NeckTiltLeft.asset
+  uploadId: 985770

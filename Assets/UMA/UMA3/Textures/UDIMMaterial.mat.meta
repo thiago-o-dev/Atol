@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 08d8b996755b28141886c197bae14a0d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Textures/UDIMMaterial.mat
+  uploadId: 985770

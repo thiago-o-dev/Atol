@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 08868f78cd128bd4fab4189e74cf0724
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/DNA/MalePose.asset
+  uploadId: 985770

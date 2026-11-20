@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 55212fded8ea2a4438dec150e49722ae
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Extensions/DynamicCharacterSystem/IconCreatorEditor.cs
+  uploadId: 985770

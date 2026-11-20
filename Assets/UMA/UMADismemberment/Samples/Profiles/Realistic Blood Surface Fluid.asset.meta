@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: af87b51bff704c3188bc9000640b1476
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMADismemberment/Samples/Profiles/Realistic Blood Surface
+    Fluid.asset
+  uploadId: 985770

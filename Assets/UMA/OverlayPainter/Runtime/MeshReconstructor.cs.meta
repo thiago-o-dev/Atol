@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 0ab6557c5bef19b408e21d3fd1ca1bfe
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Runtime/MeshReconstructor.cs
+  uploadId: 985770

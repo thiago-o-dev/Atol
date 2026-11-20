@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: f7f8eef962e40594fbc6ce029c4c94dd
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/Physics/BoneAnimations/UnityJointAnimator.cs
+  uploadId: 985770

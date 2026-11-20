@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8a8569a68a0f8f2498efdbdb7da8c159
+timeCreated: 1430298300
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Prefabs/MountedItemAssets/Props/Materials/challenger_sword.mat
+  uploadId: 985770

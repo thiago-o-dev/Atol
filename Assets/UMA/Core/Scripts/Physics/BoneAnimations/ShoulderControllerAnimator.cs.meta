@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 998dba9bcf494483820de73e736192b5
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/Physics/BoneAnimations/ShoulderControllerAnimator.cs
+  uploadId: 985770

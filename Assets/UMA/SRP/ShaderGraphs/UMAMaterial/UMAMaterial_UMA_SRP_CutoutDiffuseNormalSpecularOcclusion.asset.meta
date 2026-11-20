@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 947bcb8a0981b5148899fbff6140ac2d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_SRP_CutoutDiffuseNormalSpecularOcclusion.asset
+  uploadId: 985770

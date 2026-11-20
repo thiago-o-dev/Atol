@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cf06733cf6e9cb040a82672d4a1b4537
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Physics/Physics Slots/HD/U3PhysicsHDSlot.asset
+  uploadId: 985770

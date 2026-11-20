@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 754712d57dfa6da498e175f1a43a8612
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Expressions/JawClose_DNA.asset
+  uploadId: 985770

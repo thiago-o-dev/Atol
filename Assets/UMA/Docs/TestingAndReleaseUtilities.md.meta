@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f391145a4ebc49e8a00db2fe24b5f17d
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/TestingAndReleaseUtilities.md
+  uploadId: 985770

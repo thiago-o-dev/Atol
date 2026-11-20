@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: b27b20f5128c4cd7bf7de3014f36b4ba
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Runtime/ProceduralMeshMapBuilder.cs
+  uploadId: 985770

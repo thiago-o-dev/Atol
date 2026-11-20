@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: edc4123fc9194c53a23dd75cbb0a3ca3
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UMAUtilsHash64Tests.cs
+  uploadId: 985770

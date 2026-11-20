@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f26ef695fabd4cdf8655319446b124fe
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Scripts/Editor/UMA3.Samples.Editor.asmdef
+  uploadId: 985770

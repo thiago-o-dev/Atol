@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5ce6f6d5ea774318b7b392344127652a
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Editor/SpriteEditorIntegration/UMA.TexturePaint.Sprite.Editor.asmdef
+  uploadId: 985770

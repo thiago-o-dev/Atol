@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 61653f96882d4f1db3ea90ae25cc45a1
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/UMAToolsForBlender.md
+  uploadId: 985770

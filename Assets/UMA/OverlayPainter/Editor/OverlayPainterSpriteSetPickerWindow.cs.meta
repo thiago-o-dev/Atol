@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: fa7f3ec1cfd24468a1ea55a2230e4b26
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Editor/OverlayPainterSpriteSetPickerWindow.cs
+  uploadId: 985770

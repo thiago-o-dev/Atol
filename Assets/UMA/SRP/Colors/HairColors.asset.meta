@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b3b6cfa4c2da1004cb1e49feb8144d30
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Colors/HairColors.asset
+  uploadId: 985770

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 1b919db827b6a584a810dd3052866214
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/Physics/UMABoneVisualizer.cs
+  uploadId: 985770

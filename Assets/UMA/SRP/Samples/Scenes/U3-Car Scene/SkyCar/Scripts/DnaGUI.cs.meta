@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 88237636bbd4dfa69a32bf880a9b42e5
+timeCreated: 1534197014
+licenseType: Free
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-Car Scene/SkyCar/Scripts/DnaGUI.cs
+  uploadId: 985770

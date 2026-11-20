@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e4311c71032825d51054775a778865b0
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-Sandbox/U3-Sandbox Baking Set.asset
+  uploadId: 985770

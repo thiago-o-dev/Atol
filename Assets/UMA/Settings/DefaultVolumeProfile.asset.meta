@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1c9df4233ed5b8b48939e66446107879
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Settings/DefaultVolumeProfile.asset
+  uploadId: 985770

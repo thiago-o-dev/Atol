@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8e29dbac5d2e82f44a759a7e2cc568ab
+timeCreated: 1426943696
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/Materials/UMA_Diffuse_Normal_Metallic.asset
+  uploadId: 985770

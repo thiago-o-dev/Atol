@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: e886f3c93a5c4de1947bb54b7a1736b8
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Tests/ReleaseQualityMatrixTests.cs
+  uploadId: 985770

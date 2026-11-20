@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 299d43c94dabc1d4f893c524406fe1d4
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UmaAddRacesToRecipesWindow.cs
+  uploadId: 985770

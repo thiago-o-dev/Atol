@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 7b1dba4757254baebfb6e8082a8b982e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/AssetIndexCleaner.cs
+  uploadId: 985770

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 537f11d6032a6834895c665b36eff7a6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/ShaderPackages/UMA_SRP_DiffuseNormalThicknessOcclusionGloss.mat
+  uploadId: 985770

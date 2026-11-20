@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0f99c01fecb56704d9f6c99133c5b077
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 400006
+  packageName: Fish Shader Animation
+  packageVersion: 0.9
+  assetPath: Assets/mc_try/ThirdPartyAssets/Materials/MatWithoutArmature.mat
+  uploadId: 974624

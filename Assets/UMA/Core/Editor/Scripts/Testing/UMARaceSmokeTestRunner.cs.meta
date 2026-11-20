@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 34e0534024f98804796b97d3fa5ab362
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/Testing/UMARaceSmokeTestRunner.cs
+  uploadId: 985770

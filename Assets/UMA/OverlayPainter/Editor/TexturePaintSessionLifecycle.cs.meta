@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 248f0da9de02453ea23ad5d29572b8f7
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Editor/TexturePaintSessionLifecycle.cs
+  uploadId: 985770

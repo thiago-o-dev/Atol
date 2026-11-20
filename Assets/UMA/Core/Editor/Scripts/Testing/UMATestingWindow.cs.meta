@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 5957e28fb3716a049b7c285f6c5da55d
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/Testing/UMATestingWindow.cs
+  uploadId: 985770

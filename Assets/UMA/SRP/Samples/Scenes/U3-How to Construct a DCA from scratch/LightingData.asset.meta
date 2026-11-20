@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0d9e29bcbaef1fc6a8967a9cd466cc46
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-How to Construct a DCA from scratch/LightingData.asset
+  uploadId: 985770

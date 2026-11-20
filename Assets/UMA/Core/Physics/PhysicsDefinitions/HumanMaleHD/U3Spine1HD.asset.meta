@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6797f55e7f617fe4ba64918ea24eea6f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Physics/PhysicsDefinitions/HumanMaleHD/U3Spine1HD.asset
+  uploadId: 985770

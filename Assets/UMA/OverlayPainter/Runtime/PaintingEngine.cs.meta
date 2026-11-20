@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: a6d08bab97e69ef46ab0c9b3c123c2cb
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Runtime/PaintingEngine.cs
+  uploadId: 985770

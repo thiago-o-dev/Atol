@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 692ea877034d49a69da36a779f35eac5
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/BoneBakingSkinningJobContext.cs
+  uploadId: 985770

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 459525b6819ef524c8d2e4ab3aea8418
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/Editors/TextureEditor.cs
+  uploadId: 985770

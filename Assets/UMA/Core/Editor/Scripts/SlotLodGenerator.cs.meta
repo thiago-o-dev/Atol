@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 0ea93e74dd4e3df49b88a80b8cfaabca
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/SlotLodGenerator.cs
+  uploadId: 985770

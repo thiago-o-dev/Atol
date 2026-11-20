@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: ab7aeb2bae083ce4fae7e0c72b80f60a
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/StandardAssets/UMA/Scripts/SkinnedMeshCombinerMeshAPI.cs
+  uploadId: 985770

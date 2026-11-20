@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a60c41185c3d411bad237bc81ff14c14
+ComputeShaderImporter:
+  externalObjects: {}
+  currentAPIMask: 4
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Shaders/ChannelPack.compute
+  uploadId: 985770

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: fec8be12c063623b8a1ff0e80594a922
+labels:
+- UMA_Text Recipe
+- UMA_Wardrobe Recipe
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-Car Scene/SkyCar/Recipes/StripesRecipe.asset
+  uploadId: 985770

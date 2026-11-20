@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: e015f9627573e3b4c91e4b83d048c7c1
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UMAIncrementalMeshCombinerBaselineTests.cs
+  uploadId: 985770

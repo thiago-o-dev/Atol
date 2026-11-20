@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 11145e2e4e3e8824a9c922bf70cccdc9
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/DynamicCharacterAvatar.md
+  uploadId: 985770

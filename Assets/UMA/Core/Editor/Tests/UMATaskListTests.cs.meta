@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 097d932c62a74825b78c36dd80ed3248
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UMATaskListTests.cs
+  uploadId: 985770

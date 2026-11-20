@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 3c24687cad6644f68d184ea990fe73cf
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Editor/Tests/SpriteGridOptionsTests.cs
+  uploadId: 985770

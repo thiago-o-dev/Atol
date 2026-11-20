@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 200148652ce48ca4f9e81e9ed5306120
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/ShaderPackages/UMA_SRP_CutoutDiffuseNormalSpecular.mat
+  uploadId: 985770

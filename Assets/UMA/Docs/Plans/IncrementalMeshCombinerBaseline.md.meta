@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4f73f6db8f10d4043b1cb2c8775e7ae0
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/Plans/IncrementalMeshCombinerBaseline.md
+  uploadId: 985770

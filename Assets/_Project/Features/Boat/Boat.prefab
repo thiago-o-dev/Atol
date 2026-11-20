@@ -1,0 +1,600 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &65347786974747961
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3860144107059973389}
+  m_Layer: 6
+  m_Name: ExitAnchorLeft
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3860144107059973389
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 65347786974747961}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2, y: -0.4, z: -0.1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2278009449737809209}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2941124647483597383
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2278009449737809209}
+  - component: {fileID: 3934120525640583770}
+  - component: {fileID: 8321853169579619478}
+  - component: {fileID: 3262405023938500733}
+  - component: {fileID: 1143980588799794662}
+  - component: {fileID: 5738198442180057773}
+  - component: {fileID: 2481109813123251297}
+  - component: {fileID: 7000000000000000101}
+  - component: {fileID: 7000000000000000102}
+  m_Layer: 6
+  m_Name: Boat
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2278009449737809209
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941124647483597383}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 43.9085, y: 16.056728, z: 24.62004}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7207208959642284690}
+  - {fileID: 4268148953584448575}
+  - {fileID: 2052670796862404682}
+  - {fileID: 3860144107059973389}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &3934120525640583770
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941124647483597383}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.5, y: 1, z: 6.25}
+  m_Center: {x: 0, y: -1, z: -0.25}
+--- !u!54 &8321853169579619478
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941124647483597383}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &3262405023938500733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941124647483597383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749a59c09013b014d8c84f67dc2589df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OceanBuoyancy
+  ocean: {fileID: 0}
+  samplePoints:
+  - localPosition: {x: -0.65, y: -1, z: -3}
+    liftWeight: 1
+  - localPosition: {x: 0.65, y: -1, z: -3}
+    liftWeight: 1
+  - localPosition: {x: -0.65, y: -1, z: 2}
+    liftWeight: 1
+  - localPosition: {x: 0.65, y: -1, z: 2}
+    liftWeight: 1
+  - localPosition: {x: 0, y: -0.8, z: 0}
+    liftWeight: 1.5
+  - localPosition: {x: 2.5, y: -0.8, z: -0.5}
+    liftWeight: 0.5
+  - localPosition: {x: -2.5, y: -0.8, z: -0.5}
+    liftWeight: 0.5
+  maxOutstandingSnapshots: 3
+  applyBuoyancyForces: 1
+  buoyancyStrength: 4
+  buoyancyDepth: 0.4
+  waterDrag: 1
+  maxDragAcceleration: 12
+  normalInfluence: 0.12
+  maximumSampleAge: 0.3
+  preferNewestSnapshot: 1
+  maximumSlopeHeightCorrection: 5
+  maximumSampleSlope: 8
+  maximumEstimatedWaveVelocity: 55
+--- !u!114 &1143980588799794662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941124647483597383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 852be2beae3fe184fbdc477d835c7ab1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.Buoy.Buoyancy
+  oceanBuoyancy: {fileID: 3262405023938500733}
+--- !u!114 &5738198442180057773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941124647483597383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 356d2aa889842604680b69accf3f6eba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.Boat.BoatController
+  weight:
+    hullMass: 450
+    crewMass: 80
+    centerOfMass: {x: 0, y: -0.25, z: 0}
+    hullSize: {x: 0, y: 0, z: 0}
+    hullHeight: 1
+  yaw:
+    inertiaScale: 0.25
+    damping: 0.9
+    quadraticDamping: 0.5
+    maxRate: 90
+    directionalStability: 0.9
+    weatherHelm: 0.9
+    broaching: 24
+  pitch:
+    inertiaScale: 1.5
+    damping: 1.6
+    quadraticDamping: 0.8
+    maxRate: 80
+    stability: 5
+    waveFollow: 0.8
+    bowLift: 0.6
+  roll:
+    inertiaScale: 1.5
+    damping: 2.2
+    quadraticDamping: 1
+    maxRate: 100
+    stability: 6
+    waveFollow: 0.7
+    vanishingAngle: 110
+    sailHeel: 1.6
+    turnLean: 0.12
+    comfortableHeel: 22
+    maximumHeel: 55
+    heelDriveLoss: 0.5
+    heelRudderLoss: 0.3
+  sailPower: 7
+  sailTrimRate: 0.65
+  startingSailTrim: 0.8
+  noGoAngle: 42
+  sailSideForce: 0.55
+  sailRotationSpeed: 72
+  maximumSailRotation: 78
+  startingSailRotation: 0
+  gustStrength: 0.35
+  gustFrequency: 0.18
+  rudderMaxYawRate: 38
+  rudderResponse: 2.6
+  rudderTorque: 6
+  rudderFullSpeed: 3
+  rudderMinAuthority: 0.08
+  maximumSpeed: 14
+  surgeDrag: 0.05
+  surgeQuadraticDrag: 0.04
+  swayDrag: 1.65
+  swayQuadraticDrag: 0.25
+  heaveProbeDamping: 2
+  heaveWaveFollow: 0.5
+  heaveDamping: 1.5
+  heaveQuadraticDamping: 0.344
+  airborneDampingFraction: 0.1
+  enableWaveDrift: 1
+  waveDriftFollow: 0.6
+  waveDriftResponse: 2.6
+  waveDriftDepth: 0.35
+  driftAffectsAnchoredBoat: 1
+  airborneGravity: 2
+  airborneGraceTime: 0.18
+  airborneRampTime: 0.35
+  maximumFallSpeed: 30.1
+  landingLevelling: 1.4
+  slamStartSpeed: 4
+  slamCushion: 0.9
+  slamEventSpeed: 6
+  maxRiseAcceleration: 16
+  maxRiseSpeed: 3
+  body: {fileID: 8321853169579619478}
+  buoyancy: {fileID: 1143980588799794662}
+  ocean: {fileID: 0}
+  boardingAnchor: {fileID: 4268148953584448575}
+  exitAnchorLeft: {fileID: 3860144107059973389}
+  exitAnchorRight: {fileID: 2052670796862404682}
+  interactionRange: 3.25
+  proximityPrompt: {fileID: 0}
+  anchorWhenUnoccupied: 1
+  anchorSpring: 12
+  anchorDamping: 7
+  spawnContactFoam: 1
+  capsizeAngle: 130
+  capsizeConfirmTime: 0.35
+  capsizeRecoveryTime: 6
+  capsizeRightingTorque: 18
+  capsizeRightingDamping: 6
+  sailTrim: 0
+  sailRotationDegrees: 0
+  isAnchored: 1
+--- !u!114 &2481109813123251297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941124647483597383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec91d5ad9ac78434fa1439b875712501, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.Boat.BoatSailAnimator
+  boat: {fileID: 5738198442180057773}
+  sailRotationPivot: {fileID: 5375400039474837039}
+  sailCloth: {fileID: 4158049038885540103}
+  furledScale: {x: 1, y: 1, z: 0.12}
+  deployedScale: {x: 1, y: 1, z: 1}
+  deploymentSmoothTime: 0.22
+  deploymentAnimationSpeed: 4
+  rotationSmoothSpeed: 7
+--- !u!1 &3170412905694154222
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2052670796862404682}
+  m_Layer: 6
+  m_Name: ExitAnchorRight
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2052670796862404682
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3170412905694154222}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2, y: -0.4, z: -0.1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2278009449737809209}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7186165058241238229
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5282498454175123952}
+  - component: {fileID: 2286163078999889835}
+  - component: {fileID: 2178567739192848110}
+  m_Layer: 6
+  m_Name: HullWaterMask
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5282498454175123952
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7186165058241238229}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.000011737564, y: 0.44951817, z: 0.024880353}
+  m_LocalScale: {x: 0.95, y: 0, z: 0.95}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 7207208959642284690}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &2286163078999889835
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7186165058241238229}
+  m_Mesh: {fileID: 8536425139288874787, guid: e7a701cff3e90de47803336e494a146b, type: 3}
+--- !u!23 &2178567739192848110
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7186165058241238229}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 3b8d1f6e2a9c4e7d8f0a5c1e6b2d9a77, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &7532871685177520252
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4268148953584448575}
+  m_Layer: 6
+  m_Name: BoardingAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4268148953584448575
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7532871685177520252}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.4, z: -0.1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2278009449737809209}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &3019358085577910455
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2278009449737809209}
+    m_Modifications:
+    - target: {fileID: 5091351126660268191, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+      propertyPath: m_Name
+      value: SailBoat
+      objectReference: {fileID: 0}
+    - target: {fileID: 5612554356972755493, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5612554356972755493, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1.29
+      objectReference: {fileID: 0}
+    - target: {fileID: 5612554356972755493, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5612554356972755493, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5612554356972755493, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5612554356972755493, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5612554356972755493, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5612554356972755493, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5612554356972755493, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -180
+      objectReference: {fileID: 0}
+    - target: {fileID: 5612554356972755493, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 5612554356972755493, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 5282498454175123952}
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+--- !u!4 &4158049038885540103 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1176197875554482608, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+  m_PrefabInstance: {fileID: 3019358085577910455}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5375400039474837039 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7169638202332389016, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+  m_PrefabInstance: {fileID: 3019358085577910455}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7207208959642284690 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5612554356972755493, guid: 4335a9b6a6d39524f8b33b8707047099, type: 3}
+  m_PrefabInstance: {fileID: 3019358085577910455}
+  m_PrefabAsset: {fileID: 0}
+
+--- !u!114 &7000000000000000101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941124647483597383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f0604b1f3612574bad20a803964c973, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.WaterEffects.WaterContactFoam
+  trailRadiusMin: 0.5
+  trailRadiusMax: 1.1
+  trailFoamRate: 30
+  burstRadius: 1.6
+  burstStrength: 0.85
+  rippleRadiusSmall: 4
+  rippleRadiusLarge: 30
+  rippleLifeShort: 5
+  rippleLifeLong: 10
+  rippleStrength: 1
+  rippleFoam: 0.15
+  EmitFoam: 1
+--- !u!114 &7000000000000000102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2941124647483597383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06650085cb141f2468e950a5359e4d63, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.WaterEffects.BoatFoamEmitter
+  boat: {fileID: 5738198442180057773}
+  probes: {fileID: 3262405023938500733}
+  foam: {fileID: 7000000000000000101}
+  ocean: {fileID: 0}
+  hullNames:
+  - Boat
+  ignoreWords:
+  - sail
+  - mast
+  - rope
+  - sprit
+  - block
+  - tiller
+  - foot
+  hullSizeOverride: {x: 0, y: 0, z: 0}
+  waterlineFraction: 0.4
+  outlinePoints: 20
+  minSpeed: 0.25
+  fullSpeed: 7
+  idleIntensity: 0.25
+  leadBias: 0.6
+  contactSlack: 0.15
+  wakeImpulseInterval: 0.38
+  wakeImpulseRadius: 0.8
+  wakeImpulseStrength: 0.42
+  wakeMaxLength: 22
+  rippleSizeFloor: 0.35
+  idleRippleInterval: 2.4
+  massRange: {x: 80, y: 2500}
+  footprintRange: {x: 1.2, y: 7}
+  fullSlamSpeed: 8

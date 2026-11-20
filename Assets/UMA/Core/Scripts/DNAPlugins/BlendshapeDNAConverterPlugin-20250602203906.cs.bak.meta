@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: e0baec3c4f520554b9fa747e4c5cc5cd
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/DNAPlugins/BlendshapeDNAConverterPlugin-20250602203906.cs.bak
+  uploadId: 985770

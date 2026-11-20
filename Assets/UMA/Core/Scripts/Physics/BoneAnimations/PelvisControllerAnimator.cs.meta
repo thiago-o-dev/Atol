@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 77f6f409d33c48e3ac4d7d490cdb3089
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/Physics/BoneAnimations/PelvisControllerAnimator.cs
+  uploadId: 985770

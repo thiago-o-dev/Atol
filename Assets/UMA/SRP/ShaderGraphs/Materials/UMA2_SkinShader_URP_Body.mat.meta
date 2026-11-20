@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: eea4a3ec27be2fa4ea8d82e237d7bbb5
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/Materials/UMA2_SkinShader_URP_Body.mat
+  uploadId: 985770

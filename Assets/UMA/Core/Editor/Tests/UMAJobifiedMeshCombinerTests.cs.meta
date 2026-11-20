@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 6fb49cbaf7504f28aa17317f58e4b7e1
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UMAJobifiedMeshCombinerTests.cs
+  uploadId: 985770

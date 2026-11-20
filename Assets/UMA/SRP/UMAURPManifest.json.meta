@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d890b9061184417696a598c9ae128bcb
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/UMAURPManifest.json
+  uploadId: 985770

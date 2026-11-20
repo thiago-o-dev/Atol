@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 07f85236bd1c7cf7bc5104a3e0af275d
+labels:
+- UMA_Overlay
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-Car Scene/SkyCar/Overlays/SkyCarWindowsOverlay.asset
+  uploadId: 985770

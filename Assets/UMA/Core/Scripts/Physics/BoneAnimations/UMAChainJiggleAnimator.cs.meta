@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: a8c35dde900aa5e4ba94b4984a9197a2
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/Physics/BoneAnimations/UMAChainJiggleAnimator.cs
+  uploadId: 985770

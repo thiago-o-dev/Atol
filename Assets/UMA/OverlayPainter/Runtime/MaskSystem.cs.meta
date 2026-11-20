@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 5e4ac18428cc91a43b888d6b483d4593
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Runtime/MaskSystem.cs
+  uploadId: 985770

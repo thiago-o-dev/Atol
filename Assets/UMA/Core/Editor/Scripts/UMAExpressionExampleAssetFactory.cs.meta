@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 0962ff31e5d44c34be49e3bc7628adeb
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UMAExpressionExampleAssetFactory.cs
+  uploadId: 985770

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5c80fc4442f8349969abea6c1a0f1faa
+timeCreated: 1489108426
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Defaults/UMADynamicCharacterAvatar.prefab
+  uploadId: 985770

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0c3dc367400f3d74290b1fd34eb362e8
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/DNA/Pose/RacePoses/FemaleSylvanBonePose_TPose.asset
+  uploadId: 985770

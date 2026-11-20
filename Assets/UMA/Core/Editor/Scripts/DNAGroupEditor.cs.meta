@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 31424b5299d2c174ab9262463400bf5a
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/DNAGroupEditor.cs
+  uploadId: 985770

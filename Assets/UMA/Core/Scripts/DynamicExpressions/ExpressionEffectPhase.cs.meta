@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 2b383f3453e74f579517b4c09123c5ef
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/DynamicExpressions/ExpressionEffectPhase.cs
+  uploadId: 985770

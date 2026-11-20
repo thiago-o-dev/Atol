@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: e9f0925babd1495fb95b676187ce4fe3
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/UMA3.Samples.asmdef
+  uploadId: 985770

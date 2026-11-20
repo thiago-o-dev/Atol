@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: f273c49d63cb1b944bd243a518b68e90
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/SkinningSolver.cs
+  uploadId: 985770

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 898ef926350853a459334a2b86338ed9
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Runtime/TangentSpaceMapBuilder.cs
+  uploadId: 985770

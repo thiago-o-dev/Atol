@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: aa03738884500ba4cbb5a238157c46c3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Physics/PhysicsDefinitions/HumanMaleStandard/U3LeftForeArmStandard.asset
+  uploadId: 985770

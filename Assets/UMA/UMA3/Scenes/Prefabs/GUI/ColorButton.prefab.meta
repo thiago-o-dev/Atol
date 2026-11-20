@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5d52a7fec5a4bb344b5e73db01a3f607
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Prefabs/GUI/ColorButton.prefab
+  uploadId: 985770

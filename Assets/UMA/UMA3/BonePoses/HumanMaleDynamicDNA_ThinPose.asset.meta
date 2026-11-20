@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f60105763b02f274aa0264a5e3132bac
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/BonePoses/HumanMaleDynamicDNA_ThinPose.asset
+  uploadId: 985770

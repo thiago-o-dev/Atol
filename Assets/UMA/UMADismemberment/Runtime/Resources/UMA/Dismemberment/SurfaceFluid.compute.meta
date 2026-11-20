@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3fa3f8f0ea2147ab838cce2b2803d9ec
+ComputeShaderImporter:
+  externalObjects: {}
+  preprocessorOverride: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SurfaceFluid.compute
+  uploadId: 985770

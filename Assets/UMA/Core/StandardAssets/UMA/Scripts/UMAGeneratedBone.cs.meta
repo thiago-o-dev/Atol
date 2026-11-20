@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 9df2ad4563cc4f1a9359ae2b08ea78b3
+timeCreated: 1777545601
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/StandardAssets/UMA/Scripts/UMAGeneratedBone.cs
+  uploadId: 985770

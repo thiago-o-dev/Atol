@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 0d1b629737004abe8a83ca95ba445443
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Addressables/UMA_Core_Addressables_Editor.asmdef
+  uploadId: 985770

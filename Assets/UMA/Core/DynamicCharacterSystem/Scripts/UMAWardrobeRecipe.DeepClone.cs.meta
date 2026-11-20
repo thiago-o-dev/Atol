@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: d7bfe0f50caf49d386f2d5085b9ff168
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/DynamicCharacterSystem/Scripts/UMAWardrobeRecipe.DeepClone.cs
+  uploadId: 985770

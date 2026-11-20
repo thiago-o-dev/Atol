@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: e115c9e04e164d3bbd572256444b232a
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Editor/Tests/TexturePaintGpuTestFixture.cs
+  uploadId: 985770

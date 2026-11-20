@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8a9bd6a1605321e49a7e0d7f3991a419
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/DynamicExpressionSet/rightBrowUp_Down_ExpressionDNA.asset
+  uploadId: 985770

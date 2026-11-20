@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: be54078031bd20448bc1fcae9d56b8c2
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/NewDNA/DNAEffect_BlendShape.cs
+  uploadId: 985770

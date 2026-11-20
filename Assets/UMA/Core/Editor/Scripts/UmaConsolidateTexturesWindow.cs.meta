@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 6a28a1c6fcc67eb49818d8e825918e5f
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UmaConsolidateTexturesWindow.cs
+  uploadId: 985770

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 68d409678fe24eac9e418b9aec1178b8
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMADismemberment/Editor/UMA.Dismemberment.Editor.asmdef
+  uploadId: 985770

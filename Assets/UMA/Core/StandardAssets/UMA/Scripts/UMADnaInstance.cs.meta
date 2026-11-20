@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d9d91804051b4bf4b9a5563d2fce045c
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/StandardAssets/UMA/Scripts/UMADnaInstance.cs
+  uploadId: 985770

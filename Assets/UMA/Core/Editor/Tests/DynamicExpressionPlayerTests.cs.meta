@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 88a1e14bd33a46a4a06aef8fdb4533a3
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/DynamicExpressionPlayerTests.cs
+  uploadId: 985770

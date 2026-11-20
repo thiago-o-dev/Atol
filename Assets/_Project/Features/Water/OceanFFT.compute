@@ -1,0 +1,1019 @@
+#pragma kernel InitSpectrum
+#pragma kernel EvolveSpectrum
+#pragma kernel FFT_X
+#pragma kernel FFT_Y
+#pragma kernel BuildMaps
+#pragma kernel SampleSurface
+
+// Tessendorf-style spectral ocean.
+// Frequency-domain layout:
+//   FFT0.xy = height spectrum
+//   FFT0.zw = horizontal X displacement spectrum
+//   FFTZ.xy = horizontal Z displacement spectrum
+//
+// The inverse FFT is a radix-2 DIT transform. Each 1D transform is performed
+// inside one thread group using groupshared ping-pong storage. This avoids a
+// separate global-memory dispatch for every butterfly stage.
+
+#define WATER_PI       3.14159265358979323846
+#define WATER_TWO_PI   6.28318530717958647692
+#define WATER_GRAVITY  9.81
+#define FFT_MAX_SIZE   512
+#define FFT_HALF_SIZE  256
+
+Texture2D<float2>  _H0Read;
+RWTexture2D<float2> _H0Write;
+
+Texture2D<float4>  _FFT0Read;
+Texture2D<float2>  _FFTZRead;
+RWTexture2D<float4> _FFT0Write;
+RWTexture2D<float2> _FFTZWrite;
+
+RWTexture2D<float4> _DisplacementWrite;
+RWTexture2D<float4> _NormalWrite;
+
+// Optional point-query path used by underwater detection and physics buoyancy.
+// It samples the exact FFT displacement/normal maps consumed by Wave.shader.
+Texture2D<float4> _SampleDisplacement0;
+Texture2D<float4> _SampleDisplacement1;
+Texture2D<float4> _SampleDisplacement2;
+Texture2D<float4> _SampleNormal0;
+Texture2D<float4> _SampleNormal1;
+Texture2D<float4> _SampleNormal2;
+Texture2D<float4> _SampleShoreDistance;
+Texture2D<float4> _SampleShoreDepth;
+StructuredBuffer<float2> _SurfaceQueryPositions;
+
+struct SurfaceQueryResult
+{
+    float4 displacement; // xyz = world displacement, w = valid
+    float4 normal;       // xyz = world normal, w = valid
+    float4 lattice;      // xy = particle displacement, z = horizontal inverse-map error (m), w = reserved
+};
+RWStructuredBuffer<SurfaceQueryResult> _SurfaceQueryResults;
+
+int _SampleResolution;
+int _SampleCount;
+float _SamplePatchLength0;
+float _SamplePatchLength1;
+float _SamplePatchLength2;
+float4 _SampleShoreMapOriginXZ;
+float4 _SampleShoreMapSizeXZ;
+float _SampleShoreMapFlipV;
+float _SampleShoreDistanceRangeMeters;
+float _SampleShoreMaxDepthMeters;
+float _SampleShoreFadeStartMeters;
+float _SampleShoreFadeEndMeters;
+float _SampleNearShoreWaveStrength;
+float _SampleShoreEdgeFadeMeters;
+float _SampleShoreBreakStartMeters;
+float _SampleShoreBreakPeakMeters;
+float _SampleShoreBreakEndMeters;
+float _SampleShoreDepthPerMeter;
+float _SampleBreakerHeightToDepth;
+float _SampleShoreShoalingScale;
+float _SampleShoreHorizontalFloor;
+float _SampleShoreHorizontalDrive;
+float _SampleShoreChoppiness;
+float _SampleShoreNormalBoost;
+
+int _Resolution;
+int _Log2Resolution;
+int _Seed;
+
+float _PatchLength;
+float2 _WindDirection;
+float _WindSpeed;
+float _WindStrength;
+float _WindWaveStrength;
+float _PhillipsAmplitude;
+float _SmallWaveDamping;
+float _BackwindDamping;
+float _MinWavelength;
+float _MaxWavelength;
+float _CascadeScale;
+float _TimeSeconds;
+float _Choppiness;
+float _FoamBias;
+float _FoamGain;
+float _SeaStateStrength;
+
+// -----------------------------------------------------------------------------
+// Complex helpers
+// -----------------------------------------------------------------------------
+
+float2 ComplexMul(float2 a, float2 b)
+{
+    return float2(a.x * b.x - a.y * b.y,
+                  a.x * b.y + a.y * b.x);
+}
+
+uint HashUint(uint x)
+{
+    x ^= x >> 16;
+    x *= 0x7feb352du;
+    x ^= x >> 15;
+    x *= 0x846ca68bu;
+    x ^= x >> 16;
+    return x;
+}
+
+float Random01(uint x)
+{
+    return (HashUint(x) & 0x00ffffffu) * (1.0 / 16777216.0);
+}
+
+float2 GaussianRandom(uint2 p)
+{
+    uint index = p.x + p.y * (uint)_Resolution;
+    uint seed = (uint)_Seed;
+
+    float u1 = max(Random01(index ^ (seed + 0x9e3779b9u)), 1e-7);
+    float u2 = Random01(index ^ (seed + 0x85ebca6bu));
+
+    float radius = sqrt(-2.0 * log(u1));
+    float angle = WATER_TWO_PI * u2;
+
+    return radius * float2(cos(angle), sin(angle));
+}
+
+int SignedFrequency(uint index)
+{
+    // Resolution is always a power of two, so use a bit shift rather than
+    // integer division. This also avoids the D3D11 integer-divide warning.
+    uint halfResolution = (uint)_Resolution >> 1u;
+    return (index <= halfResolution)
+        ? (int)index
+        : (int)index - _Resolution;
+}
+
+uint ReverseBits(uint value)
+{
+    uint reversed = 0u;
+
+    [loop]
+    for (int i = 0; i < _Log2Resolution; ++i)
+    {
+        reversed = (reversed << 1u) | (value & 1u);
+        value >>= 1u;
+    }
+
+    return reversed;
+}
+
+// -----------------------------------------------------------------------------
+// 1. Initial Phillips spectrum. Run once per cascade / parameter change.
+// -----------------------------------------------------------------------------
+
+[numthreads(8, 8, 1)]
+void InitSpectrum(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_Resolution || id.y >= (uint)_Resolution)
+        return;
+
+    uint2 p = id.xy;
+    int sx = SignedFrequency(p.x);
+    int sz = SignedFrequency(p.y);
+
+    float2 kVector = (WATER_TWO_PI / max(_PatchLength, 0.001))
+                   * float2((float)sx, (float)sz);
+
+    float k2 = dot(kVector, kVector);
+    if (k2 < 1e-10)
+    {
+        _H0Write[p] = 0.0;
+        return;
+    }
+
+    float kMagnitude = sqrt(k2);
+
+    // Base Phillips spectrum. Directional weighting is applied in EvolveSpectrum
+    // so runtime wind direction changes can rotate the wave field without
+    // reallocating or regenerating the initial random spectrum.
+    float windLength = (_WindSpeed * _WindSpeed) / WATER_GRAVITY;
+    float longWave = exp(-1.0 / max(k2 * windLength * windLength, 1e-8));
+    float shortWave = exp(-k2 * _SmallWaveDamping * _SmallWaveDamping);
+
+    float wavelength = WATER_TWO_PI / kMagnitude;
+    float bandIn = smoothstep(_MinWavelength * 0.70,
+                              _MinWavelength, wavelength);
+    float bandOut = 1.0 - smoothstep(_MaxWavelength * 0.80,
+                                     _MaxWavelength, wavelength);
+    float bandWeight = bandIn * bandOut;
+
+    float spectrum = _PhillipsAmplitude
+                   * longWave
+                   * shortWave
+                   * bandWeight
+                   / max(k2 * k2, 1e-12);
+
+    // h0(k) = 1/sqrt(2) * (xi_r + i*xi_i) * sqrt(P(k)).
+    // The delta-k and N^2 factors compensate for our normalized inverse FFT.
+    float2 gaussian = GaussianRandom(p);
+
+    // The four self-conjugate frequency bins must be real-valued.
+    uint nyquist = (uint)_Resolution >> 1u;
+    bool selfConjugateX = (p.x == 0u) || (p.x == nyquist);
+    bool selfConjugateZ = (p.y == 0u) || (p.y == nyquist);
+    if (selfConjugateX && selfConjugateZ)
+        gaussian.y = 0.0;
+
+    float deltaK = WATER_TWO_PI / max(_PatchLength, 0.001);
+    float normalization = (float)(_Resolution * _Resolution);
+    float coefficient = sqrt(max(spectrum, 0.0) * 0.5)
+                      * deltaK
+                      * normalization
+                      * _CascadeScale;
+
+    _H0Write[p] = gaussian * coefficient;
+}
+
+// -----------------------------------------------------------------------------
+// 2. Evolve the spectrum in time and create height / choppy displacement fields.
+// -----------------------------------------------------------------------------
+
+[numthreads(8, 8, 1)]
+void EvolveSpectrum(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_Resolution || id.y >= (uint)_Resolution)
+        return;
+
+    uint2 p = id.xy;
+    uint mask = (uint)(_Resolution - 1);
+    uint2 negativeP = (uint2((uint)_Resolution - p.x, (uint)_Resolution - p.y)) & mask;
+
+    int sx = SignedFrequency(p.x);
+    int sz = SignedFrequency(p.y);
+
+    float2 kVector = (WATER_TWO_PI / max(_PatchLength, 0.001))
+                   * float2((float)sx, (float)sz);
+    float kMagnitude = length(kVector);
+
+    if (kMagnitude < 1e-8)
+    {
+        _FFT0Write[p] = 0.0;
+        _FFTZWrite[p] = 0.0;
+        return;
+    }
+
+    float2 wind = _WindDirection;
+    float windLengthSq = dot(wind, wind);
+    wind = (windLengthSq > 1e-8)
+        ? wind * rsqrt(windLengthSq)
+        : float2(1.0, 0.0);
+
+    // Apply the Phillips directional lobe during evolution. Evaluate +k and -k
+    // independently because their upwind/downwind energy can differ. This makes
+    // wind direction a live control instead of requiring a spectrum rebuild.
+    float2 kDirection = kVector / kMagnitude;
+    float alignment = dot(kDirection, wind);
+    float forwardEnergy = max(alignment, 0.0);
+    float backwardEnergy = max(-alignment, 0.0);
+    float directionalEnergy = forwardEnergy * forwardEnergy
+                            + _BackwindDamping * backwardEnergy * backwardEnergy;
+    float reverseDirectionalEnergy = backwardEnergy * backwardEnergy
+                                   + _BackwindDamping * forwardEnergy * forwardEnergy;
+
+    // Light air leaves a broader, more isotropic residual swell. As wind rises,
+    // energy increasingly concentrates into the downwind lobe. The separate
+    // _WindWaveStrength multiplier in ReadSurface also scales total amplitude.
+    float directionalBlend = pow(saturate(_WindStrength), 0.8);
+    directionalEnergy = lerp(0.18, directionalEnergy, directionalBlend);
+    reverseDirectionalEnergy = lerp(0.18, reverseDirectionalEnergy, directionalBlend);
+
+    float2 h0 = _H0Read.Load(int3(p, 0))
+              * sqrt(max(directionalEnergy, 0.0));
+    float2 h0Negative = _H0Read.Load(int3(negativeP, 0))
+                      * sqrt(max(reverseDirectionalEnergy, 0.0));
+
+    // Deep-water dispersion: omega(k) = sqrt(g * |k|).
+    float omega = sqrt(WATER_GRAVITY * kMagnitude);
+    float phase = omega * _TimeSeconds;
+    float s;
+    float c;
+    sincos(phase, s, c);
+
+    float2 positiveRotation = float2(c, s);
+    float2 negativeRotation = float2(c, -s);
+    float2 h = ComplexMul(h0, positiveRotation)
+             + ComplexMul(float2(h0Negative.x, -h0Negative.y), negativeRotation);
+
+    // D(k) = -i * (k / |k|) * h(k). The artist multiplier is applied
+    // after the inverse transform in BuildMaps.
+    float2 minusIH = float2(h.y, -h.x);
+    float2 displacementX = minusIH * (kVector.x / kMagnitude);
+    float2 displacementZ = minusIH * (kVector.y / kMagnitude);
+
+    // Nyquist displacement coefficients are zeroed to preserve Hermitian symmetry.
+    int nyquist = _Resolution >> 1;
+    if (abs(sx) == nyquist)
+        displacementX = 0.0;
+    if (abs(sz) == nyquist)
+        displacementZ = 0.0;
+
+    _FFT0Write[p] = float4(h, displacementX);
+    _FFTZWrite[p] = displacementZ;
+}
+
+// -----------------------------------------------------------------------------
+// Shared-memory inverse FFT.
+// One thread group transforms one row / column. Each thread handles up to
+// two samples, allowing 256 threads to process 256- or 512-point transforms.
+// -----------------------------------------------------------------------------
+
+groupshared float4 SharedA0[FFT_MAX_SIZE];
+groupshared float4 SharedB0[FFT_MAX_SIZE];
+groupshared float2 SharedAZ[FFT_MAX_SIZE];
+groupshared float2 SharedBZ[FFT_MAX_SIZE];
+
+void ButterflyShared(uint lane, uint stage, bool readFromB)
+{
+    uint span = 1u << (stage + 1u);
+    uint halfSpan = span >> 1u;
+    uint j = lane & (halfSpan - 1u);
+    uint groupBase = lane & ~(span - 1u);
+    uint i0 = groupBase + j;
+    uint i1 = i0 + halfSpan;
+
+    float angle = WATER_TWO_PI * ((float)j / (float)span);
+    float2 twiddle = float2(cos(angle), sin(angle));
+    float signValue = ((lane & halfSpan) != 0u) ? -1.0 : 1.0;
+
+    if (readFromB)
+    {
+        float4 a0 = SharedB0[i0];
+        float4 b0 = SharedB0[i1];
+        float2 az = SharedBZ[i0];
+        float2 bz = SharedBZ[i1];
+
+        SharedA0[lane] = float4(
+            a0.xy + signValue * ComplexMul(b0.xy, twiddle),
+            a0.zw + signValue * ComplexMul(b0.zw, twiddle)
+        );
+        SharedAZ[lane] = az + signValue * ComplexMul(bz, twiddle);
+    }
+    else
+    {
+        float4 a0 = SharedA0[i0];
+        float4 b0 = SharedA0[i1];
+        float2 az = SharedAZ[i0];
+        float2 bz = SharedAZ[i1];
+
+        SharedB0[lane] = float4(
+            a0.xy + signValue * ComplexMul(b0.xy, twiddle),
+            a0.zw + signValue * ComplexMul(b0.zw, twiddle)
+        );
+        SharedBZ[lane] = az + signValue * ComplexMul(bz, twiddle);
+    }
+}
+
+[numthreads(256, 1, 1)]
+void FFT_X(uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID)
+{
+    uint row = groupID.y;
+    uint lane0 = groupThreadID.x;
+    uint lane1 = lane0 + FFT_HALF_SIZE;
+
+    if (lane0 < (uint)_Resolution)
+    {
+        SharedA0[lane0] = _FFT0Read.Load(int3(lane0, row, 0));
+        SharedAZ[lane0] = _FFTZRead.Load(int3(lane0, row, 0));
+    }
+    if (lane1 < (uint)_Resolution)
+    {
+        SharedA0[lane1] = _FFT0Read.Load(int3(lane1, row, 0));
+        SharedAZ[lane1] = _FFTZRead.Load(int3(lane1, row, 0));
+    }
+    GroupMemoryBarrierWithGroupSync();
+
+    // DIT FFT requires bit-reversed input order.
+    if (lane0 < (uint)_Resolution)
+    {
+        uint reversed = ReverseBits(lane0);
+        SharedB0[lane0] = SharedA0[reversed];
+        SharedBZ[lane0] = SharedAZ[reversed];
+    }
+    if (lane1 < (uint)_Resolution)
+    {
+        uint reversed = ReverseBits(lane1);
+        SharedB0[lane1] = SharedA0[reversed];
+        SharedBZ[lane1] = SharedAZ[reversed];
+    }
+    GroupMemoryBarrierWithGroupSync();
+
+    [loop]
+    for (uint stage = 0u; stage < (uint)_Log2Resolution; ++stage)
+    {
+        bool readFromB = ((stage & 1u) == 0u);
+        if (lane0 < (uint)_Resolution)
+            ButterflyShared(lane0, stage, readFromB);
+        if (lane1 < (uint)_Resolution)
+            ButterflyShared(lane1, stage, readFromB);
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    // After an even number of stages, the final values are in B; otherwise A.
+    bool resultInB = ((_Log2Resolution & 1) == 0);
+    if (lane0 < (uint)_Resolution)
+    {
+        _FFT0Write[uint2(lane0, row)] = resultInB ? SharedB0[lane0] : SharedA0[lane0];
+        _FFTZWrite[uint2(lane0, row)] = resultInB ? SharedBZ[lane0] : SharedAZ[lane0];
+    }
+    if (lane1 < (uint)_Resolution)
+    {
+        _FFT0Write[uint2(lane1, row)] = resultInB ? SharedB0[lane1] : SharedA0[lane1];
+        _FFTZWrite[uint2(lane1, row)] = resultInB ? SharedBZ[lane1] : SharedAZ[lane1];
+    }
+}
+
+[numthreads(256, 1, 1)]
+void FFT_Y(uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID)
+{
+    uint column = groupID.x;
+    uint lane0 = groupThreadID.x;
+    uint lane1 = lane0 + FFT_HALF_SIZE;
+
+    if (lane0 < (uint)_Resolution)
+    {
+        SharedA0[lane0] = _FFT0Read.Load(int3(column, lane0, 0));
+        SharedAZ[lane0] = _FFTZRead.Load(int3(column, lane0, 0));
+    }
+    if (lane1 < (uint)_Resolution)
+    {
+        SharedA0[lane1] = _FFT0Read.Load(int3(column, lane1, 0));
+        SharedAZ[lane1] = _FFTZRead.Load(int3(column, lane1, 0));
+    }
+    GroupMemoryBarrierWithGroupSync();
+
+    if (lane0 < (uint)_Resolution)
+    {
+        uint reversed = ReverseBits(lane0);
+        SharedB0[lane0] = SharedA0[reversed];
+        SharedBZ[lane0] = SharedAZ[reversed];
+    }
+    if (lane1 < (uint)_Resolution)
+    {
+        uint reversed = ReverseBits(lane1);
+        SharedB0[lane1] = SharedA0[reversed];
+        SharedBZ[lane1] = SharedAZ[reversed];
+    }
+    GroupMemoryBarrierWithGroupSync();
+
+    [loop]
+    for (uint stage = 0u; stage < (uint)_Log2Resolution; ++stage)
+    {
+        bool readFromB = ((stage & 1u) == 0u);
+        if (lane0 < (uint)_Resolution)
+            ButterflyShared(lane0, stage, readFromB);
+        if (lane1 < (uint)_Resolution)
+            ButterflyShared(lane1, stage, readFromB);
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    bool resultInB = ((_Log2Resolution & 1) == 0);
+    if (lane0 < (uint)_Resolution)
+    {
+        _FFT0Write[uint2(column, lane0)] = resultInB ? SharedB0[lane0] : SharedA0[lane0];
+        _FFTZWrite[uint2(column, lane0)] = resultInB ? SharedBZ[lane0] : SharedAZ[lane0];
+    }
+    if (lane1 < (uint)_Resolution)
+    {
+        _FFT0Write[uint2(column, lane1)] = resultInB ? SharedB0[lane1] : SharedA0[lane1];
+        _FFTZWrite[uint2(column, lane1)] = resultInB ? SharedBZ[lane1] : SharedAZ[lane1];
+    }
+}
+
+// -----------------------------------------------------------------------------
+// 3. Build choppy displacement, normals and a Jacobian whitecap mask.
+// -----------------------------------------------------------------------------
+
+float3 ReadSurface(uint2 p)
+{
+    float normalization = 1.0 / (float)(_Resolution * _Resolution);
+    float4 hAndDx = _FFT0Read.Load(int3(p, 0));
+    float2 dzComplex = _FFTZRead.Load(int3(p, 0));
+
+    // Sea-state strength is applied after the FFT, so storms and calm
+    // transitions do not require regenerating the initial Phillips spectrum.
+    float seaState = max(_SeaStateStrength, 0.0);
+    float windDrive = max(_WindWaveStrength, 0.0);
+    return float3(
+        hAndDx.z * normalization * _Choppiness,
+        hAndDx.x * normalization,
+        dzComplex.x * normalization * _Choppiness
+    ) * seaState * windDrive;
+}
+
+[numthreads(8, 8, 1)]
+void BuildMaps(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_Resolution || id.y >= (uint)_Resolution)
+        return;
+
+    uint mask = (uint)(_Resolution - 1);
+    uint2 p = id.xy;
+
+    uint2 left  = uint2((p.x - 1u) & mask, p.y);
+    uint2 right = uint2((p.x + 1u) & mask, p.y);
+    uint2 down  = uint2(p.x, (p.y - 1u) & mask);
+    uint2 up    = uint2(p.x, (p.y + 1u) & mask);
+
+    float3 center = ReadSurface(p);
+    float3 sL = ReadSurface(left);
+    float3 sR = ReadSurface(right);
+    float3 sD = ReadSurface(down);
+    float3 sU = ReadSurface(up);
+
+    float inverseTwoSpacing = 0.5 * (float)_Resolution / max(_PatchLength, 0.001);
+
+    float dDxDx = (sR.x - sL.x) * inverseTwoSpacing;
+    float dHdx  = (sR.y - sL.y) * inverseTwoSpacing;
+    float dDzDx = (sR.z - sL.z) * inverseTwoSpacing;
+
+    float dDxDz = (sU.x - sD.x) * inverseTwoSpacing;
+    float dHdz  = (sU.y - sD.y) * inverseTwoSpacing;
+    float dDzDz = (sU.z - sD.z) * inverseTwoSpacing;
+
+    float3 tangentX = float3(1.0 + dDxDx, dHdx, dDzDx);
+    float3 tangentZ = float3(dDxDz, dHdz, 1.0 + dDzDz);
+
+    float3 normal = normalize(cross(tangentZ, tangentX));
+    if (normal.y < 0.0)
+        normal = -normal;
+
+    // Jacobian of the horizontal choppy mapping (x,z) -> (x+Dx,z+Dz).
+    float jacobian = (1.0 + dDxDx) * (1.0 + dDzDz)
+                   - dDxDz * dDzDx;
+
+    // Instantaneous whitecap mask. Persistent / advected foam can be added later.
+    float foam = saturate(max(0.0, _FoamBias - jacobian) * _FoamGain);
+
+    _DisplacementWrite[p] = float4(center, foam);
+    _NormalWrite[p] = float4(normal, jacobian);
+}
+
+
+// -----------------------------------------------------------------------------
+// 3. Point sampling for camera immersion and physics buoyancy.
+// This runs after BuildMaps and samples the same repeating textures as the
+// render shader. The result is read back asynchronously to avoid GPU stalls.
+// -----------------------------------------------------------------------------
+
+float SampleSmootherStep(float edge0, float edge1, float value)
+{
+    float t = saturate((value - edge0) / max(edge1 - edge0, 1e-4));
+    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+}
+
+float4 SampleDisp0(float2 worldXZ)
+{
+    float2 grid = frac(worldXZ / max(_SamplePatchLength0, 1.0)) * _SampleResolution;
+    uint2 p0 = (uint2)floor(grid);
+    uint2 p1 = (p0 + 1u) & ((uint)_SampleResolution - 1u);
+    float2 f = frac(grid);
+    float4 a = _SampleDisplacement0.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleDisplacement0.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleDisplacement0.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleDisplacement0.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleDisp1(float2 worldXZ)
+{
+    float2 grid = frac(worldXZ / max(_SamplePatchLength1, 1.0)) * _SampleResolution;
+    uint2 p0 = (uint2)floor(grid);
+    uint2 p1 = (p0 + 1u) & ((uint)_SampleResolution - 1u);
+    float2 f = frac(grid);
+    float4 a = _SampleDisplacement1.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleDisplacement1.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleDisplacement1.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleDisplacement1.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleDisp2(float2 worldXZ)
+{
+    float2 grid = frac(worldXZ / max(_SamplePatchLength2, 1.0)) * _SampleResolution;
+    uint2 p0 = (uint2)floor(grid);
+    uint2 p1 = (p0 + 1u) & ((uint)_SampleResolution - 1u);
+    float2 f = frac(grid);
+    float4 a = _SampleDisplacement2.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleDisplacement2.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleDisplacement2.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleDisplacement2.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleNorm0(float2 worldXZ)
+{
+    float2 grid = frac(worldXZ / max(_SamplePatchLength0, 1.0)) * _SampleResolution;
+    uint2 p0 = (uint2)floor(grid);
+    uint2 p1 = (p0 + 1u) & ((uint)_SampleResolution - 1u);
+    float2 f = frac(grid);
+    float4 a = _SampleNormal0.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleNormal0.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleNormal0.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleNormal0.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleNorm1(float2 worldXZ)
+{
+    float2 grid = frac(worldXZ / max(_SamplePatchLength1, 1.0)) * _SampleResolution;
+    uint2 p0 = (uint2)floor(grid);
+    uint2 p1 = (p0 + 1u) & ((uint)_SampleResolution - 1u);
+    float2 f = frac(grid);
+    float4 a = _SampleNormal1.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleNormal1.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleNormal1.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleNormal1.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleNorm2(float2 worldXZ)
+{
+    float2 grid = frac(worldXZ / max(_SamplePatchLength2, 1.0)) * _SampleResolution;
+    uint2 p0 = (uint2)floor(grid);
+    uint2 p1 = (p0 + 1u) & ((uint)_SampleResolution - 1u);
+    float2 f = frac(grid);
+    float4 a = _SampleNormal2.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleNormal2.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleNormal2.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleNormal2.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleShoreDistance(float2 uv)
+{
+    uint width, height, _unusedMipCount;
+    _SampleShoreDistance.GetDimensions(0, width, height, _unusedMipCount);
+    width = max(width, 1u);
+    height = max(height, 1u);
+    float2 pixel = saturate(uv) * float2(width, height) - 0.5;
+    int2 p0 = (int2)floor(pixel);
+    int2 p1 = p0 + 1;
+    float2 f = frac(pixel);
+    int2 maxPixel = int2((int)width - 1, (int)height - 1);
+    p0 = clamp(p0, int2(0, 0), maxPixel);
+    p1 = clamp(p1, int2(0, 0), maxPixel);
+    float4 a = _SampleShoreDistance.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleShoreDistance.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleShoreDistance.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleShoreDistance.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+float4 SampleShoreDepth(float2 uv)
+{
+    uint width, height, _unusedMipCount;
+    _SampleShoreDepth.GetDimensions(0, width, height, _unusedMipCount);
+    width = max(width, 1u);
+    height = max(height, 1u);
+    float2 pixel = saturate(uv) * float2(width, height) - 0.5;
+    int2 p0 = (int2)floor(pixel);
+    int2 p1 = p0 + 1;
+    float2 f = frac(pixel);
+    int2 maxPixel = int2((int)width - 1, (int)height - 1);
+    p0 = clamp(p0, int2(0, 0), maxPixel);
+    p1 = clamp(p1, int2(0, 0), maxPixel);
+    float4 a = _SampleShoreDepth.Load(int3((int)p0.x, (int)p0.y, 0));
+    float4 b = _SampleShoreDepth.Load(int3((int)p1.x, (int)p0.y, 0));
+    float4 c = _SampleShoreDepth.Load(int3((int)p0.x, (int)p1.y, 0));
+    float4 d = _SampleShoreDepth.Load(int3((int)p1.x, (int)p1.y, 0));
+    return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
+}
+
+// Evaluate exactly the same shore/depth attenuation as Wave.shader at a
+// parametric mesh coordinate. This helper is also used by the inverse horizontal
+// mapping below, so camera and physics probes query the wave at their actual XZ.
+bool EvaluateSurfaceAtParamXZ(
+    float2 baseXZ,
+    out float3 displacement,
+    out float3 normal)
+{
+    displacement = 0.0;
+    normal = float3(0.0, 1.0, 0.0);
+
+    float2 mapSize = max(_SampleShoreMapSizeXZ.xy, float2(1.0, 1.0));
+    float2 shoreUV = (baseXZ - _SampleShoreMapOriginXZ.xy) / mapSize;
+    if (_SampleShoreMapFlipV > 0.5)
+        shoreUV.y = 1.0 - shoreUV.y;
+
+    bool insideMap = all(shoreUV >= 0.0) && all(shoreUV <= 1.0);
+    float sampledDistance01 = 1.0;
+    if (insideMap)
+    {
+        sampledDistance01 = SampleShoreDistance(shoreUV).r;
+        if (!isfinite(sampledDistance01))
+            sampledDistance01 = 1.0;
+        sampledDistance01 = saturate(sampledDistance01);
+    }
+
+    float shoreDistanceMeters = sampledDistance01
+        * max(_SampleShoreDistanceRangeMeters, 1.0);
+
+    float waveStrength = lerp(
+        saturate(_SampleNearShoreWaveStrength), 1.0,
+        SampleSmootherStep(_SampleShoreFadeStartMeters,
+            max(_SampleShoreFadeEndMeters, _SampleShoreFadeStartMeters + 0.1),
+            shoreDistanceMeters));
+
+    float breakIn = SampleSmootherStep(
+        _SampleShoreBreakStartMeters,
+        max(_SampleShoreBreakPeakMeters, _SampleShoreBreakStartMeters + 0.1),
+        shoreDistanceMeters);
+    float breakOut = 1.0 - SampleSmootherStep(
+        _SampleShoreBreakPeakMeters,
+        max(_SampleShoreBreakEndMeters, _SampleShoreBreakPeakMeters + 0.1),
+        shoreDistanceMeters);
+    float breakStrength = saturate(breakIn * breakOut);
+
+    float depthFactor = 1.0;
+    if (insideMap)
+    {
+        depthFactor = SampleShoreDepth(shoreUV).r;
+        if (!isfinite(depthFactor))
+            depthFactor = 1.0;
+        depthFactor = saturate(depthFactor);
+    }
+
+    float localDepth = max(0.05, min(
+        shoreDistanceMeters * max(_SampleShoreDepthPerMeter, 0.001),
+        max(_SampleShoreMaxDepthMeters, 1.0)) * depthFactor);
+
+    float4 d0 = SampleDisp0(baseXZ);
+    float4 d1 = SampleDisp1(baseXZ);
+    float3 rawDisplacement = float3(d0.x + d1.x, d0.y + d1.y, d0.z + d1.z);
+    bool valid = all(isfinite(rawDisplacement)) && all(abs(rawDisplacement) < 10000.0);
+    if (!valid)
+        rawDisplacement = 0.0;
+
+    float shoalRamp = 1.0 - SampleSmootherStep(
+        _SampleShoreBreakStartMeters,
+        max(_SampleShoreBreakEndMeters, _SampleShoreBreakStartMeters + 0.1),
+        shoreDistanceMeters);
+    float shoalScale = lerp(1.0, max(_SampleShoreShoalingScale, 1.0), shoalRamp);
+    float candidateHeight = rawDisplacement.y * shoalScale;
+    float maxCrestAmplitude = max(
+        0.05, 0.5 * max(_SampleBreakerHeightToDepth, 0.1) * localDepth);
+    float depthLimitedHeight = maxCrestAmplitude
+        * tanh(candidateHeight / maxCrestAmplitude);
+    float depthLimitBlend = 1.0 - SampleSmootherStep(1.0, 14.0, localDepth);
+    float limitedHeight = lerp(candidateHeight, depthLimitedHeight, depthLimitBlend);
+
+    float stillBand = max(_SampleShoreEdgeFadeMeters, 0.5);
+    float nearShoreBlend = SampleSmootherStep(0.0, stillBand, shoreDistanceMeters);
+    float troughSuppression = 1.0 - SampleSmootherStep(
+        0.0, stillBand * 2.0, shoreDistanceMeters);
+    float shoreSafeHeight = lerp(
+        max(limitedHeight, 0.0), limitedHeight, 1.0 - troughSuppression);
+    rawDisplacement.y = shoreSafeHeight * waveStrength * nearShoreBlend;
+
+    float horizontalScale = lerp(
+        saturate(_SampleShoreHorizontalFloor), 1.0, nearShoreBlend);
+    horizontalScale *= lerp(1.0, max(_SampleShoreChoppiness, 1.0), breakStrength);
+    float horizontalDrive = saturate(
+        waveStrength + _SampleShoreHorizontalDrive * breakStrength);
+    rawDisplacement.xz *= horizontalScale * horizontalDrive;
+
+    // Land/shore pixels represent stationary water. Never generate a negative
+    // height or horizontal offset from the mask at the land boundary.
+    if (shoreDistanceMeters <= 0.001)
+        rawDisplacement = 0.0;
+
+    if (!all(isfinite(rawDisplacement)) || any(abs(rawDisplacement) > 10000.0))
+    {
+        rawDisplacement = 0.0;
+        valid = false;
+    }
+
+    float shorelineMotion = SampleSmootherStep(0.0, stillBand, shoreDistanceMeters);
+    float normalScale = waveStrength * shorelineMotion * lerp(
+        1.0, max(_SampleShoreNormalBoost, 1.0), breakStrength);
+
+    float3 rawN0 = SampleNorm0(baseXZ).xyz;
+    float3 rawN1 = SampleNorm1(baseXZ).xyz;
+    float3 rawN2 = SampleNorm2(baseXZ).xyz;
+    float3 n0 = all(isfinite(rawN0)) && dot(rawN0, rawN0) > 1e-6
+        ? normalize(rawN0) : float3(0.0, 1.0, 0.0);
+    float3 n1 = all(isfinite(rawN1)) && dot(rawN1, rawN1) > 1e-6
+        ? normalize(rawN1) : float3(0.0, 1.0, 0.0);
+    float3 n2 = all(isfinite(rawN2)) && dot(rawN2, rawN2) > 1e-6
+        ? normalize(rawN2) : float3(0.0, 1.0, 0.0);
+
+    float2 combinedSlope = (
+        n0.xz / max(n0.y, 0.12) +
+        n1.xz / max(n1.y, 0.12) +
+        n2.xz / max(n2.y, 0.12)) * normalScale;
+    float3 calculatedNormal = float3(combinedSlope.x, 1.0, combinedSlope.y);
+    normal = all(isfinite(calculatedNormal)) && dot(calculatedNormal, calculatedNormal) > 1e-6
+        ? normalize(calculatedNormal)
+        : float3(0.0, 1.0, 0.0);
+
+    displacement = rawDisplacement;
+    return valid;
+}
+
+// Solve the choppy parametric-to-world mapping with a damped Newton step.
+// A plain fixed-point iteration works in calm water but becomes unreliable when
+// high wind/sea-state settings compress horizontal displacement near wave crests.
+// Numerical derivatives include the shoreline attenuation, so the Jacobian is
+// consistent with the actual surface used by the vertex shader.
+bool RefineSurfaceParameter(
+    float2 targetWorldXZ,
+    float2 seed,
+    out float3 bestDisplacement,
+    out float3 bestNormal,
+    out float bestResidualSqr)
+{
+    float2 param = seed;
+    bestDisplacement = 0.0;
+    bestNormal = float3(0.0, 1.0, 0.0);
+    bestResidualSqr = 1e12;
+
+    // The derivative step should be related to the actual displacement-map
+    // texel size, but not so large that it crosses an entire short wave crest.
+    float epsilon = clamp(
+        min(_SamplePatchLength0, _SamplePatchLength1)
+            / max((float)_SampleResolution, 1.0) * 0.5,
+        0.2, 1.25);
+
+    [loop]
+    for (int iteration = 0; iteration < 10; ++iteration)
+    {
+        float3 displacement;
+        float3 normal;
+        if (!EvaluateSurfaceAtParamXZ(param, displacement, normal))
+            break;
+
+        float2 mapped = param + displacement.xz;
+        float2 residual = targetWorldXZ - mapped;
+        float residualSqr = dot(residual, residual);
+
+        if (all(isfinite(residual)) && residualSqr < bestResidualSqr &&
+            all(isfinite(displacement)) && all(isfinite(normal)))
+        {
+            bestDisplacement = displacement;
+            bestNormal = normal;
+            bestResidualSqr = residualSqr;
+        }
+
+        if (residualSqr < 0.0001)
+            break;
+
+        float3 displacementX;
+        float3 normalX;
+        float3 displacementZ;
+        float3 normalZ;
+        bool validX = EvaluateSurfaceAtParamXZ(
+            param + float2(epsilon, 0.0), displacementX, normalX);
+        bool validZ = EvaluateSurfaceAtParamXZ(
+            param + float2(0.0, epsilon), displacementZ, normalZ);
+        if (!validX || !validZ)
+            break;
+
+        float2 mappedX = param + float2(epsilon, 0.0) + displacementX.xz;
+        float2 mappedZ = param + float2(0.0, epsilon) + displacementZ.xz;
+        float j00 = (mappedX.x - mapped.x) / epsilon;
+        float j10 = (mappedX.y - mapped.y) / epsilon;
+        float j01 = (mappedZ.x - mapped.x) / epsilon;
+        float j11 = (mappedZ.y - mapped.y) / epsilon;
+        float determinant = j00 * j11 - j01 * j10;
+
+        float2 step;
+        if (isfinite(determinant) && abs(determinant) > 0.025)
+        {
+            step.x = (residual.x * j11 - j01 * residual.y) / determinant;
+            step.y = (j00 * residual.y - residual.x * j10) / determinant;
+            if (!all(isfinite(step)))
+                step = residual * 0.35;
+        }
+        else
+        {
+            // Near a folded wave the inverse Jacobian becomes ill-conditioned.
+            // Fall back to a small fixed-point correction instead of allowing a
+            // large Newton jump to land on a neighbouring crest/trough.
+            step = residual * 0.35;
+        }
+
+        // A Newton step is never allowed to jump tens of metres. Keep it within
+        // the local wave patch and use a backtracking line search to guarantee
+        // that each accepted step reduces the world-space mapping error.
+        float maxStep = clamp(
+            max(epsilon * 1.5, length(displacement.xz) * 0.75 + 0.35),
+            0.35, 2.5);
+        float stepLength = length(step);
+        if (stepLength > maxStep)
+            step *= maxStep / max(stepLength, 1e-5);
+
+        bool accepted = false;
+        float stepScale = 1.0;
+        [unroll]
+        for (int lineSearch = 0; lineSearch < 5; ++lineSearch)
+        {
+            float2 candidateParam = param + step * stepScale;
+            float3 candidateDisplacement;
+            float3 candidateNormal;
+            if (EvaluateSurfaceAtParamXZ(
+                candidateParam, candidateDisplacement, candidateNormal))
+            {
+                float2 candidateMapped = candidateParam + candidateDisplacement.xz;
+                float2 candidateResidual = targetWorldXZ - candidateMapped;
+                float candidateResidualSqr = dot(candidateResidual, candidateResidual);
+                if (isfinite(candidateResidualSqr) &&
+                    candidateResidualSqr < residualSqr - 1e-7)
+                {
+                    param = candidateParam;
+                    accepted = true;
+                    break;
+                }
+            }
+            stepScale *= 0.5;
+        }
+
+        if (!accepted)
+            break;
+    }
+
+    return bestResidualSqr < 1e11;
+}
+
+[numthreads(64, 1, 1)]
+void SampleSurface(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x;
+    if (index >= (uint)_SampleCount)
+        return;
+
+    float2 targetWorldXZ = _SurfaceQueryPositions[index];
+    float3 initialDisplacement;
+    float3 initialNormal;
+    bool initialValid = EvaluateSurfaceAtParamXZ(
+        targetWorldXZ, initialDisplacement, initialNormal);
+
+    // Start from the undeformed point, one fixed-point estimate, and a halfway
+    // estimate. The additional seed helps at moderate/high choppiness without
+    // allowing a solver to jump to a distant wave crest.
+    float2 seeds[3];
+    seeds[0] = targetWorldXZ;
+    seeds[1] = initialValid ? targetWorldXZ - initialDisplacement.xz : targetWorldXZ;
+    seeds[2] = initialValid ? targetWorldXZ - initialDisplacement.xz * 0.5 : targetWorldXZ;
+
+    float3 bestDisplacement = 0.0;
+    float3 bestNormal = float3(0.0, 1.0, 0.0);
+    float bestResidualSqr = 1e12;
+
+    [unroll]
+    for (int seedIndex = 0; seedIndex < 3; ++seedIndex)
+    {
+        float3 candidateDisplacement;
+        float3 candidateNormal;
+        float candidateResidualSqr;
+        if (RefineSurfaceParameter(
+            targetWorldXZ, seeds[seedIndex],
+            candidateDisplacement, candidateNormal,
+            candidateResidualSqr))
+        {
+            // Prefer the smallest world-space horizontal error. When two sheets
+            // map almost identically at a folded crest, select the higher surface;
+            // cameras and buoyancy need the top/visible water sheet, not a lower
+            // overlapping branch.
+            bool clearlyCloser = candidateResidualSqr < bestResidualSqr - 0.0025;
+            bool nearTie = abs(candidateResidualSqr - bestResidualSqr) <= 0.0025;
+            if (clearlyCloser || (nearTie && candidateDisplacement.y > bestDisplacement.y))
+            {
+                bestDisplacement = candidateDisplacement;
+                bestNormal = candidateNormal;
+                bestResidualSqr = candidateResidualSqr;
+            }
+        }
+    }
+
+    // A 1.5 m acceptance radius is too permissive: at medium wind it can select
+    // a neighbouring crest or trough and report that height under the swimmer.
+    // The bilinear displacement maps are continuous, so a successful inverse
+    // should converge close to the requested world XZ.
+    bool valid = bestResidualSqr <= 1.0 &&
+        all(isfinite(bestDisplacement)) && all(isfinite(bestNormal)) &&
+        dot(bestNormal, bestNormal) > 1e-6;
+
+    if (!valid)
+    {
+        bestDisplacement = 0.0;
+        bestNormal = float3(0.0, 1.0, 0.0);
+    }
+
+    SurfaceQueryResult result;
+    // Position is the water surface height at the requested world XZ. Do not put
+    // the inverse-solver residual in displacement.xz: that residual is a numerical
+    // error diagnostic, not a world-space displacement of the query point.
+    result.displacement = float4(0.0, valid ? bestDisplacement.y : 0.0, 0.0,
+        valid ? 1.0 : 0.0);
+    result.normal = float4(bestNormal, valid ? 1.0 : 0.0);
+    // xy = horizontal water-particle displacement (for drift); z = inverse-map
+    // residual in metres (for diagnostics); w remains reserved.
+    result.lattice = float4(
+        valid ? bestDisplacement.xz : float2(0.0, 0.0),
+        valid ? sqrt(bestResidualSqr) : 1e6, 0.0);
+    _SurfaceQueryResults[index] = result;
+}

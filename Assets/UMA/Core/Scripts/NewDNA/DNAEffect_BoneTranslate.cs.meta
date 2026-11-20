@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: c8d73276f1e45a54ca933e38ce29a564
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/NewDNA/DNAEffect_BoneTranslate.cs
+  uploadId: 985770

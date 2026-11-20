@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7dc21a5d294352243a3f2c96065fb381
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/NewDNASystem.md
+  uploadId: 985770

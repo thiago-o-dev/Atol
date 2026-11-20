@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ca0cf02793087b2478cf7fd76b0299a0
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_SRP_DiffuseAlpha.asset
+  uploadId: 985770

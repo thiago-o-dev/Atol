@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 257eeca2ff92b0b458c65827d03a0435
+timeCreated: 1551742374
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMADismemberment/Samples/Scripts/ExampleDismemberCallback.cs
+  uploadId: 985770

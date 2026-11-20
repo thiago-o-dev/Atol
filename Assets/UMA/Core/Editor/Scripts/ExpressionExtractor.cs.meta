@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 4c23f0d389008b443ae6be4e3e33070d
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/ExpressionExtractor.cs
+  uploadId: 985770

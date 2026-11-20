@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 8735560bda647844e9d0d1d1e71ecba5
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/Addressables.md
+  uploadId: 985770

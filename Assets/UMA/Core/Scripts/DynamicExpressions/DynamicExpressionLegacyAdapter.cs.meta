@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 95a9d2908bf44f5a99267a5aedcf18b2
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/DynamicExpressions/DynamicExpressionLegacyAdapter.cs
+  uploadId: 985770

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 18335958560a1a34c967b8ef873cde0d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/DynamicExpressionSet/rightEyeUp_Down_ExpressionDNA.asset
+  uploadId: 985770

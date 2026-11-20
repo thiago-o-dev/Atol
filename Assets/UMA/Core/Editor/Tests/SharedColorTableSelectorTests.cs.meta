@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 46c080a8a6a54d4b9da08693296b6d5a
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/SharedColorTableSelectorTests.cs
+  uploadId: 985770

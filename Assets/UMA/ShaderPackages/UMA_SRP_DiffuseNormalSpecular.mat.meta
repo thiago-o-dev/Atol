@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: af19252e3ceaa2e4797ada3a9fdb3fec
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/ShaderPackages/UMA_SRP_DiffuseNormalSpecular.mat
+  uploadId: 985770

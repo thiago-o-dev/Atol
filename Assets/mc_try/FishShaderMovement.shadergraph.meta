@@ -1,0 +1,25 @@
+fileFormatVersion: 2
+guid: a9009bebbd8527541855ccd5f9c0b892
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 625f186215c104763be7675aa2d941aa, type: 3}
+  useAsTemplate: 0
+  exposeTemplateAsShader: 0
+  template:
+    name: 
+    category: 
+    description: 
+    icon: {instanceID: 0}
+    thumbnail: {instanceID: 0}
+AssetOrigin:
+  serializedVersion: 1
+  productId: 400006
+  packageName: Fish Shader Animation
+  packageVersion: 0.9
+  assetPath: Assets/mc_try/FishShaderMovement.shadergraph
+  uploadId: 974624

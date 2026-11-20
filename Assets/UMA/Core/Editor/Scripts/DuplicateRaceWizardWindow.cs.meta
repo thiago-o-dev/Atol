@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: b364660e3c960f0439a3d52d62cd3e4a
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/DuplicateRaceWizardWindow.cs
+  uploadId: 985770

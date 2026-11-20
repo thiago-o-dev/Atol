@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 640b58875833432ead6b5cb26721db9c
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Tests/LayerOrderingTests.cs
+  uploadId: 985770

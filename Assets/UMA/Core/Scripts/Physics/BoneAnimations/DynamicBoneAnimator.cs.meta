@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 5bc23f19b5bb669498e786e369550457
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/Physics/BoneAnimations/DynamicBoneAnimator.cs
+  uploadId: 985770

@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 0a9589f2f69b459381346db83032b1fc
+timeCreated: 1788228000
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/PositionedPrefabRootUtility.cs
+  uploadId: 985770

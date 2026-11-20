@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e09da0a2ef17f0f4cbbcc1bc8b6ab245
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/DynamicExpressionSet/leftEyeIn_Out_ExpressionDNA.asset
+  uploadId: 985770

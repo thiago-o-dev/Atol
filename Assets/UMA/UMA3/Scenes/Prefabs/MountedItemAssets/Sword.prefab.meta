@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: cc256476ed909094c9004bbf395a4f9b
+timeCreated: 1534567648
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Prefabs/MountedItemAssets/Sword.prefab
+  uploadId: 985770

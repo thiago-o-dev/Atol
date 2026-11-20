@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: ae859d58fdf844b73863d3833f955cdf
+labels:
+- UMA_Animator Controller
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Animation/Locomotion with Head.controller
+  uploadId: 985770

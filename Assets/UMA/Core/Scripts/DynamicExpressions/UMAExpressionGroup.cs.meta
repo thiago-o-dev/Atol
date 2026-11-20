@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 592b2fc0dd244bed981d8c1ff5a1fa78
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/DynamicExpressions/UMAExpressionGroup.cs
+  uploadId: 985770

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: bcffb0a198605474c8a4d1c67c1515fe
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/DynamicCharacterSystem/Scripts/DynamicCharacterAvatar.cs
+  uploadId: 985770

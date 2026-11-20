@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ea1e6a3a42d24c0ebacbbf558ffe91f8
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/AssetDiscoveryUtilities.md
+  uploadId: 985770

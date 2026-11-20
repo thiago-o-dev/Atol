@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 911f3a81ee78422fb8e339b88fc8bfaf
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Editor/Tests/OverlayPainterSpriteSetTests.cs
+  uploadId: 985770

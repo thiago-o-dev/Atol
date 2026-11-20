@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 593fe28d65ca7064bb7d90567c01aecc
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UMAAssetIndexerGeneratorTests.cs
+  uploadId: 985770

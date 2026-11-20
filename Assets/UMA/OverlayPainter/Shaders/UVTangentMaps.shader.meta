@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 3259db64ca62eda49a089799833026d9
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Shaders/UVTangentMaps.shader
+  uploadId: 985770

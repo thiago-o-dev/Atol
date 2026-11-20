@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e167a4b442bbc784491ac9b4f20639e6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_SRP_DiffuseNormalMetallicOcclusionAlpha.asset
+  uploadId: 985770

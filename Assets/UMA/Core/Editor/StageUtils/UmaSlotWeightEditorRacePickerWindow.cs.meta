@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 756ac86ca90b7a8499e71c46a4a082f3
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/StageUtils/UmaSlotWeightEditorRacePickerWindow.cs
+  uploadId: 985770

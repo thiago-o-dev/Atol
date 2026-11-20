@@ -1,0 +1,348 @@
+﻿using System.Collections.Generic;
+using UMA.CharacterSystem;
+using UnityEngine;
+
+namespace UMA
+{
+	public class UMARandomAvatar : MonoBehaviour
+	{
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void RuntimeInitializeOnLoad()
+		{
+#if false
+			lastValidCharacter = null;
+#endif
+		}
+
+		public List<UMARandomizer> Randomizers;
+		public GameObject prefab;
+		public GameObject ParentObject;
+		public bool ShowPlaceholder;
+		public bool GenerateGrid;
+		public int GridXSize = 5;
+		public int GridZSize = 4;
+		public float GridDistance = 1.5f;
+		public float RandomOffset = 0.0f;
+		public bool RandomRotation;
+		public string NameBase = "Pat";
+		public UMARandomAvatarEvent RandomAvatarGenerated;
+
+		private DynamicCharacterAvatar RandomAvatar;
+		private readonly List<GameObject> generatedCharacters = new List<GameObject>();
+		private bool initialRandomStateCaptured;
+		private Random.State initialRandomState;
+
+		public int GeneratedCharacterCount
+		{
+			get
+			{
+				RemoveDestroyedCharacterReferences();
+				return generatedCharacters.Count;
+			}
+		}
+
+		// Use this for initialization
+		void Start()
+		{
+			GenerateCharacters(false);
+		}
+
+		/// <summary>
+		/// Generates the configured avatar or avatar grid. Passing true restores
+		/// the random state captured before the first run so profiling restarts
+		/// generate the same crowd.
+		/// </summary>
+		public void GenerateCharacters(bool repeatInitialRandomSequence)
+		{
+			if (ParentObject == null)
+			{
+				ParentObject = this.gameObject;
+			}
+
+			if (!initialRandomStateCaptured)
+			{
+				initialRandomState = Random.state;
+				initialRandomStateCaptured = true;
+			}
+			else if (repeatInitialRandomSequence)
+			{
+				Random.state = initialRandomState;
+			}
+
+			if (!GenerateGrid)
+			{
+				if (RandomRotation)
+                {
+                    GenerateRandomCharacter(transform.position, RandRotation(transform.rotation),NameBase);
+                }
+                else
+                {
+                    GenerateRandomCharacter(transform.position, transform.rotation, NameBase);
+                }
+            } 
+			else
+			{
+				float xstart = 0-((GridXSize * GridDistance) / 2.0f);
+				int i = 0;
+				for (int x=0;x<GridXSize;x++)
+				{
+					float zstart = 0-((GridZSize * GridDistance) / 2.0f);
+					for (int z=0;z<GridZSize;z++)
+					{
+						Vector3 pos = new Vector3(transform.position.x + xstart, transform.position.y, transform.position.z + zstart);
+						if (RandomOffset != 0.0f)
+						{
+							pos.x = pos.x + Random.Range(-RandomOffset, RandomOffset);
+							pos.z = pos.z + Random.Range(-RandomOffset, RandomOffset);
+						}
+						if (RandomRotation)
+                        {
+                            GenerateRandomCharacter(pos, RandRotation(transform.rotation),NameBase + " "+ i);
+                        }
+                        else
+                        {
+                            GenerateRandomCharacter(pos, transform.rotation, NameBase + " " + i);
+                        }
+
+                        ++i;
+						zstart += GridDistance;
+					}
+					xstart += GridDistance;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Destroys avatars created by this crowd controller and returns the
+		/// number scheduled for destruction.
+		/// </summary>
+		public int DestroyGeneratedCharacters()
+		{
+			RemoveDestroyedCharacterReferences();
+			int destroyed = generatedCharacters.Count;
+			for (int i = 0; i < generatedCharacters.Count; i++)
+			{
+				GameObject generatedCharacter = generatedCharacters[i];
+				if (generatedCharacter != null)
+				{
+					Destroy(generatedCharacter);
+				}
+			}
+			generatedCharacters.Clear();
+			RandomAvatar = null;
+			return destroyed;
+		}
+
+		private void RemoveDestroyedCharacterReferences()
+		{
+			for (int i = generatedCharacters.Count - 1; i >= 0; i--)
+			{
+				if (generatedCharacters[i] == null)
+				{
+					generatedCharacters.RemoveAt(i);
+				}
+			}
+		}
+
+		private Quaternion RandRotation(Quaternion src)
+		{
+			Vector3 Euler = src.eulerAngles;
+			return Quaternion.Euler(Euler.x, Random.Range(0.0f, 359.9f), Euler.z);
+		}
+
+
+		public void GenerateRandomCharacter(Vector3 Pos, Quaternion Rot, string Name)
+		{
+			if (prefab == null)
+			{
+				Debug.LogError("UMARandomAvatar requires a character prefab before it can generate avatars.", this);
+				return;
+			}
+
+			GameObject go = GameObject.Instantiate(prefab, Pos, Rot);
+			RandomAvatar = go.GetComponent<DynamicCharacterAvatar>();
+			if (RandomAvatar == null)
+			{
+				Debug.LogError("UMARandomAvatar prefab '" + prefab.name +
+					"' does not contain a DynamicCharacterAvatar component.", prefab);
+				Destroy(go);
+				return;
+			}
+
+			if (ParentObject != null)
+			{
+				go.transform.parent = ParentObject.transform;
+			}
+			generatedCharacters.Add(go);
+			go.name = Name;
+			// Event for possible networking here
+			if (RandomAvatarGenerated != null)
+			{
+				RandomAvatarGenerated.Invoke(gameObject, go);
+			}
+			// This generator owns the initial build, so batch all randomization
+			// changes and perform the same animator setup that the normal DCA
+			// startup path performs. Relying on LoadCharacter to do this only
+			// works for some restore-DNA and addressables paths, leaving newly
+			// generated avatars without an Animator/controller in the others.
+			RandomAvatar.BuildCharacterEnabled = false;
+			Randomize(RandomAvatar);
+			RandomAvatar.SetAnimatorController(true);
+			RandomAvatar.BuildCharacter(true);
+			// look at wardrobe here:
+			//DumpWardrobeToConsole(RandomAvatar);
+        }
+
+#if false
+		public static DynamicCharacterAvatar lastValidCharacter = null;
+        public void DumpWardrobeToConsole(DynamicCharacterAvatar Avatar)
+		{
+			Debug.Log("Avatar " + Avatar.name + " has the following wardrobe:");
+			foreach (var ws in Avatar.WardrobeRecipes)
+			{
+				Debug.Log("    " + ws.Value.name);
+            }
+			Debug.Log("End of wardrobe for " + Avatar.name);
+			if (lastValidCharacter == null)
+			{
+				if (Avatar.WardrobeRecipes.Count > 0)
+				{
+					lastValidCharacter = Avatar;
+                }
+            }
+        }
+#endif
+        public RandomWardrobeSlot GetRandomWardrobe(List<RandomWardrobeSlot> wardrobeSlots)
+		{
+			// Sum weights
+            int total = 0;
+            for (int i = 0; i < wardrobeSlots.Count; i++)
+            {
+                total += wardrobeSlots[i].Chance;
+            }
+            if (total <= 0)
+            {
+                return wardrobeSlots[wardrobeSlots.Count - 1];
+            }
+
+            // Single roll, cumulative selection
+            int roll = UnityEngine.Random.Range(0, total);
+            int cumulative = 0;
+            for (int i = 0; i < wardrobeSlots.Count; i++)
+            {
+                cumulative += wardrobeSlots[i].Chance;
+                if (roll < cumulative)
+                {
+                    return wardrobeSlots[i];
+                }
+            }
+
+            // Fallback (shouldn’t hit)
+            return wardrobeSlots[wardrobeSlots.Count - 1];
+		}
+
+		private OverlayColorData GetRandomColor(RandomColors rc)
+		{
+			int inx = UnityEngine.Random.Range(0, rc.ColorTable.colors.Length);
+			return rc.ColorTable.colors[inx];
+		}
+
+		private void AddRandomSlot(DynamicCharacterAvatar Avatar, RandomWardrobeSlot uwr)
+		{
+			Avatar.SetSlot(uwr.WardrobeSlot);
+		    if (uwr.Colors != null)
+			{
+                for (int i = 0; i < uwr.Colors.Count; i++)
+				{
+                    RandomColors rc = uwr.Colors[i];
+                    if (rc.ColorTable != null)
+					{
+						OverlayColorData ocd = GetRandomColor(rc);
+						Avatar.SetRawColor(rc.ColorName, ocd, false);
+					}
+				}
+			}
+		}
+
+#if UNITY_EDITOR
+		void OnDrawGizmos()
+		{
+			if (ShowPlaceholder)
+			{
+				Gizmos.DrawCube(transform.position, Vector3.one);
+			}
+		}
+#endif
+
+
+		public void Randomize(DynamicCharacterAvatar Avatar)
+		{
+			if (Avatar == null)
+			{
+				Debug.LogError("UMARandomAvatar cannot randomize a null DynamicCharacterAvatar.", this);
+				return;
+			}
+
+			// Must clear that out!
+			Avatar.WardrobeRecipes.Clear();
+
+			UMARandomizer Randomizer = null;
+			if (Randomizers != null)
+			{
+				if (Randomizers.Count == 0)
+                {
+                    return;
+                }
+
+                if (Randomizers.Count == 1)
+                {
+                    Randomizer = Randomizers[0];
+                }
+                else
+				{
+					Randomizer = Randomizers[UnityEngine.Random.Range(0, Randomizers.Count)];
+				}
+			}
+			if (Randomizer != null)
+			{
+				RandomAvatar ra = Randomizer.GetRandomAvatar();
+				if (ra == null)
+				{
+					Debug.LogError("UMARandomizer '" + Randomizer.name +
+						"' does not contain a usable random avatar definition.", Randomizer);
+					return;
+				}
+				Avatar.ChangeRaceData(ra.RaceName);
+				//Avatar.BuildCharacterEnabled = true;
+				var RandomDNA = ra.GetRandomDNA();
+				Avatar.predefinedDNA = RandomDNA;
+				var RandomSlots = ra.GetRandomSlots();
+
+				if (ra.SharedColors != null && ra.SharedColors.Count > 0)
+				{
+                    for (int i = 0; i < ra.SharedColors.Count; i++)
+					{
+                        RandomColors rc = ra.SharedColors[i];
+                        if (rc.ColorTable != null)
+						{
+							Avatar.SetRawColor(rc.ColorName, GetRandomColor(rc), false);
+						}
+					}
+				}
+				foreach (string s in RandomSlots.Keys)
+				{
+					List<RandomWardrobeSlot> RandomWardrobe = RandomSlots[s];
+					RandomWardrobeSlot uwr = GetRandomWardrobe(RandomWardrobe);
+					if (uwr.WardrobeSlot != null)
+					{
+						AddRandomSlot(Avatar, uwr);
+					}
+					else
+					{
+						//Debug.LogWarning("RandomAvatar: No WardrobeSlot found for " + s + " in " + Randomizer.name);
+                    }
+                }
+			}
+		}
+	}
+}

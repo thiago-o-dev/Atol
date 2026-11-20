@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 9faf72c4924e48b7ba18a4aee9abc1a8
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/PoseTools.md
+  uploadId: 985770

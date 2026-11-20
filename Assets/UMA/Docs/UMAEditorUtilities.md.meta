@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: b96df8c775f045f899ceb7552d4c93a3
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/UMAEditorUtilities.md
+  uploadId: 985770

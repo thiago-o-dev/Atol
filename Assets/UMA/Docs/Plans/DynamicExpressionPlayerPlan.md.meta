@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 82182145c00a4cac82348f595451441d
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/Plans/DynamicExpressionPlayerPlan.md
+  uploadId: 985770

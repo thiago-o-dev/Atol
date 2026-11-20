@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 032690d9439b11b4ba68fbb8d4617571
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/DynamicExpressionSet/leftPoint_ExpressionDNA.asset
+  uploadId: 985770

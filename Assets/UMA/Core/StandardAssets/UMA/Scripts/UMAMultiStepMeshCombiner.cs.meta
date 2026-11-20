@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 56e379f21fc0f4e43ba2dbf68b0e69b9
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/StandardAssets/UMA/Scripts/UMAMultiStepMeshCombiner.cs
+  uploadId: 985770

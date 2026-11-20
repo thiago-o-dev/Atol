@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 556b82981ffa62d40b5003eb3c7d9ea7
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UMALatticeEditor.cs
+  uploadId: 985770

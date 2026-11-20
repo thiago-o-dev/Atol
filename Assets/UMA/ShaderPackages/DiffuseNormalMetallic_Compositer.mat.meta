@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 80ee45c0e3e61df4b959b1caad80fdac
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/ShaderPackages/DiffuseNormalMetallic_Compositer.mat
+  uploadId: 985770

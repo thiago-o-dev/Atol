@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d9e2f33866b84a6d9d35de95bfa7a13e
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/TestRunnerIntegration/UMA.TestRunner.Editor.asmdef
+  uploadId: 985770

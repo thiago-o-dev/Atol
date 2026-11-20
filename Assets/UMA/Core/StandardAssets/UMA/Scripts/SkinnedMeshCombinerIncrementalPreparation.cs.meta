@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: d8341ca196c14bcf94a34c350691714e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/StandardAssets/UMA/Scripts/SkinnedMeshCombinerIncrementalPreparation.cs
+  uploadId: 985770

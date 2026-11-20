@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: a9011976fd7a4139b9e6986160387997
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/CreatingANewRace.md
+  uploadId: 985770

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1728b3e68cb051647bc7a05ae1210e70
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Physics/PhysicsDefinitions/HumanMaleStandard/U3RightUpLegStandard.asset
+  uploadId: 985770

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 780483523bf01fe449a655d3dfb8f316
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UmaExamineOverlaysWindow.cs
+  uploadId: 985770

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 7226768791fb4b49b318abc0803c166c
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/StandardAssets/UMA/Atlas/TransparentPrefill.shader
+  uploadId: 985770

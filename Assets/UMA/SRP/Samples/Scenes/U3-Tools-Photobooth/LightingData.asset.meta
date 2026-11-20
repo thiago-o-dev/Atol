@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 87ededdf86a8405d2ed3c0342c510deb
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-Tools-Photobooth/LightingData.asset
+  uploadId: 985770

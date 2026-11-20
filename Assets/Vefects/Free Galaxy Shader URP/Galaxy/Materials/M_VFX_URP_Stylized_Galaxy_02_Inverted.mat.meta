@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 81f8a0c17169cda43af74208234214fd
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 323302
+  packageName: Free Galaxy Shader - URP
+  packageVersion: 1.0.1
+  assetPath: Assets/Vefects/Free Galaxy Shader URP/Galaxy/Materials/M_VFX_URP_Stylized_Galaxy_02_Inverted.mat
+  uploadId: 764497

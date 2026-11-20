@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9e6be03301e6e7d3f50673f1c369810d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-Decals/U3-Decals Baking Set.asset
+  uploadId: 985770

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: bb11db16764b5ef499664a8bf1b92014
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Plugins/ExampleBrushPlugin.cs
+  uploadId: 985770

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a4840cf1d3a3f7042b2115c195ed1d47
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Physics/PhysicsDefinitions/HumanMaleStandard/U3HipsStandard.asset
+  uploadId: 985770

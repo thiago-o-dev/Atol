@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 04a30424987496e43b2b50340169a4c8
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Settings/Mobile_Renderer.asset
+  uploadId: 985770

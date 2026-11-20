@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: cbae07ea713eef54fb787641a542954c
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Prefabs/GUI/ItemGrid.prefab
+  uploadId: 985770

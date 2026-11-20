@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: f115b82c9d894c4d8d62d802f3d46155
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Extensions/DynamicCharacterSystem/IconCreatorSpriteAtlasUtility.cs
+  uploadId: 985770

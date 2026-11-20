@@ -6,3 +6,10 @@ NativeFormatImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 400006
+  packageName: Fish Shader Animation
+  packageVersion: 0.9
+  assetPath: Assets/Settings/SampleSceneProfile.asset
+  uploadId: 974624

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: c98a3f57a9a04ecda3b076d15a11b50d
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Editor/Tests/TexturePaintReleaseIntegrationTests.cs
+  uploadId: 985770

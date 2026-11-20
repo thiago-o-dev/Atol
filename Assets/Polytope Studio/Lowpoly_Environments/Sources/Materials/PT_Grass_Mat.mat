@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: PT_Grass_Mat
   m_Shader: {fileID: 4800000, guid: 233be0623027421449b81f7423abaf79, type: 3}
-  m_Parent: {fileID: 2100000, guid: 33e92b212d568b844ae30511d6c23987, type: 2}
+  m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _CUSTOMWIND_ON
@@ -30,7 +30,52 @@ Material:
         m_Texture: {fileID: 2800000, guid: 1b92b31acbcdce24ba9dc6d01dbc2e84, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats: []
-    m_Colors: []
+    m_Floats:
+    - _AlphaCutoff: 0.5
+    - _CUSTOMCOLORSTINTING: 0
+    - _CUSTOMWIND: 1
+    - _EnvironmentReflections: 1
+    - _Gradient: 1.4
+    - _LeavesThickness: 0.5
+    - _QueueControl: -1
+    - _QueueOffset: 0
+    - _ReceiveShadows: 1
+    - _SNOWONOFF: 0
+    - _Smoothness: 0
+    - _SnowAmount: 1
+    - _SnowCoverage: 0.45
+    - _SnowGradient: 0.83
+    - _SpecularHighlights: 1
+    - _TRANSLUCENCYONOFF: 1
+    - _TransAmbient: 0.1
+    - _TransDirect: 0.9
+    - _TransNormal: 0.5
+    - _TransScattering: 2
+    - _TransShadow: 0.5
+    - _TransStrength: 1
+    - _WindDensity: 3.3
+    - _WindMovement: 0.5
+    - _WindStrength: 0.3
+    m_Colors:
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _GroundColor: {r: 1, g: 0, b: 0, a: 1}
+    - _TopColor: {r: 0, g: 0.2178235, b: 1, a: 1}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1

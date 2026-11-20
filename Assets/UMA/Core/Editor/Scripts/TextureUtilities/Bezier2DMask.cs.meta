@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 7b8e358b8e954ed4aa5183522ad115d1
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/TextureUtilities/Bezier2DMask.cs
+  uploadId: 985770

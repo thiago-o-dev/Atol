@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: f4a10b0f80d844d095adf70742273a1e
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UMATaskItemEditorWindow.cs
+  uploadId: 985770

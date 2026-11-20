@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a65a1492a1a9cba4eb3e2c59055b41cb
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/ShaderPackages/AlbedoNormal_Compositer_Emission_Cutout_Compositer.mat
+  uploadId: 985770

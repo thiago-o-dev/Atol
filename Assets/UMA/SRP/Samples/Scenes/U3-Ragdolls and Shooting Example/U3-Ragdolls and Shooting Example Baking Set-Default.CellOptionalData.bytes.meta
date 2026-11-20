@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bcdac4bdefda15d9ffcb23137aef4521
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-Ragdolls and Shooting Example/U3-Ragdolls
+    and Shooting Example Baking Set-Default.CellOptionalData.bytes
+  uploadId: 985770

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 188f504ca89dd4048afe6a51f56070b2
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/DynamicExpressionSet/leftMouthSmile_Frown_ExpressionDNA.asset
+  uploadId: 985770

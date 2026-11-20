@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 14ce63032e83453a951b0e8e209fbe13
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/UMAGeneratorSetup.md
+  uploadId: 985770

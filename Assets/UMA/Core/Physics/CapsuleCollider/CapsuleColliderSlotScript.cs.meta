@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c1bba1da04b720f46a080d95b000923f
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Physics/CapsuleCollider/CapsuleColliderSlotScript.cs
+  uploadId: 985770

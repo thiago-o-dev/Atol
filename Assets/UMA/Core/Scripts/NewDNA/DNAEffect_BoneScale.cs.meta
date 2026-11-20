@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 9e12a5cb24f88c841890984def3972e9
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/NewDNA/DNAEffect_BoneScale.cs
+  uploadId: 985770

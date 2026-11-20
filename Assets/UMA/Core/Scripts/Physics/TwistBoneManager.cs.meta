@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 1417a715973aad94991e92f19bcc37d1
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/Physics/TwistBoneManager.cs
+  uploadId: 985770

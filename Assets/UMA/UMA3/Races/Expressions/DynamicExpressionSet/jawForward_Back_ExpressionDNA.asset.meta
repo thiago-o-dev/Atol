@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 025141efe0162d34b9c92ce9e497c5c4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Races/Expressions/DynamicExpressionSet/jawForward_Back_ExpressionDNA.asset
+  uploadId: 985770

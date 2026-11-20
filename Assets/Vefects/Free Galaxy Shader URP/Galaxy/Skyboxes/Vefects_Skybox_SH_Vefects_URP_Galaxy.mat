@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Vefects_Skybox_SH_Vefects_URP_Galaxy
+  m_Shader: {fileID: 4800000, guid: 04c0dca9ed93c254d9f34cff7c3f3829, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _USEREFLECTIONVECTOR_ON
+  m_LightmapFlags: 0
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _GalaxyTexture:
+        m_Texture: {fileID: 8900000, guid: 14e50fcbc1a2ff842ba76151cc0d64d7, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _StarsNoiseTexture:
+        m_Texture: {fileID: 2800000, guid: c0e12b60cf1bfeb4a9e85b9f780abaa2, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _StarsTexture:
+        m_Texture: {fileID: 2800000, guid: 644f27aae8365bc4eac6e7c2899c78fb, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _FresnelBias: 0
+    - _FresnelEmissionIntensity: 0.46
+    - _FresnelHorizon: 0
+    - _FresnelHueShift: 0
+    - _FresnelInvert: 0
+    - _FresnelPower: 2.02
+    - _FresnelScale: 1
+    - _FresnelWidth: 0.25
+    - _GalaxyBaseColorIntensity: 0
+    - _GalaxyEmissionIntensity: 1
+    - _GalaxyHueShift: 0
+    - _GalaxySaturationShift: 0
+    - _StarsDistortion: 0.05
+    - _StarsEmissionIntensity: 221.6
+    - _StarsHueShift: -0.08
+    - _StarsNoiseTileOverall: 1
+    - _StarsTileOverall: 8
+    - _UseReflectionVector: 1
+    m_Colors:
+    - _FresnelColor: {r: 0, g: 0.7981409, b: 1, a: 0}
+    - _GalaxyTint: {r: 1, g: 1, b: 1, a: 0}
+    - _StarsColor01: {r: 0.12673414, g: 0, b: 1, a: 0}
+    - _StarsColor02: {r: 1, g: 0.514151, b: 0.6721208, a: 0}
+    - _StarsNoiseSpeed: {r: 0.1, g: 0.03, b: 0, a: 0}
+    - _StarsNoiseTile: {r: 1, g: 1, b: 0, a: 0}
+    - _StarsSpeed: {r: -0.03, g: -0.02, b: 0, a: 0}
+    - _StarsTile: {r: 1, g: 1, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

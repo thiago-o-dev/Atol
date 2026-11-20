@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9872487463550f944853b0a1c92124ca
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/ShaderPackages/UMA_URP_HAIR_Pass 1.mat
+  uploadId: 985770

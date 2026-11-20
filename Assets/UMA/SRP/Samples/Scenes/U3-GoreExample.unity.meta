@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fb7b7bdfb5bc6c143970c8b80074dce9
+timeCreated: 1551769837
+licenseType: Free
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-GoreExample.unity
+  uploadId: 985770

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 03aeec9d5ace09a41ad6f1b1851b6c29
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/StageUtils/UmaSlotWeightEditorWindow.cs
+  uploadId: 985770

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: b531503aab096f54e89c21bb22c07fd1
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/TextureUtilities/NormalIndentProcessor.cs
+  uploadId: 985770

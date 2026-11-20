@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ecf999092565a614cb8ebc0527de3c6c
+timeCreated: 1459430677
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Prefabs/Textures/FeetCamRenderTexture.renderTexture
+  uploadId: 985770

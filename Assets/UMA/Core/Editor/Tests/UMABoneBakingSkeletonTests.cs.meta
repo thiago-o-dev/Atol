@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 85b84293df6e8934597c9c71abdf2272
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UMABoneBakingSkeletonTests.cs
+  uploadId: 985770

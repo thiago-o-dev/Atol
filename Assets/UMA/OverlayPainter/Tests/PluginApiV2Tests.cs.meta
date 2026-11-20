@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 38cb5c34b51448aab83c0b4db5aa34aa
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Tests/PluginApiV2Tests.cs
+  uploadId: 985770

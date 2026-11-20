@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 6d7f0c67357b497b8fbe5d2f6c256b74
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/TextureUtilities.md
+  uploadId: 985770

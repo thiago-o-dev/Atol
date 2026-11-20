@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5ba8954c332baf845a6d043a4f5f058a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Prefabs/New Material.mat
+  uploadId: 985770

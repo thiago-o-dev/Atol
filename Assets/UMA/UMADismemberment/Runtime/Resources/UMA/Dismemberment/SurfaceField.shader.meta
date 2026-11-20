@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: c305d83b931c4459992a2f572a0c6714
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SurfaceField.shader
+  uploadId: 985770

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0addf1dc174a21b4c92c3d4090d3b16f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/Graphs/TempMat/UMA_URP_CutoutDiffuseNormalMetallic.mat
+  uploadId: 985770

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3b61a3a3252f00243bdcee2e3ca4b917
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/Materials/UMA_Mat_Diffuse.mat
+  uploadId: 985770

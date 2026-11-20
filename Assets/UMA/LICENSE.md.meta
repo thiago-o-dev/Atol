@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f1308d874d274e6b9920adccbed999cf
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/LICENSE.md
+  uploadId: 985770

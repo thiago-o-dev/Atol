@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: f0749950e911c584793570ab9aab7bfa
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/Physics/BoneAnimations/BaseUpdatedObject.cs
+  uploadId: 985770

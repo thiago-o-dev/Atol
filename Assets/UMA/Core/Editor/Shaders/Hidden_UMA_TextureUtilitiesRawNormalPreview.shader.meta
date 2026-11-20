@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 6955729f5ebf47ad8e566ff3ecf0a3bb
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Shaders/Hidden_UMA_TextureUtilitiesRawNormalPreview.shader
+  uploadId: 985770

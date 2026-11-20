@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4c7717819057c87438f7bba859e58e4f
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/MeshModifiers.md
+  uploadId: 985770

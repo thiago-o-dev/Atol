@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 1f1a63285f4e438c94f53b086eb3073b
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Addressables/UMA_Core_Addressables.asmdef
+  uploadId: 985770

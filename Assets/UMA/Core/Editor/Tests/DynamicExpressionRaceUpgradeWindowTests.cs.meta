@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: de03daab0d1244f8b43650a5cdf637ae
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/DynamicExpressionRaceUpgradeWindowTests.cs
+  uploadId: 985770

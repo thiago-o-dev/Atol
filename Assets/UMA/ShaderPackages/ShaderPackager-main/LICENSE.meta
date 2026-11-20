@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 580cfc624734b96409a41117dde7daae
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/ShaderPackages/ShaderPackager-main/LICENSE
+  uploadId: 985770

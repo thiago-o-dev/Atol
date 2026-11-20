@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 6e18b46ecb214ea782542994d08bacfc
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/OverlayPainterGeneratorsAndFilters.md
+  uploadId: 985770

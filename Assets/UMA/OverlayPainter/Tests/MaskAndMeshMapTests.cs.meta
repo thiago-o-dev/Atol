@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: c8d1bb0d94f94729be675cfc5dbc92d8
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Tests/MaskAndMeshMapTests.cs
+  uploadId: 985770

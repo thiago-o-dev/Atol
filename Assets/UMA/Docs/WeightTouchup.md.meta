@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: a0f78e93ad394a928f772c32b524c2d4
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/WeightTouchup.md
+  uploadId: 985770

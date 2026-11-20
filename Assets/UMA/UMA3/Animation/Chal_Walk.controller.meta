@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 438fea526ed7b544593cd66001a31e49
+timeCreated: 1430988066
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Animation/Chal_Walk.controller
+  uploadId: 985770

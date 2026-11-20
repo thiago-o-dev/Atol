@@ -102,6 +102,13 @@ GameObject:
   - component: {fileID: 5597441788725092936}
   - component: {fileID: 8797379442825105498}
   - component: {fileID: 3683730610663036522}
+  - component: {fileID: 6691349078233350827}
+  - component: {fileID: 7266475739418501036}
+  - component: {fileID: 8657221663229615731}
+  - component: {fileID: 4880123821736701158}
+  - component: {fileID: 1943209821000374001}
+  - component: {fileID: 2333455000001}
+  - component: {fileID: 2333455000002}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -120,7 +127,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4846237997634002855}
   - {fileID: 6981162543374608517}
@@ -146,12 +153,12 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 2
-  m_Radius: 0.5
+  m_Radius: 0.25
   m_SlopeLimit: 45
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: 1.03, z: 0}
 --- !u!114 &8797379442825105498
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -165,8 +172,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInputHandler
   GroundedMovement: {fileID: 3683730610663036522}
+  SwimmingMovement: {fileID: 7266475739418501036}
+  BoatMovement: {fileID: 8657221663229615731}
   MovementAction: {fileID: -1680190386980627800, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   JumpAction: {fileID: -2099379676528639254, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  DiveAction: {fileID: 0}
+  CharacterController: {fileID: 5597441788725092936}
+  InteractAction: {fileID: 0}
+  DefaultBoatExitDistance: 1.75
+  DisembarkVelocityInheritance: 1
+  BoatExitJumpHeight: 1.1
+  BoatExitJumpSpeed: 3
+  BoatExitIgnoreCollisionTime: 0.2
+  BoatExitObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  BoatExitClearanceStep: 0.45
+  AutoEnterSwimming: 1
+  Ocean: {fileID: 0}
+  WaterCheckInterval: 0.15
+  SwimmingExitHysteresis: 0.25
 --- !u!114 &3683730610663036522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -188,7 +213,245 @@ MonoBehaviour:
   Acceleration: 50
   Deceleration: 25
   UseCoyoteTiming: 1
-  CoyoteTime: 0.1
+  CoyoteTime: 0.2
+--- !u!114 &6691349078233350827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45dbd42f77762974589e77804b705858, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.StatusViewModels.StaminaComponent
+  maximum: 100
+  startingFraction: 1
+  regenPerSecond: 6
+  regenDelay: 1.5
+  exhaustedRegenMultiplier: 0.6
+  current: 0
+--- !u!114 &7266475739418501036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81a94ee6db45c7b41be9878100f5daa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SwimmingMovement
+  MovementRoot: {fileID: 0}
+  Controller: {fileID: 5597441788725092936}
+  Body: {fileID: 0}
+  BodyCollider: {fileID: 0}
+  ReferenceTransform: {fileID: 0}
+  Speed: 3.8
+  Acceleration: 8
+  Deceleration: 5
+  TurnSmoothTime: 0.12
+  Ocean: {fileID: 0}
+  TargetSubmersion: 0.55
+  AssumedBodyHeight: 1.8
+  AssumedBodyCenterOffset: 0.9
+  SurfaceSpring: 4.8
+  VerticalDamping: 10
+  WaveLiftMultiplier: 0.12
+  WaveVelocityFollow: 0.25
+  MaximumWaveVerticalSpeed: 0.85
+  ExtraBuoyancyAcceleration: 8
+  DrowningPullAcceleration: 16
+  DrowningBuoyancyRetention: 0.18
+  DrowningWaveResponse: 0.3
+  MaximumUpwardAcceleration: 5
+  MaximumDownwardAcceleration: 5.5
+  MaximumUpwardSpeed: 0.9
+  MaximumDownwardSpeed: 1
+  WaveEjectionHeight: 0.2
+  WaveReentryMargin: 0.05
+  WaveEjectionConfirmationTime: 0.08
+  VerticalSwimAcceleration: 8
+  EnableWaveDrift: 1
+  WaveDriftFollow: 0.8
+  WaveDriftResponse: 3.2
+  WaveDriftDamping: 0.9
+  WaveDriftMaxOffset: 3
+  DriftFadeStart: 0.7
+  DriftFadeEnd: 1
+  EmitFoam: 1
+  FoamFullSpeed: 2.8
+  FoamRadius: {x: 0.26, y: 0.62}
+  FoamRate: 22
+  FoamEmitHz: 18
+  FoamLeadOffset: 0.35
+  UseExternalPlayerFoam: 1
+  EnableJumpHop: 1
+  Stamina: {fileID: 0}
+  JumpStaminaCost: 25
+  JumpDelay: 0.18
+  JumpCooldown: 1.2
+  JumpVelocity: 3.4
+  JumpSpeedBoost: 1.6
+  JumpAirControl: 0.25
+  JumpGravity: 9.81
+  JumpWindupDip: 0.2
+  JumpMaxDepthError: 0.45
+  JumpLandingGrace: 0.5
+  SurfaceSampleInterval: 0.05
+  MaximumSurfaceSampleAge: 0.35
+  WaveVelocitySmoothing: 0.3
+  MaximumSurfaceQueryError: 0.25
+  MaximumSurfaceSampleSlope: 8
+  MaximumSurfaceHeightCorrection: 5
+  MaximumSurfaceQueryDrift: 5
+  SurfaceHeightSmoothTime: 0.16
+  MaximumSurfaceFollowSpeed: 2
+  SurfaceSampleHoldTime: 0.9
+  SurfaceProbeSpread: 0.7
+  MaximumProbeHeightDifference: 0.28
+--- !u!114 &8657221663229615731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73390b2de3df16d43a7d5b79e22b284b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BoatMovement
+  boat: {fileID: 0}
+--- !u!114 &4880123821736701158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16e02b87c157c0d4da157bde229ed76b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindParticleField
+  ocean: {fileID: 0}
+  followTarget: {fileID: 3276620587067567657}
+  particleMaterial: {fileID: 2100000, guid: 513091f996b3915429ce16025e69d1e0, type: 2}
+  particleShader: {fileID: 4800000, guid: 1a2133bb5ef884841ba86171a507a622, type: 3}
+  spawnVolume: {x: 16, y: 3.2, z: 16}
+  heightAboveTarget: 2.5
+  followSharpness: 14
+  lightWindSpeed: 3.5
+  strongWindSpeed: 10
+  minimumLifetime: 0.65
+  maximumLifetime: 1.15
+  turbulence: 0.18
+  baseEmissionRate: 11
+  maximumParticles: 96
+--- !u!114 &1943209821000374001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f5d8a0a7a9e4dc2a8cb4b8421c50a11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationController
+  player: {fileID: 8797379442825105498}
+  animator: {fileID: 0}
+  movementModeParameter: MovementMode
+  speedParameter: Speed
+  directionParameter: Direction
+  verticalSpeedParameter: VerticalSpeed
+  groundedParameter: Grounded
+  jumpingParameter: Jumping
+  fallingParameter: Falling
+  fallDurationParameter: FallDuration
+  swimmingParameter: Swimming
+  boatParameter: InBoat
+  backwardParameter: Backward
+  jumpTriggerParameter: Jump
+  landTriggerParameter: Land
+  swimHopTriggerParameter: SwimHop
+  swimLandTriggerParameter: SwimLand
+  boatDodgeTriggerParameter: BoatDodge
+  speedDampTime: 0.12
+  directionDampTime: 0.1
+  verticalSpeedDampTime: 0.08
+  fallDetectionDelay: 0.2
+  minimumFallingSpeed: 0.08
+  maximumFallDurationForBlend: 1.5
+  boatMaxAnimationSpeed: 12
+  boatDodgeSpeedThreshold: 8
+  boatDodgeRearmFraction: 0.55
+  airborneThreshold: 0.1
+  movementDeadZone: 0.04
+  backwardThreshold: 0.12
+--- !u!114 &2333455000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f0604b1f3612574bad20a803964c973, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.WaterEffects.WaterContactFoam
+  trailRadiusMin: 0.5
+  trailRadiusMax: 1.1
+  trailFoamRate: 30
+  burstRadius: 1.6
+  burstStrength: 0.85
+  rippleRadiusSmall: 4
+  rippleRadiusLarge: 30
+  rippleLifeShort: 5
+  rippleLifeLong: 10
+  rippleStrength: 1
+  rippleFoam: 0.15
+  EmitFoam: 1
+--- !u!114 &2333455000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3aef1c5e8e64f39b6d09d4c7f2a9e11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWaterContactFoam
+  player: {fileID: 8797379442825105498}
+  ocean: {fileID: 0}
+  characterController: {fileID: 5597441788725092936}
+  foam: {fileID: 2333455000001}
+  sampleInterval: 0.08
+  maxSampleAge: 0.75
+  sampleRequestTimeout: 0.4
+  contactEnterFraction: 0.002
+  deepSubmersionStart: 0.78
+  deepSubmersionEnd: 0.94
+  fullFoamSpeed: 2.6
+  foamRate: 4
+  playerFoamStrength: 0.22
+  foamRadius: {x: 0.22, y: 0.36}
+  leadOffset: 0.06
+  emitRateHz: 4
+  wakeImpulseInterval: 0.65
+  wakeMaxLength: 12
+  wakeImpulseRadius: 0.48
+  wakeImpulseStrength: 0.24
+  minimumFallDuration: 0.2
+  maximumImpactFallDuration: 2.2
+  minimumImpactDownSpeed: 2.5
 --- !u!1 &1251915431351904075
 GameObject:
   m_ObjectHideFlags: 0
@@ -218,6 +481,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 581197146020484893}
   - {fileID: 5975587701466113160}
   m_Father: {fileID: 3276620587067567657}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -239,7 +503,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5975587701466113160
 Transform:
   m_ObjectHideFlags: 0
@@ -249,8 +513,8 @@ Transform:
   m_GameObject: {fileID: 2623907936406581045}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalScale: {x: 0.5, y: 1, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7958049186394381754}
@@ -352,6 +616,7 @@ GameObject:
   - component: {fileID: 2459767113613431875}
   - component: {fileID: 2297651328916204478}
   - component: {fileID: 1690043424413402783}
+  - component: {fileID: 6591528548865814736}
   m_Layer: 0
   m_Name: FreeLook Camera
   m_TagString: Untagged
@@ -367,8 +632,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6581715764922298619}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.10450153, y: -0.000000014819564, z: 0.0000000015571933, w: 0.9945247}
-  m_LocalPosition: {x: 0.5, y: 1.25, z: -4}
+  m_LocalRotation: {x: 0.10450156, y: 0.000000033137574, z: -0.0000000034819927, w: 0.9945248}
+  m_LocalPosition: {x: 0.5, y: 2.28, z: -4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -429,7 +694,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b5d7c088409d9a40b7b09aa707777f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineOrbitalFollow
-  TargetOffset: {x: 0, y: 0, z: 0}
+  TargetOffset: {x: 0, y: 1.03, z: 0}
   TrackerSettings:
     BindingMode: 4
     PositionDamping: {x: 0.4, y: 1, z: 0.4}
@@ -502,7 +767,7 @@ MonoBehaviour:
       Size: {x: 0.8, y: 0.8}
       Offset: {x: 0, y: 0}
   CenterOnActivate: 1
-  TargetOffset: {x: 0, y: 0.4, z: 0}
+  TargetOffset: {x: 0, y: 1.43, z: 0}
   Damping: {x: 0.5, y: 1}
   Lookahead:
     Enabled: 0
@@ -647,6 +912,24 @@ MonoBehaviour:
       m_Bits: 65
     MaximumRaycast: 10
     Damping: 0.5
+--- !u!114 &6591528548865814736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6581715764922298619}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b5ab49cfc0cf76478faebfa26339782, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  OrbitalFollow: {fileID: 6113607378039255195}
+  zoomSpeed: 50
+  minRadius: 4
+  maxRadius: 8
+  minHeight: 3.5
+  maxHeight: 7
 --- !u!1 &7282339514725207314
 GameObject:
   m_ObjectHideFlags: 0
@@ -678,3 +961,65 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3276620587067567657}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &8069619059761006887
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4846237997634002855}
+    m_Modifications:
+    - target: {fileID: 5577229398164003525, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+      propertyPath: m_Name
+      value: HuldaAvatar
+      objectReference: {fileID: 0}
+    - target: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+--- !u!4 &581197146020484893 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+  m_PrefabInstance: {fileID: 8069619059761006887}
+  m_PrefabAsset: {fileID: 0}

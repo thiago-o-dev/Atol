@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: a552e0ef6d8d79a498a4871a8cbcb582
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Scenes/Prefabs/GUI/InfoText.prefab
+  uploadId: 985770

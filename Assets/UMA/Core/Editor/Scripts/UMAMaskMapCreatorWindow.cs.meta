@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: ae330b4f27d357949bd0a4fc7fba67ec
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UMAMaskMapCreatorWindow.cs
+  uploadId: 985770

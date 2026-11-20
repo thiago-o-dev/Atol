@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: bd67ece7c64982e44bc90abaf8337ed5
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/ClothingConformer/UMAClothingConformer.cs
+  uploadId: 985770

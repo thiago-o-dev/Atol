@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 386e0c1d555a6d74b833641fcbc98d8a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/MeshModifiers/FullScalpShadow.asset
+  uploadId: 985770

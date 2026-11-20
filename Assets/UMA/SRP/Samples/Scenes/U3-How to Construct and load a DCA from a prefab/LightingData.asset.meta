@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 91b01b61571953ca2d4acf0bf2e2f405
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/Samples/Scenes/U3-How to Construct and load a DCA from
+    a prefab/LightingData.asset
+  uploadId: 985770

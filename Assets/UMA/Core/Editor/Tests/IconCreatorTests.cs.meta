@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 619c6a107d364ca1bd605bdf4ed892aa
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/IconCreatorTests.cs
+  uploadId: 985770

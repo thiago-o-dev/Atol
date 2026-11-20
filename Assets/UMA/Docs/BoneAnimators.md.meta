@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 87222ab4ee6892a40bc77dfaa4740c96
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Docs/BoneAnimators.md
+  uploadId: 985770

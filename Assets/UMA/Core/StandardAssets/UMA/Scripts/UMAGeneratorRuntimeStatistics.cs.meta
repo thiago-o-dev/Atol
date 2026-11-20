@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 3f1fd4e912a34650bf32829d529ec1da
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/StandardAssets/UMA/Scripts/UMAGeneratorRuntimeStatistics.cs
+  uploadId: 985770

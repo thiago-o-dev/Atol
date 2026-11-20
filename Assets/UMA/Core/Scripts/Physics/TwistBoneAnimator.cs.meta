@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 0b293eff6dd38444da2f2fccfa2aa864
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/Physics/TwistBoneAnimator.cs
+  uploadId: 985770

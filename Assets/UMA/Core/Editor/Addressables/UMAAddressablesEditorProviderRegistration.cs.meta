@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: f61e3451b2a04debb28fb223099a1db2
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Addressables/UMAAddressablesEditorProviderRegistration.cs
+  uploadId: 985770

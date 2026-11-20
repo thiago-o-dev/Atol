@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 9a99cd14858e9c444969022d721df92b
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UMAMultiStepMeshCombinerContractTests.cs
+  uploadId: 985770

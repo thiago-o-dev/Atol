@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a45e384cbb72ef3468891c0dde78c0e8
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/SaveCharactersPrefab.cs
+  uploadId: 985770

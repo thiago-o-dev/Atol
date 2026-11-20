@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 5ebe0021fc0d94b41802ae88f58a0c11
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/DNACollectionInspector.cs
+  uploadId: 985770

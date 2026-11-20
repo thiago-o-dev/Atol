@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 118258fe980445fa98960c2bb1bdd02d
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMADismemberment/Samples/Scripts/UMA.Dismemberment.Samples.asmdef
+  uploadId: 985770

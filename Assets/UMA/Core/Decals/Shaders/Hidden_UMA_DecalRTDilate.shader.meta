@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 198051db1ed33e740ad822b97e7ca165
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Decals/Shaders/Hidden_UMA_DecalRTDilate.shader
+  uploadId: 985770

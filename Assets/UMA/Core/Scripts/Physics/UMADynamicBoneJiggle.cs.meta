@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 649aa35f24e19bb42b4c08bbc87a96d0
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/Physics/UMADynamicBoneJiggle.cs
+  uploadId: 985770

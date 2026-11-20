@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f3424d808ee148b418adc7ac831f0337
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/SRP/ShaderGraphs/Graphs/TempMat/UMA_URP_DiffuseNormalMetallic.mat
+  uploadId: 985770

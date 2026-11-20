@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 707d4ac00a15452da1e0d2febd243103
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/QA/RELEASE_GATE.md
+  uploadId: 985770

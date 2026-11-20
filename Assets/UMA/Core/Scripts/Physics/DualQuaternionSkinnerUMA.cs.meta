@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: ca28e1dff386fdf4f8c5b7914667714b
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/Physics/DualQuaternionSkinnerUMA.cs
+  uploadId: 985770

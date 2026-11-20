@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e47f6fe16e72447e8f40e8d7cf5c4957
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Brushes/DefaultCircle.asset
+  uploadId: 985770

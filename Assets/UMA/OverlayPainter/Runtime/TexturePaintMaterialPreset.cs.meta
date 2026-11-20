@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 64cb21cb67364e6b88ee17f47f46ab63
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/OverlayPainter/Runtime/TexturePaintMaterialPreset.cs
+  uploadId: 985770

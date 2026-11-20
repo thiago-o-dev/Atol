@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 9a2258566ca51bb45a1130c6a41856b0
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Scripts/Physics/BoneAnimations/MC2ClothAnimator.cs
+  uploadId: 985770

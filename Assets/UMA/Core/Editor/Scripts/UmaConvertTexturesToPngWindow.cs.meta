@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: ac8cebe5478dd9940969b63a74b248ec
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UmaConvertTexturesToPngWindow.cs
+  uploadId: 985770

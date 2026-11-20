@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a4e4c9340d84e104b8cf6ef8f03cf6cd
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Physics/Physics Slots/HD/U3PhysicsHDRecipe.asset
+  uploadId: 985770

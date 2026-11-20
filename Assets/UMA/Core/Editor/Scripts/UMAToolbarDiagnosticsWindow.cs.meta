@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 729a1778d89d4e76ab9bff3692798488
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UMAToolbarDiagnosticsWindow.cs
+  uploadId: 985770

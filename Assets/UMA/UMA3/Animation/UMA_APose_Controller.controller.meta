@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 66af5264f1619114db5f72f979ce14bd
+labels:
+- UMA_Animator Controller
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/Animation/UMA_APose_Controller.controller
+  uploadId: 985770

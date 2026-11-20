@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: e4b4e36bfaf5f4b44b1b5e4635a3d06f
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Scripts/UMAMeshInformationEditor.cs
+  uploadId: 985770

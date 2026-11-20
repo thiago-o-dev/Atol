@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: e9c92b298982499493161812065a6aa2
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/Core/Editor/Tests/UMAWardrobeRecipeDeepCloneTests.cs
+  uploadId: 985770

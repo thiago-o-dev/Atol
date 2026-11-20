@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a2c8d81aa49f93449bbd4193c7e48463
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 35611
+  packageName: UMA 3
+  packageVersion: 3.0.5
+  assetPath: Assets/UMA/UMA3/DNA/Pose/DNAPoses/EyePosition.asset
+  uploadId: 985770
