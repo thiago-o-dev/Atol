@@ -51,10 +51,38 @@ namespace Assets._Project.Features.StatusViewModels
         private PlayerStrike _strike;
         private BoatFlooding _flooding;
         private float _punch;
+        private bool _persistentHudActive = true;
+        private bool _hasCutsceneVisibilityOverride;
+        private bool _cutsceneHudActive;
+        private bool _wasCutscenePlaying;
 
         private void Awake()
         {
             Group.alpha = 0f;
+        }
+
+        /// <summary>
+        /// Changes HUD visibility. During a cutscene this only overrides that cutscene;
+        /// outside cutscenes it controls normal gameplay visibility.
+        /// </summary>
+        public void SetHudActive(bool active)
+        {
+            if (CutsceneComponent.AnyPlaying)
+            {
+                _hasCutsceneVisibilityOverride = true;
+                _cutsceneHudActive = active;
+            }
+            else
+            {
+                _persistentHudActive = active;
+            }
+        }
+
+        /// <summary>Restores normal gameplay visibility and automatic cutscene hiding.</summary>
+        public void UseAutomaticVisibility()
+        {
+            _persistentHudActive = true;
+            _hasCutsceneVisibilityOverride = false;
         }
 
         public void Bind(PlayerController player)
@@ -87,7 +115,15 @@ namespace Assets._Project.Features.StatusViewModels
 
             float step = 2f * Time.unscaledDeltaTime;
 
-            Group.alpha = Mathf.MoveTowards(Group.alpha, CutsceneComponent.AnyPlaying ? 0f : 1f, step);
+            bool cutscenePlaying = CutsceneComponent.AnyPlaying;
+            if (_wasCutscenePlaying && !cutscenePlaying)
+                _hasCutsceneVisibilityOverride = false;
+            _wasCutscenePlaying = cutscenePlaying;
+
+            bool shouldShowHud = cutscenePlaying
+                ? (_hasCutsceneVisibilityOverride && _cutsceneHudActive)
+                : _persistentHudActive;
+            Group.alpha = Mathf.MoveTowards(Group.alpha, shouldShowHud ? 1f : 0f, step);
             DamageFlash.alpha = Mathf.MoveTowards(DamageFlash.alpha, 0f, step);
 
             BoatFlooding flooding = _player.CurrentBoat ? _player.CurrentBoat.GetComponent<BoatFlooding>() : null;

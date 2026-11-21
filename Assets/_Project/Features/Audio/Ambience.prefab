@@ -54,6 +54,8 @@ MonoBehaviour:
   - {fileID: 8922926836875879514}
   - {fileID: 3267398207352716442}
   - {fileID: 5477326763831817807}
+  Tracks: []
+  TrackFadeDuration: 2
   MusicVolume: 0.3
   MusicDucking: 0.6
   TensionVolume: 0.55

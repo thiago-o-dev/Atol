@@ -67,6 +67,7 @@ public sealed class PlayerController : MonoBehaviour
     private bool characterControllerWasEnabled;
     private bool isAboardBoat;
     private BoatController currentBoat;
+    private PlayerHud hud;
     private BoatController nearbyBoat;
     private float nextWaterCheckTime;
     private bool waterSamplePending;
@@ -99,6 +100,29 @@ public sealed class PlayerController : MonoBehaviour
     public bool IsAboardBoat => isAboardBoat;
     public BoatController CurrentBoat => currentBoat;
 
+    /// <summary>
+    /// Explicitly shows or hides the HUD. This overrides the default behavior
+    /// (visible during gameplay, hidden while any cutscene is playing).
+    /// </summary>
+    public void SetHudActive(bool active)
+    {
+        if (hud != null)
+            hud.SetHudActive(active);
+    }
+
+    /// <summary>Convenience method for cutscene events.</summary>
+    public void ShowHud() => SetHudActive(true);
+
+    /// <summary>Convenience method for cutscene events.</summary>
+    public void HideHud() => SetHudActive(false);
+
+    /// <summary>Returns HUD visibility to the automatic cutscene behavior.</summary>
+    public void UseAutomaticHudVisibility()
+    {
+        if (hud != null)
+            hud.UseAutomaticVisibility();
+    }
+
     private void Awake()
     {
         if (CharacterController == null)
@@ -120,7 +144,7 @@ public sealed class PlayerController : MonoBehaviour
         if (GetComponent<PlayerStrike>() == null)
             gameObject.AddComponent<PlayerStrike>();
 
-        PlayerHud hud = HudPrefab != null ? Instantiate(HudPrefab) : null;
+        hud = HudPrefab != null ? Instantiate(HudPrefab) : null;
         if (hud != null)
             hud.Bind(this);
 
