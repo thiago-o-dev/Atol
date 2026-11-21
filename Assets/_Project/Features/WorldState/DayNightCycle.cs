@@ -38,8 +38,11 @@ public sealed class DayNightCycle : MonoBehaviour
     private void OnDestroy()
     {
         Daylight = 1f;
-        Sun.color = _sunColor;
-        Sun.intensity = _sunIntensity;
+        if (Sun != null)
+        {
+            Sun.color = _sunColor;
+            Sun.intensity = _sunIntensity;
+        }
     }
 
     private void Update()

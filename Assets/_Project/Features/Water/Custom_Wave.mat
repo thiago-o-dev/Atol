@@ -117,14 +117,23 @@ Material:
     - _ShoreWashPulseStrength: 0.65
     - _ShoreWashSpacingMeters: 42
     - _ShoreWashSpeed: 2.2
+    - _SkyCubeRotation: 224
     - _SkyReflectionFresnel: 1
     - _SkyReflectionIntensity: 2.18
     - _SkyReflectionRoughness: 0
-    - _SkyReflectionStrength: 0.538
+    - _SkyReflectionStrength: 0.883
     - _SkyUseCustomCube: 1
     - _SpecularPower: 48
     - _SpecularStrength: 0.81
     - _SubsurfaceStrength: 0.9
+    - _SunGlitterPower: 52
+    - _SunGlitterScale: 24
+    - _SunGlitterSpeed: 0.28
+    - _SunGlitterStrength: 2
+    - _SunGlitterThreshold: 0.78
+    - _SunRayAnisotropy: 0.8
+    - _SunRayPower: 24
+    - _SunRayStrength: 1.35
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _DeepColor: {r: 0.008, g: 0.044999972, b: 0.10499997, a: 1}
