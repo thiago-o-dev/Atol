@@ -13,11 +13,15 @@ namespace Assets._Project.Features.Boat
     {
         [SerializeField] private TMP_Text hintText;
         [SerializeField] private string controlsText =
-            "<b>A / D</b>  Steer     <b>W / S</b>  Sail\n<b>Hold Q / E</b>  Rotate sail     <b>Tap E</b>  Leave boat";
+            "<b>A / D</b>  Steer     <b>W / S</b>  Sail     <b>Hold Q / E</b>  Rotate sail\n<b>Hold F</b>  Bail water     <b>Click</b>  Strike     <b>Space</b>  Leave boat";
+        [Tooltip("Seconds fully visible after boarding before the hint dims.")]
+        [SerializeField] private float dimAfter = 8f;
+        [SerializeField, Range(0f, 1f)] private float dimmedAlpha = 0.3f;
         [SerializeField] private int fontSize = 21;
         [SerializeField] private Vector2 bottomLeftOffset = new Vector2(28f, 28f);
         [SerializeField] private bool visible;
         private bool hasVisibilityState;
+        private float shownTime;
 
         private void Awake()
         {
@@ -38,7 +42,18 @@ namespace Assets._Project.Features.Boat
                 if (hintText.text != controlsText)
                     hintText.text = controlsText;
                 hintText.enabled = value;
+                hintText.alpha = 1f;
+                shownTime = Time.unscaledTime;
             }
+        }
+
+        private void Update()
+        {
+            if (!visible || hintText == null)
+                return;
+
+            float alpha = Time.unscaledTime - shownTime > dimAfter ? dimmedAlpha : 1f;
+            hintText.alpha = Mathf.MoveTowards(hintText.alpha, alpha, Time.unscaledDeltaTime);
         }
 
         private void CreateOverlay()

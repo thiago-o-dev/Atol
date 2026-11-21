@@ -105,7 +105,7 @@ public class SelectableComponent : MonoBehaviour
         if (_isHovered)
         {
             _log.Log("Started to hover clickable object!");
-            OnMouseOver.Invoke();
+            OnMouseOver?.Invoke();
         }
         else
         {
@@ -117,7 +117,7 @@ public class SelectableComponent : MonoBehaviour
                 _log.Log("Cancelled click after leaving hover");
             }
 
-            OnMouseLeft.Invoke();
+            OnMouseLeft?.Invoke();
         }
     }
 

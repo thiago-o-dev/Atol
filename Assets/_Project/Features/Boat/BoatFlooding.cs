@@ -6,15 +6,18 @@ namespace Assets._Project.Features.Boat
 {
     // Água acumulada no barco (ex: tubarão preso no casco). Deixa o barco lento e, quando enche, vira ele
     // pro lado de onde a água está entrando. Depois o capsize do BoatController cuida de desvirar.
+    // A barra aparece no HUD do player (PlayerHud.Flood).
     [DisallowMultipleComponent]
     [RequireComponent(typeof(BoatController))]
     public class BoatFlooding : MonoBehaviour, IStatusPool
     {
         public float Capacity = 100f;
         public float DrainRate = 3f;
+        [Tooltip("Quanto sai por segundo com o player tirando água na mão.")]
+        public float BailRate = 14f;
         [Tooltip("Freio aplicado no barco quando ele está cheio.")]
         public float MaxSlowdown = 1.5f;
-        public float CapsizeTorque = 6f;
+        public float CapsizeTorque = 16f;
         public float CapsizeTimeout = 4f;
 
         public float Water { get; private set; }
@@ -24,7 +27,6 @@ namespace Assets._Project.Features.Boat
         public event Action Flooded;
 
         private BoatController _boat;
-        private WorldStatusBarUI _bar;
         private float _floodSide = 1f;
         private float _capsizeStartTime;
         private float _lastFillTime;
@@ -32,13 +34,6 @@ namespace Assets._Project.Features.Boat
         private void Awake()
         {
             _boat = GetComponent<BoatController>();
-
-            _bar = gameObject.AddComponent<WorldStatusBarUI>();
-            _bar.FillColor = new Color(0.25f, 0.55f, 1f, 1f);
-            _bar.Offset = new Vector3(0f, 3f, 0f);
-            _bar.Size = new Vector2(2f, 0.18f);
-            _bar.Bind(this);
-            _bar.enabled = false;
         }
 
         public void AddWater(float amount, Vector3 fromPoint)
@@ -59,6 +54,12 @@ namespace Assets._Project.Features.Boat
             }
         }
 
+        public void Bail(float deltaTime)
+        {
+            if (!IsCapsizing)
+                Water = Mathf.Max(0f, Water - BailRate * deltaTime);
+        }
+
         private void FixedUpdate()
         {
             Rigidbody body = _boat.Body;
@@ -76,8 +77,6 @@ namespace Assets._Project.Features.Boat
                 Vector3 planarVelocity = Vector3.ProjectOnPlane(body.linearVelocity, Vector3.up);
                 body.AddForce(-planarVelocity * MaxSlowdown * Normalized, ForceMode.Acceleration);
             }
-
-            _bar.enabled = Water > 0f;
         }
 
         private void UpdateCapsize(Rigidbody body)

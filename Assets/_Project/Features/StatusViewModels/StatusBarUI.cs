@@ -8,123 +8,115 @@ namespace Assets._Project.Features.StatusViewModels
         float Normalized { get; }
     }
 
-    // Barra na tela (canto inferior direito). Cria o próprio canvas se a cena não tiver um.
+    // Barra de status. O visual fica no prefab, aqui só o preenchimento e os efeitos.
     public sealed class StatusBarUI : MonoBehaviour
     {
-        public string Label = "Status";
-        public Color FillColor = new Color(1f, 0.8f, 0.25f, 1f);
-        public Color BackgroundColor = new Color(0f, 0f, 0f, 0.55f);
-        public Vector2 Size = new Vector2(320f, 16f);
-        public Vector2 Offset = new Vector2(28f, 28f);
+        public RectTransform Fill;
+        public Graphic FillGraphic;
         public float Smoothing = 12f;
 
-        private IStatusPool _pool;
-        private GameObject _root;
-        private RectTransform _fill;
-        private float _displayed;
+        [Header("Ghost")]
+        [Tooltip("Opcional. Rastro que mostra quanto acabou de ser perdido.")]
+        public RectTransform Ghost;
+        public float GhostDelay = 0.45f;
+        public float GhostSpeed = 0.5f;
 
-        public void Bind(IStatusPool pool, string label = null)
+        [Header("Low")]
+        [Tooltip("Abaixo dessa fração a barra pulsa na LowColor.")]
+        [Range(0f, 1f)] public float LowThreshold = 0.25f;
+        public Color LowColor = new Color(0.9f, 0.25f, 0.2f, 1f);
+
+        [Header("Auto Hide")]
+        [Tooltip("Opcional. Com um CanvasGroup a barra some depois de um tempo cheia (ou vazia).")]
+        public CanvasGroup Group;
+        [Tooltip("Some quando vazia em vez de cheia, ex: água no barco.")]
+        public bool HideWhenEmpty;
+        public float HideDelay = 2f;
+
+        private IStatusPool _pool;
+        private Color _fillColor;
+        private float _displayed;
+        private float _ghost;
+        private float _lastValue;
+        private float _ghostHoldUntil;
+        private float _lastShownTime;
+        private float _flashUntil;
+
+        private void Awake()
+        {
+            if (FillGraphic)
+                _fillColor = FillGraphic.color;
+
+            if (Group)
+                Group.alpha = 0f;
+        }
+
+        public void Bind(IStatusPool pool)
         {
             _pool = pool;
+            _displayed = _ghost = _lastValue = Value;
 
-            if (!string.IsNullOrEmpty(label))
-                Label = label;
-
-            if (_root == null)
-                CreateBar();
-
-            _root.name = $"{Label} Bar";
-            _displayed = _pool != null ? _pool.Normalized : 0f;
-            ApplyFill();
+            Apply();
         }
+
+        // Pisca na LowColor, ex: tentou gastar stamina que não tinha.
+        public void Flash()
+        {
+            _flashUntil = Time.unscaledTime + 0.35f;
+            _lastShownTime = Time.time;
+        }
+
+        private float Value => _pool as Object ? _pool.Normalized : 0f;
 
         private void Update()
         {
-            if (_pool == null || _fill == null)
-                return;
+            float value = Value;
 
-            _displayed = Mathf.Lerp(_displayed, _pool.Normalized, Smoothing * Time.deltaTime);
-            ApplyFill();
-        }
+            if (value < _lastValue - 0.0001f)
+                _ghostHoldUntil = Time.time + GhostDelay;
 
-        private void OnEnable()
-        {
-            if (_root)
-                _root.SetActive(true);
-        }
+            _lastValue = value;
+            _displayed = Mathf.Lerp(_displayed, value, Smoothing * Time.deltaTime);
 
-        private void OnDisable()
-        {
-            if (_root)
-                _root.SetActive(false);
-        }
+            if (_ghost < value)
+                _ghost = value;
+            else if (Time.time >= _ghostHoldUntil)
+                _ghost = Mathf.MoveTowards(_ghost, value, GhostSpeed * Time.deltaTime);
 
-        private void OnDestroy()
-        {
-            if (_root)
-                Destroy(_root);
-        }
+            Apply();
 
-        private void ApplyFill()
-        {
-            if (_fill)
-                _fill.anchorMax = new Vector2(Mathf.Clamp01(_displayed), 1f);
-        }
-
-        private void CreateBar()
-        {
-            Canvas canvas = FindAnyObjectByType<Canvas>();
-
-            if (canvas == null || canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            if (FillGraphic)
             {
-                GameObject canvasObject = new GameObject("Status Bars Overlay", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+                Color color = _fillColor;
 
-                canvas = canvasObject.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvas.sortingOrder = 80;
+                if (value < LowThreshold)
+                    color = Color.Lerp(color, LowColor, 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f));
 
-                CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1920f, 1080f);
-                scaler.matchWidthOrHeight = 0.5f;
+                if (Time.unscaledTime < _flashUntil)
+                    color = LowColor;
+
+                FillGraphic.color = color;
             }
 
-            RectTransform bar = BuildBar(canvas.transform, Size, BackgroundColor, FillColor, out _fill);
-            bar.anchorMin = new Vector2(1f, 0f);
-            bar.anchorMax = new Vector2(1f, 0f);
-            bar.pivot = new Vector2(1f, 0f);
-            bar.anchoredPosition = new Vector2(-Offset.x, Offset.y);
+            if (Group)
+            {
+                bool resting = HideWhenEmpty ? value <= 0.001f : value >= 0.999f;
 
-            _root = bar.gameObject;
-            _root.SetActive(isActiveAndEnabled);
+                if (!resting)
+                    _lastShownTime = Time.time;
+
+                float alpha = Time.time - _lastShownTime > HideDelay ? 0f : 1f;
+                Group.alpha = Mathf.MoveTowards(Group.alpha, alpha, 3f * Time.deltaTime);
+            }
         }
 
-        public static RectTransform BuildBar(Transform parent, Vector2 size, Color backgroundColor, Color fillColor, out RectTransform fill)
+        private void Apply()
         {
-            GameObject barObject = new GameObject("Bar", typeof(RectTransform), typeof(Image));
-            barObject.transform.SetParent(parent, false);
+            if (Fill)
+                Fill.anchorMax = new Vector2(Mathf.Clamp01(_displayed), 1f);
 
-            RectTransform bar = barObject.GetComponent<RectTransform>();
-            bar.sizeDelta = size;
-
-            Image background = barObject.GetComponent<Image>();
-            background.color = backgroundColor;
-            background.raycastTarget = false;
-
-            GameObject fillObject = new GameObject("Fill", typeof(RectTransform), typeof(Image));
-            fillObject.transform.SetParent(bar, false);
-
-            fill = fillObject.GetComponent<RectTransform>();
-            fill.anchorMin = Vector2.zero;
-            fill.anchorMax = Vector2.one;
-            fill.offsetMin = Vector2.zero;
-            fill.offsetMax = Vector2.zero;
-
-            Image fillImage = fillObject.GetComponent<Image>();
-            fillImage.color = fillColor;
-            fillImage.raycastTarget = false;
-
-            return bar;
+            if (Ghost)
+                Ghost.anchorMax = new Vector2(Mathf.Clamp01(_ghost), 1f);
         }
     }
 }

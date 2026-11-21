@@ -1,5 +1,7 @@
 using Assets._Project.Features.Boat;
+using Assets._Project.Features.Combat;
 using Assets._Project.Features.Movement;
+using Assets._Project.Features.Pause;
 using Assets._Project.Features.StatusViewModels;
 using Assets._Project.Features.WaterEffects;
 using UnityEngine;
@@ -26,8 +28,9 @@ public sealed class PlayerController : MonoBehaviour
     public InputActionReference DashAction;
 
     [Header("HUD")]
-    public StatusBarUI StaminaBar;
-    public StatusBarUI HealthBar;
+    public PlayerHud HudPrefab;
+    public WindIndicatorUI WindIndicatorPrefab;
+    public PauseMenu PauseMenuPrefab;
 
     [Header("Boat Boarding")]
     [Tooltip("Optional CharacterController reference. If empty, one is searched on this object.")]
@@ -76,6 +79,7 @@ public sealed class PlayerController : MonoBehaviour
     private float ignoreBoatCollisionUntil;
     private bool boatCollisionIgnored;
     private bool sailInputActive;
+    private bool bailing;
     private float nextPromptPollTime;
     private const float PromptPollInterval = 0.1f;
     private int pendingSampleGeneration;
@@ -87,6 +91,11 @@ public sealed class PlayerController : MonoBehaviour
     public HealthComponent Health { get; private set; }
 
     public IMovement ActiveMovement => activeMovement;
+    /// <summary>Set while the player must not act (e.g. the death and respawn sequence).</summary>
+    public bool InputLocked { get; set; }
+    public bool IsBailing => bailing;
+    /// <summary>True while the player must not act: locked, in a cutscene or paused.</summary>
+    public bool InputBlocked => InputLocked || CutsceneComponent.AnyPlaying || PauseMenu.IsPaused;
     public bool IsAboardBoat => isAboardBoat;
     public BoatController CurrentBoat => currentBoat;
 
@@ -104,31 +113,37 @@ public sealed class PlayerController : MonoBehaviour
         if (GroundedMovement != null && GroundedMovement.Stamina == null)
             GroundedMovement.Stamina = Stamina;
 
-        if (StaminaBar == null)
-            StaminaBar = gameObject.AddComponent<StatusBarUI>();
-        StaminaBar.Bind(Stamina, "Stamina");
-
         Health = GetComponent<HealthComponent>();
         if (Health == null)
             Health = gameObject.AddComponent<HealthComponent>();
 
-        if (HealthBar == null)
-        {
-            HealthBar = gameObject.AddComponent<StatusBarUI>();
-            HealthBar.FillColor = new Color(0.85f, 0.2f, 0.2f, 1f);
-            HealthBar.Offset = new Vector2(28f, 52f);
-        }
-        HealthBar.Bind(Health, "Health");
+        if (GetComponent<PlayerStrike>() == null)
+            gameObject.AddComponent<PlayerStrike>();
+
+        PlayerHud hud = HudPrefab != null ? Instantiate(HudPrefab) : null;
+        if (hud != null)
+            hud.Bind(this);
+
+        PlayerRespawn respawn = GetComponent<PlayerRespawn>();
+        if (respawn == null)
+            respawn = gameObject.AddComponent<PlayerRespawn>();
+        if (respawn.Hud == null)
+            respawn.Hud = hud;
 
         boatControlHint = GetComponent<BoatControlHintUI>();
         if (boatControlHint == null)
             boatControlHint = gameObject.AddComponent<BoatControlHintUI>();
         boatControlHint.SetVisible(false);
 
-        windIndicator = GetComponent<WindIndicatorUI>();
-        if (windIndicator == null)
-            windIndicator = gameObject.AddComponent<WindIndicatorUI>();
-        windIndicator.Ocean = Ocean;
+        if (WindIndicatorPrefab != null)
+        {
+            windIndicator = Instantiate(WindIndicatorPrefab);
+            windIndicator.Ocean = Ocean;
+            windIndicator.Player = this;
+        }
+
+        if (PauseMenuPrefab != null && FindAnyObjectByType<PauseMenu>() == null)
+            Instantiate(PauseMenuPrefab);
 
         if (GroundedMovement != null && GroundedMovement.Controller == null)
             GroundedMovement.Controller = CharacterController;
@@ -188,14 +203,20 @@ public sealed class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (PauseMenu.IsPaused)
+            return;
+
         // Only use direct keyboard interaction when no Input System action is assigned.
-        if (InteractAction == null)
+        if (InteractAction == null && !InputBlocked)
             UpdateKeyboardFallbackInteraction();
         if (DashAction == null && Keyboard.current != null && Keyboard.current.leftAltKey.wasPressedThisFrame)
             TryDash();
 
         UpdateBoatCollisionIgnore();
         UpdateSailRotationInput();
+        UpdateBailing();
+
+        CameraFeel.Speed = isAboardBoat && currentBoat != null ? currentBoat.PlanarSpeed : 0f;
         UpdateNearbyBoatPrompt();
         UpdateAutomaticSwimming();
     }
@@ -205,7 +226,8 @@ public sealed class PlayerController : MonoBehaviour
         if (activeMovement == null)
             return;
 
-        activeMovement.Move(latestDirection);
+        // The player only takes control once the cutscene is over.
+        activeMovement.Move(InputBlocked || bailing ? Vector2.zero : latestDirection);
         activeMovement.ApplyMovement();
     }
 
@@ -634,6 +656,21 @@ public sealed class PlayerController : MonoBehaviour
         sailInputActive = true;
     }
 
+    // Holding F bails water out of the hull by hand. The helm is let go while doing it.
+    private void UpdateBailing()
+    {
+        bailing = false;
+
+        if (!isAboardBoat || currentBoat == null || Keyboard.current == null || !Keyboard.current.fKey.isPressed)
+            return;
+
+        if (currentBoat.TryGetComponent(out BoatFlooding flooding) && flooding.Water > 0f)
+        {
+            bailing = true;
+            flooding.Bail(Time.deltaTime);
+        }
+    }
+
     private void UpdateNearbyBoatPrompt()
     {
         if (isAboardBoat)
@@ -676,6 +713,9 @@ public sealed class PlayerController : MonoBehaviour
 
     private void OnInteract(InputAction.CallbackContext context)
     {
+        if (InputBlocked)
+            return;
+
         if (context.performed)
         {
             if (isAboardBoat)
@@ -954,6 +994,9 @@ public sealed class PlayerController : MonoBehaviour
 
     private void OnJumped(InputAction.CallbackContext context)
     {
+        if (InputBlocked)
+            return;
+
         if (isAboardBoat)
         {
             if (context.performed)
@@ -1006,7 +1049,7 @@ public sealed class PlayerController : MonoBehaviour
 
     private void TryDash()
     {
-        if (GroundedMovement != null && !isAboardBoat && IsSameMovement(activeMovement, GroundedMovement))
+        if (!InputBlocked && GroundedMovement != null && !isAboardBoat && IsSameMovement(activeMovement, GroundedMovement))
             GroundedMovement.Dash();
     }
 

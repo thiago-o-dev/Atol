@@ -179,7 +179,15 @@ MonoBehaviour:
   PatrolRadius: 20
   PatrolSpeed: 2.5
   PatrolPointTime: 10
-  ChaseSpeed: 5
+  StalkRadius: 7
+  StalkSpeed: 4
+  StalkTime: {x: 1.5, y: 3}
+  RetreatTime: 1.4
+  LurkTime: 10
+  ChaseSpeed: 7
+  ChaseMaxTime: 6
+  FrenzyHealth: 0.5
+  FrenzySpeed: 1.25
   Bite: {fileID: 0}
   BiteOffset: {x: 0, y: 0, z: 1.5}
   BiteRadius: 0.8
@@ -188,6 +196,54 @@ MonoBehaviour:
   BiteLungeSpeed: 9
   BiteDuration: 0.35
   BiteCooldown: 2
+  BiteStaminaDrain: 20
+  CircleRadius: 7
+  CircleSpeed: 4
+  BoatChaseSpeed: 7
+  CircleTime: {x: 3, y: 6}
+  LeapVelocity: 7
+  LeapWindup: 0.6
+  LeapWindupDip: 0.8
+  LeapMaxSpeed: 10
+  LeapHitRadius: 1.3
+  LeapDamage: 20
+  KnockOffSpeed: 5
+  LeapCooldown: 4
+  RamChance: 0.5
+  RamSpeed: 9
+  RamHitDistance: 1
+  RamPush: 2.5
+  RamRoll: 0.7
+  RamFlood: 15
+  LatchRange: 5
+  LatchPull: 1.5
+  LatchFloodRate: 10
+  LatchMaxTime: 20
+  StrikesToRelease: 3
+  ShakeOffSpeed: 5
+  ShakeOffTime: 2
+  SwimDepth: 0.5
+  CircleDepth: 0.2
+  DepthFollow: 0
+  MaxVerticalSpeed: 4
+  MaxDecayDetection: 1.5
+  MaxDecaySpeed: 1.4
+  MaxDecayCooldown: 0.5
+  Model: {fileID: 0}
+  BankAngle: 25
+  BankPerTurn: 0.4
+  LeapPitch: 45
+  TailPower: {x: 0.2, y: 0.6}
+  TailSpeed: {x: 3, y: 6}
+  TelegraphShake: 0.06
+  RamShake: 0.35
+  FlinchRoll: 50
+  BiteSound: {fileID: 8300000, guid: 8e4c4787bd226894da41a0fa3b898583, type: 3}
+  HurtSound: {fileID: 8300000, guid: 808afeb4d6f73b444aad0884b123f6b5, type: 3}
+  RamSound: {fileID: 8300000, guid: 7c4ede6f20d0bfe409b099bd1021589f, type: 3}
+  SplashSound: {fileID: 8300000, guid: 9ff6ebc041c73804c89991defa11009a, type: 3}
+  SplashEffect: {fileID: 8403566584478979066, guid: 32df3b0a0e3a0bb40981b7a62b7406bf, type: 3}
+  StuckTime: 2
   ShowLogs: 0
 --- !u!54 &5372899224193693378
 Rigidbody:
@@ -252,11 +308,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.StatusViewModels.WorldStatusBarUI
   Source: {fileID: 0}
+  BarPrefab: {fileID: 4639135032272302157, guid: e16b9def218cc704cb7559fe834a6ced, type: 3}
   Offset: {x: 0, y: 2, z: 0}
-  FillColor: {r: 0.85, g: 0.2, b: 0.2, a: 1}
-  BackgroundColor: {r: 0, g: 0, b: 0, a: 0.55}
-  Size: {x: 1.2, y: 0.14}
-  Smoothing: 12
+  ShowDistance: 12
 --- !u!1001 &1742000428044201127
 PrefabInstance:
   m_ObjectHideFlags: 0
