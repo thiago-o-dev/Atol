@@ -9,7 +9,7 @@ namespace Assets._Project.Features.StatusViewModels
     /// slowly after a short pause. Required by SwimmingMovement and PlayerController.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class StaminaComponent : MonoBehaviour
+    public sealed class StaminaComponent : MonoBehaviour, IStatusPool
     {
         [Header("Pool")]
         [SerializeField, Min(1f)] private float maximum = 100f;

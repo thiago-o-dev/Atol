@@ -1,4 +1,5 @@
 using Assets._Project.Features.Movement;
+using Assets._Project.Features.StatusViewModels;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -17,7 +18,21 @@ public class GroundedMovement : MonoBehaviour, IMovement, IPlanarVelocityMovemen
     public bool UseCoyoteTiming = true;
     [Min(0f)] public float CoyoteTime = 0.2f;
 
+    [Header("Stamina")]
+    public StaminaComponent Stamina;
+    [Min(0f)] public float JumpStaminaCost = 10f;
+
+    [Header("Dash")]
+    [Min(0f)] public float DashSpeed = 16f;
+    [Min(0.01f)] public float DashDuration = 0.18f;
+    [Min(0f)] public float DashCooldown = 0.4f;
+    [Min(0f)] public float DashStaminaCost = 20f;
+
     private float _turnSmoothVelocity;
+    private bool _isDashing;
+    private float _dashEndTime;
+    private float _nextDashTime;
+    private Vector3 _dashVelocity;
     private float _lastGroundedTime = -1000f;
     private float _fallingDuration;
     private bool _jumpInProgress;
@@ -29,6 +44,7 @@ public class GroundedMovement : MonoBehaviour, IMovement, IPlanarVelocityMovemen
     public float VerticalVelocity => _velocity.y;
     public float FallingDuration => _fallingDuration;
     public bool IsJumpInProgress => _jumpInProgress;
+    public bool IsDashing => _isDashing;
     public bool IsGrounded => Controller != null && Controller.enabled && Controller.isGrounded;
     public bool CanCoyoteJump => UseCoyoteTiming && _lastGroundedTime > -999f &&
                                  Time.time - _lastGroundedTime >= 0f &&
@@ -36,6 +52,7 @@ public class GroundedMovement : MonoBehaviour, IMovement, IPlanarVelocityMovemen
 
     /// <summary>Raised only after a normal or coyote-time jump has actually been accepted.</summary>
     public event System.Action JumpStarted;
+    public event System.Action DashStarted;
 
     private void OnEnable()
     {
@@ -52,6 +69,7 @@ public class GroundedMovement : MonoBehaviour, IMovement, IPlanarVelocityMovemen
     public void SetPlanarVelocity(Vector3 velocity)
     {
         velocity = Vector3.ProjectOnPlane(velocity, Vector3.up);
+        _isDashing = false;
         _velocity.x = velocity.x;
         _velocity.z = velocity.z;
     }
@@ -105,11 +123,37 @@ public class GroundedMovement : MonoBehaviour, IMovement, IPlanarVelocityMovemen
         if (!grounded && !insideCoyoteWindow)
             return;
 
+        if (Stamina != null && !Stamina.TryConsume(JumpStaminaCost))
+            return;
+
         _velocity.y = Mathf.Sqrt(Mathf.Max(0f, JumpHeight) * -2f * Physics.gravity.y);
         _lastGroundedTime = -1000f;
         _fallingDuration = 0f;
         _jumpInProgress = true;
         JumpStarted?.Invoke();
+    }
+
+    public bool Dash()
+    {
+        if (Controller == null || !Controller.enabled || _isDashing || Time.time < _nextDashTime)
+            return false;
+
+        if (!Controller.isGrounded && !CanCoyoteJump)
+            return false;
+
+        if (Stamina != null && !Stamina.TryConsume(DashStaminaCost))
+            return false;
+
+        Vector3 direction = _direction.sqrMagnitude > 0f
+            ? Quaternion.Euler(0f, GetTargetAngle(), 0f) * Vector3.forward
+            : Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+
+        _dashVelocity = direction * DashSpeed;
+        _isDashing = true;
+        _dashEndTime = Time.time + DashDuration;
+        _nextDashTime = _dashEndTime + DashCooldown;
+        DashStarted?.Invoke();
+        return true;
     }
 
     public void ApplyMovement()
@@ -126,16 +170,7 @@ public class GroundedMovement : MonoBehaviour, IMovement, IPlanarVelocityMovemen
         Vector3 targetHorizontalVelocity = Vector3.zero;
         if (_direction.sqrMagnitude > 0f)
         {
-            float targetAngle;
-            if (ReferenceTransform != null)
-            {
-                targetAngle = Mathf.Atan2(_direction.x, _direction.z) * Mathf.Rad2Deg
-                              + ReferenceTransform.eulerAngles.y;
-            }
-            else
-            {
-                targetAngle = Mathf.Atan2(_direction.x, _direction.z) * Mathf.Rad2Deg;
-            }
+            float targetAngle = GetTargetAngle();
 
             SmoothApplyRotation(targetAngle);
             Vector3 worldDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
@@ -143,9 +178,22 @@ public class GroundedMovement : MonoBehaviour, IMovement, IPlanarVelocityMovemen
         }
 
         Vector3 currentHorizontalVelocity = PlanarVelocity;
-        float rate = targetHorizontalVelocity.sqrMagnitude > 0.0001f ? Acceleration : Deceleration;
-        currentHorizontalVelocity = Vector3.MoveTowards(
-            currentHorizontalVelocity, targetHorizontalVelocity, rate * Time.fixedDeltaTime);
+        if (_isDashing && Time.time >= _dashEndTime)
+        {
+            _isDashing = false;
+            currentHorizontalVelocity = Vector3.ClampMagnitude(currentHorizontalVelocity, Speed);
+        }
+
+        if (_isDashing)
+        {
+            currentHorizontalVelocity = _dashVelocity;
+        }
+        else
+        {
+            float rate = targetHorizontalVelocity.sqrMagnitude > 0.0001f ? Acceleration : Deceleration;
+            currentHorizontalVelocity = Vector3.MoveTowards(
+                currentHorizontalVelocity, targetHorizontalVelocity, rate * Time.fixedDeltaTime);
+        }
 
         _velocity.x = currentHorizontalVelocity.x;
         _velocity.z = currentHorizontalVelocity.z;
@@ -238,6 +286,12 @@ public class GroundedMovement : MonoBehaviour, IMovement, IPlanarVelocityMovemen
             _velocity.y = -1f;
         else
             _velocity.y += Physics.gravity.y * GravityMultiplier * Time.fixedDeltaTime;
+    }
+
+    private float GetTargetAngle()
+    {
+        float angle = Mathf.Atan2(_direction.x, _direction.z) * Mathf.Rad2Deg;
+        return ReferenceTransform != null ? angle + ReferenceTransform.eulerAngles.y : angle;
     }
 
     private void SmoothApplyRotation(float targetAngle)

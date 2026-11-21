@@ -269,6 +269,7 @@ namespace Assets._Project.Features.Boat
                 return;
             buoyancy.SlopeFollow = new Vector2(roll.waveFollow, pitch.waveFollow);
             buoyancy.DragScale = heaveProbeDamping;
+            buoyancy.PlanarDragScale = probePlanarDrag;
         }
 
         // ------------------------------------------------------------------ attitude

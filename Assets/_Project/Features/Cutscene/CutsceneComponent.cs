@@ -32,6 +32,14 @@ public class CutsceneComponent : MonoBehaviour
 
     public bool IsPlaying => _isPlaying;
 
+    private static int _playingCount;
+
+    /// <summary>True while any cutscene is playing. Player input, HUD and enemies wait for it.</summary>
+    public static bool AnyPlaying => _playingCount > 0;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetPlayingCount() => _playingCount = 0;
+
     // Preserve the existing inspector field while exposing the common quest skip contract.
     public bool SkipOnBegin => SkipCutscene;
 
@@ -56,6 +64,7 @@ public class CutsceneComponent : MonoBehaviour
             return;
 
         _isPlaying = true;
+        _playingCount++;
         _log.Log("Cutscene started.");
 
         if (Camera != null)
@@ -157,6 +166,7 @@ public class CutsceneComponent : MonoBehaviour
             return;
 
         _isPlaying = false;
+        _playingCount--;
 
         if (Timeline != null)
         {
@@ -185,6 +195,7 @@ public class CutsceneComponent : MonoBehaviour
             return;
 
         _isPlaying = false;
+        _playingCount--;
 
         if (Timeline != null)
         {

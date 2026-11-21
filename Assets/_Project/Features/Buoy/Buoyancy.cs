@@ -33,6 +33,12 @@ namespace Assets._Project.Features.Buoy
             get => oceanBuoyancy != null ? oceanBuoyancy.RuntimeDragScale : 1f;
             set { if (oceanBuoyancy != null) oceanBuoyancy.RuntimeDragScale = value; }
         }
+        /// <summary>Horizontal share of the probe drag (see OceanBuoyancy.RuntimePlanarDragScale).</summary>
+        public float PlanarDragScale
+        {
+            get => oceanBuoyancy != null ? oceanBuoyancy.RuntimePlanarDragScale : 1f;
+            set { if (oceanBuoyancy != null) oceanBuoyancy.RuntimePlanarDragScale = value; }
+        }
         public float CurrentWaterImmersion => oceanBuoyancy != null ? oceanBuoyancy.CurrentWaterImmersion : 0f;
 
         private void Awake()

@@ -61,7 +61,18 @@ Shader "Custom/Wave"
         _SkyReflectionIntensity("Skybox Reflection Brightness", Range(0, 4)) = 1.0
         [Toggle] _SkyUseCustomCube("Use Custom Cubemap Instead Of Scene Reflection", Float) = 0
         [NoScaleOffset] _SkyCube("Custom Sky Cubemap (HDR ok)", Cube) = "" {}
+        _SkyCubeRotation("Custom Cubemap Rotation", Range(0, 360)) = 0
         _SkyReflectionRoughness("Skybox Blur (0 = mirror)", Range(0, 1)) = 0.12
+
+        [Header(Sun Reflection Streaks and Glints)]
+        _SunRayStrength("Sun Ray Reflection Strength", Range(0, 6)) = 1.35
+        _SunRayPower("Sun Ray Reflection Sharpness", Range(4, 128)) = 24
+        _SunRayAnisotropy("Sun Ray Streak Length", Range(0, 1)) = 0.8
+        _SunGlitterStrength("Water Sun Twinkle Strength", Range(0, 8)) = 2.0
+        _SunGlitterScale("Water Sun Twinkle Scale", Range(2, 80)) = 24
+        _SunGlitterThreshold("Water Sun Twinkle Density", Range(0.5, 0.98)) = 0.78
+        _SunGlitterPower("Water Sun Twinkle Sharpness", Range(8, 128)) = 52
+        _SunGlitterSpeed("Water Sun Twinkle Speed", Range(0, 2)) = 0.28
 
         [Header(Foam Surface)]
         _FoamNormalStrength("Foam Normal Strength (0 = flat foam)", Range(0, 4)) = 1.0
@@ -174,7 +185,16 @@ Shader "Custom/Wave"
                 float _SkyReflectionFresnel;
                 float _SkyReflectionIntensity;
                 float _SkyUseCustomCube;
+                float _SkyCubeRotation;
                 float _SkyReflectionRoughness;
+                float _SunRayStrength;
+                float _SunRayPower;
+                float _SunRayAnisotropy;
+                float _SunGlitterStrength;
+                float _SunGlitterScale;
+                float _SunGlitterThreshold;
+                float _SunGlitterPower;
+                float _SunGlitterSpeed;
                 float _FoamNormalStrength;
                 float _FoamHeight;
                 float _FoamBubbleDetail;
@@ -279,7 +299,18 @@ Shader "Custom/Wave"
                 float mip = perceptualRoughness * (1.7 - 0.7 * perceptualRoughness) * 6.0;
                 if (_SkyUseCustomCube > 0.5)
                 {
-                    half4 c = SAMPLE_TEXTURECUBE_LOD(_SkyCube, sampler_SkyCube, reflectDir, mip);
+                    // Rotate only the assigned cubemap, leaving the scene reflection
+                    // probe aligned with the Lighting settings. Rotation is a yaw in degrees.
+                    float rotationRadians = radians(_SkyCubeRotation);
+                    float sineRotation;
+                    float cosineRotation;
+                    sincos(rotationRadians, sineRotation, cosineRotation);
+                    float3 cubeDirection = float3(
+                        reflectDir.x * cosineRotation - reflectDir.z * sineRotation,
+                        reflectDir.y,
+                        reflectDir.x * sineRotation + reflectDir.z * cosineRotation);
+                    half4 c = SAMPLE_TEXTURECUBE_LOD(
+                        _SkyCube, sampler_SkyCube, cubeDirection, mip);
                     return c.rgb;
                 }
                 half4 encoded = SAMPLE_TEXTURECUBE_LOD(
@@ -1097,10 +1128,52 @@ Shader "Custom/Wave"
                 waterColor *= 0.35 + 0.65 * nDotL;
 
                 float3 halfVector = normalize(viewDir + sunDir);
-                float specular = pow(
-                    saturate(dot(normalWS, halfVector)),
-                    _SpecularPower) * _SpecularStrength;
+                float sunAlignment = saturate(dot(normalWS, halfVector));
+                float specular = pow(sunAlignment, _SpecularPower) * _SpecularStrength;
                 waterColor += _SunColor.rgb * specular;
+
+                // A slightly broader, anisotropic reflection lobe creates long
+                // sunlit streaks across the water. The streak field is stretched along
+                // the sun's horizontal direction, while wave-normal alignment keeps
+                // the effect attached to the actual moving surface.
+                float2 sunAxis = sunDir.xz;
+                sunAxis = dot(sunAxis, sunAxis) > 1e-5
+                    ? normalize(sunAxis) : float2(1.0, 0.0);
+                float2 sunSide = float2(-sunAxis.y, sunAxis.x);
+                float2 rayPosition = float2(
+                    dot(IN.positionWS.xz, sunAxis),
+                    dot(IN.positionWS.xz, sunSide));
+                float rayNoiseA = ValueNoise(
+                    float2(rayPosition.x * 0.018 + _Time.y * 0.025,
+                           rayPosition.y * 0.15 - _Time.y * 0.045));
+                float rayNoiseB = ValueNoise(
+                    float2(rayPosition.x * 0.041 - _Time.y * 0.018,
+                           rayPosition.y * 0.31 + 17.3));
+                float rayPattern = saturate(rayNoiseA * 0.68 + rayNoiseB * 0.32);
+                float rayStreakMask = lerp(
+                    1.0, 0.55 + rayPattern * 0.9, saturate(_SunRayAnisotropy));
+                float sunRayReflection = pow(
+                    sunAlignment, max(_SunRayPower, 1.0))
+                    * _SunRayStrength * rayStreakMask;
+
+                // Fine animated glints are sparse and only appear where displaced
+                // FFT waves tilt toward the sun/camera half-vector. This makes the
+                // twinkles travel and wink out with the changing water, not the camera.
+                float2 glitterUV = IN.baseWorldXZ * max(_SunGlitterScale, 0.01) * 0.1
+                    + float2(_Time.y * _SunGlitterSpeed,
+                             -_Time.y * _SunGlitterSpeed * 0.63);
+                float glitterNoise = ValueNoise(glitterUV) * 0.7
+                    + ValueNoise(glitterUV * 2.37 + 13.1) * 0.3;
+                float glitterMask = smoothstep(
+                    _SunGlitterThreshold,
+                    min(_SunGlitterThreshold + 0.14, 0.999),
+                    glitterNoise);
+                float waveActivity = saturate(length(combinedSlope) * 0.9
+                    + length(displacementData0.xyz + displacementData1.xyz
+                             + displacementData2.xyz) * 0.025);
+                float sunTwinkle = pow(
+                    sunAlignment, max(_SunGlitterPower, 1.0))
+                    * glitterMask * waveActivity * _SunGlitterStrength;
                 waterColor += _FresnelColor.rgb * fresnel * _FresnelStrength;
                 waterColor += _ShallowColor.rgb * rippleTint * 0.12;
 
@@ -1115,6 +1188,9 @@ Shader "Custom/Wave"
                 float skyAmount = saturate(_SkyReflectionStrength
                     * lerp(1.0, schlick, _SkyReflectionFresnel)) * (1.0 - foam);
                 waterColor = lerp(waterColor, skyColor, skyAmount);
+                // Keep the sun streaks and tiny glints on top of the environment
+                // blend so a bright HDR cubemap does not wash out the water highlights.
+                waterColor += _SunColor.rgb * (sunRayReflection + sunTwinkle);
 
                 // Foam is lit with the bumped normal. The ratio is relative to a flat
                 // surface so flat foam keeps exactly the old _FoamColor brightness.
@@ -1143,7 +1219,7 @@ Shader "Custom/Wave"
                     saturate(_ShallowMinOpacity), 1.0,
                     pow(saturate(absorption), max(_ShallowTransparencyPower, 0.01)));
                 float opacity = max(depthOpacity, skyAmount * schlick);
-                opacity = max(opacity, saturate(specular));
+                opacity = max(opacity, saturate(specular + sunRayReflection + sunTwinkle));
                 opacity = saturate(max(opacity, foam));
 
                 return half4(waterColor, opacity);

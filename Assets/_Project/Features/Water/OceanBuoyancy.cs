@@ -64,6 +64,12 @@ public sealed class OceanBuoyancy : MonoBehaviour
     public float RuntimeDragScale { get; set; } = 1f;
 
     /// <summary>
+    /// Runtime multiplier on the horizontal part of the water drag. 1 = serialized behaviour.
+    /// Lower it for hulls that model their own surge / sway drag.
+    /// </summary>
+    public float RuntimePlanarDragScale { get; set; } = 1f;
+
+    /// <summary>
     /// Runtime wave-slope follow per hull axis (x = roll, across the beam; y = pitch, along the
     /// length). 1 = the probes ride the true wave surface (default, unchanged behaviour).
     /// 0 = the probes only follow the mean wave height, so the hull heaves but stays level.
@@ -315,6 +321,8 @@ public sealed class OceanBuoyancy : MonoBehaviour
                 ForceMode.Acceleration);
 
             Vector3 pointVelocity = body.GetPointVelocity(probeWorld);
+            pointVelocity.x *= RuntimePlanarDragScale;
+            pointVelocity.z *= RuntimePlanarDragScale;
             Vector3 dragAcceleration = -pointVelocity
                 * (waterDrag * RuntimeDragScale * immersion * normalizedWeight);
             dragAcceleration = Vector3.ClampMagnitude(dragAcceleration, maxDragAcceleration * RuntimeDragScale);
