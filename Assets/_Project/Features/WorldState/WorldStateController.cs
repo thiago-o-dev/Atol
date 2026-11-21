@@ -12,7 +12,8 @@ public class WorldStateController : Singleton<WorldStateController>
     {
         Decay = Mathf.Clamp(value, 0, DecayMaximum);
 
-        SpectralOcean.SetWindStrength(Decay / (float)DecayMaximum);
+        // Sempre tem um pouco de vento, senão o barco não sai do lugar com Decay 0.
+        SpectralOcean.SetWindStrength(Mathf.Lerp(0.35f, 1f, Decay / (float)DecayMaximum));
     }
 
     private void OnValidate()

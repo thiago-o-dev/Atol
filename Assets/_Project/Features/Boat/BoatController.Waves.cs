@@ -16,6 +16,8 @@ namespace Assets._Project.Features.Boat
         [Header("Heave (bob attenuation)")]
         [Tooltip("Multiplier on the buoyancy probes' water drag. Higher = less bobbing and ringing.")]
         [SerializeField, Range(1f, 4f)] private float heaveProbeDamping = 2f;
+        [Tooltip("Fraction of the probes' drag that also acts horizontally. The hull has its own surge / sway drag, so a high value caps the boat at walking pace.")]
+        [SerializeField, Range(0f, 1f)] private float probePlanarDrag = 0.1f;
         [Tooltip("Fraction of the water's vertical speed the hull follows. Lower = heavier, calmer hull.")]
         [SerializeField, Range(0f, 1f)] private float heaveWaveFollow = 0.5f;
         [Tooltip("Pulls the hull's vertical speed toward the followed wave speed (1/s).")]

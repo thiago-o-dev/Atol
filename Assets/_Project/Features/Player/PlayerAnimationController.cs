@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Assets._Project.Features.Combat;
 using Assets._Project.Features.Movement;
 using UnityEngine;
 
@@ -32,6 +33,8 @@ public sealed class PlayerAnimationController : MonoBehaviour
     [SerializeField] private string swimHopTriggerParameter = "SwimHop";
     [SerializeField] private string swimLandTriggerParameter = "SwimLand";
     [SerializeField] private string boatDodgeTriggerParameter = "BoatDodge";
+    [SerializeField] private string attackTriggerParameter = "Attack";
+    [SerializeField] private string deadParameter = "Dead";
 
     [Header("Smoothing")]
     [Min(0f)] [SerializeField] private float speedDampTime = 0.12f;
@@ -65,6 +68,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
     private readonly HashSet<int> availableParameters = new HashSet<int>();
     private Animator cachedAnimator;
     private GroundedMovement subscribedGroundedMovement;
+    private PlayerStrike strike;
     private bool pendingGroundJump;
     private bool jumpTriggerSentByGroundEvent;
     private bool wasJumping;
@@ -101,7 +105,21 @@ public sealed class PlayerAnimationController : MonoBehaviour
     private void OnDisable()
     {
         UnbindGroundJumpEvent();
+
+        if (strike != null)
+            strike.Struck -= OnStruck;
     }
+
+    private void Start()
+    {
+        // PlayerController adds the strike component in its Awake.
+        strike = GetComponent<PlayerStrike>();
+
+        if (strike != null)
+            strike.Struck += OnStruck;
+    }
+
+    private void OnStruck() => SetTrigger(attackTriggerParameter);
 
     private void OnValidate()
     {
@@ -120,6 +138,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
             CacheAnimatorParameters();
 
         UpdateAnimatorState();
+        SetBoolean(deadParameter, player.Health != null && player.Health.IsDead);
     }
 
     private void ResolveReferences()

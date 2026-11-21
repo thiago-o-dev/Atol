@@ -42,6 +42,18 @@ public class SelectableComponent : MonoBehaviour
         SetShaderProperty(0f);
     }
 
+    private void OnEnable()
+    {
+        if (_outline)
+            _outline.enabled = true;
+    }
+
+    private void OnDisable()
+    {
+        if (_outline)
+            _outline.enabled = false;
+    }
+
     private void Start()
     {
         if (ObjectSelector.Instance == null)
@@ -93,7 +105,7 @@ public class SelectableComponent : MonoBehaviour
         if (_isHovered)
         {
             _log.Log("Started to hover clickable object!");
-            OnMouseOver.Invoke();
+            OnMouseOver?.Invoke();
         }
         else
         {
@@ -105,7 +117,7 @@ public class SelectableComponent : MonoBehaviour
                 _log.Log("Cancelled click after leaving hover");
             }
 
-            OnMouseLeft.Invoke();
+            OnMouseLeft?.Invoke();
         }
     }
 

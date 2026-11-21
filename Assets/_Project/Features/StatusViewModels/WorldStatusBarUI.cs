@@ -3,90 +3,63 @@ using UnityEngine;
 
 namespace Assets._Project.Features.StatusViewModels
 {
-    // Barra acima da cabeça (ex: vida dos animais), sempre virada pra câmera.
+    // Barra acima da cabeça (ex: vida dos animais), sempre virada pra câmera. O visual é o WorldStatusBar.prefab.
     [DisallowMultipleComponent]
     public sealed class WorldStatusBarUI : MonoBehaviour
     {
         [Tooltip("Componente que implementa IStatusPool. Se vazio, usa o HealthComponent do objeto.")]
         public MonoBehaviour Source;
+        public StatusBarUI BarPrefab;
         public Vector3 Offset = new Vector3(0f, 2f, 0f);
-        public Color FillColor = new Color(0.85f, 0.2f, 0.2f, 1f);
-        public Color BackgroundColor = new Color(0f, 0f, 0f, 0.55f);
-        public Vector2 Size = new Vector2(1.2f, 0.14f);
-        public float Smoothing = 12f;
-
-        private const float PixelsPerUnit = 100f;
+        [Tooltip("Aparece com a câmera mais perto que isso. Com a barra incompleta, até três vezes mais longe.")]
+        public float ShowDistance = 12f;
 
         private IStatusPool _pool;
-        private Transform _canvas;
-        private RectTransform _fill;
-        private float _displayed;
-        private FrameworkLogger _log;
+        private StatusBarUI _bar;
 
         private void Awake()
         {
-            _log = new(this);
-
             if (Source == null)
                 Source = GetComponent<HealthComponent>();
 
             _pool = Source as IStatusPool;
 
-            if (_pool == null)
+            if (_pool == null || BarPrefab == null)
             {
-                _log.Error("No IStatusPool source found, add a HealthComponent");
+                new FrameworkLogger(this).Error("Needs an IStatusPool source and a BarPrefab");
                 enabled = false;
                 return;
             }
 
-            CreateCanvas();
-
-            _displayed = _pool.Normalized;
+            _bar = Instantiate(BarPrefab);
+            _bar.Bind(_pool);
         }
 
         private void LateUpdate()
         {
-            _displayed = Mathf.Lerp(_displayed, _pool.Normalized, Smoothing * Time.deltaTime);
-            _fill.anchorMax = new Vector2(Mathf.Clamp01(_displayed), 1f);
+            Camera camera = Camera.main;
 
-            _canvas.position = transform.position + Offset;
+            if (camera == null)
+                return;
 
-            if (Camera.main)
-                _canvas.rotation = Camera.main.transform.rotation;
-        }
+            float value = _pool.Normalized;
+            float distance = Vector3.Distance(camera.transform.position, transform.position);
+            float range = value < 0.999f ? ShowDistance * 3f : ShowDistance;
 
-        private void OnEnable()
-        {
-            if (_canvas)
-                _canvas.gameObject.SetActive(true);
+            _bar.gameObject.SetActive(value > 0f && distance < range);
+            _bar.transform.SetPositionAndRotation(transform.position + Offset, camera.transform.rotation);
         }
 
         private void OnDisable()
         {
-            if (_canvas)
-                _canvas.gameObject.SetActive(false);
+            if (_bar)
+                _bar.gameObject.SetActive(false);
         }
 
         private void OnDestroy()
         {
-            if (_canvas)
-                Destroy(_canvas.gameObject);
-        }
-
-        private void CreateCanvas()
-        {
-            // Fica fora da hierarquia do objeto pra escala dele não distorcer a barra.
-            GameObject canvasObject = new GameObject($"{name} Status Bar", typeof(RectTransform), typeof(Canvas));
-            canvasObject.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
-
-            Vector2 pixelSize = Size * PixelsPerUnit;
-            canvasObject.GetComponent<RectTransform>().sizeDelta = pixelSize;
-
-            _canvas = canvasObject.transform;
-            _canvas.localScale = Vector3.one / PixelsPerUnit;
-            _canvas.position = transform.position + Offset;
-
-            StatusBarUI.BuildBar(_canvas, pixelSize, BackgroundColor, FillColor, out _fill);
+            if (_bar)
+                Destroy(_bar.gameObject);
         }
     }
 }
