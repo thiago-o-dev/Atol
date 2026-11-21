@@ -1,0 +1,199 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &621009300010406985
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 915751464368258140, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 11.86
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 11.86
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 11.86
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -34
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -4.39
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -584
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1687415659182262826, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2230451407402765028, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_Name
+      value: O terror do sete mares Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 2230451407402765028, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 2879369549325446042, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: maximum
+      value: 10000
+      objectReference: {fileID: 0}
+    - target: {fileID: 4246400501863697999, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 4778823959328995402, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: Maximum
+      value: 10000
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: RamSound
+      value: 
+      objectReference: {fileID: 8300000, guid: a4fa48344d652c14fbb475733945eb57, type: 3}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: RamSpeed
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: BiteRange
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: SwimDepth
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: BiteDamage
+      value: 200
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: BiteRadius
+      value: 4.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: ChaseSpeed
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: RetreatTime
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: StalkRadius
+      value: 318.49
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: StalkTime.x
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: StalkTime.y
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: BiteOffset.y
+      value: -0.27
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: BiteOffset.z
+      value: 2.69
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: ChaseMaxTime
+      value: 70
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: CircleRadius
+      value: 341
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: LeapVelocity
+      value: 14
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: PatrolRadius
+      value: 309.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: LeapWindupDip
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: ShakeOffSpeed
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: BiteLungeSpeed
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: BoatChaseSpeed
+      value: 14
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: DetectionRadius
+      value: 341
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: StrikesToRelease
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 5900143053414859835, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: MaxDecayDetection
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7882949409841788416, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_Height
+      value: 4.63
+      objectReference: {fileID: 0}
+    - target: {fileID: 7882949409841788416, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
+      propertyPath: m_Radius
+      value: 0.52
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b3e59ab1ffff38c478101fe437a3cad5, type: 3}
