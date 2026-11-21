@@ -6,6 +6,7 @@
   <Project Path="UMA.Dismemberment.Runtime.csproj" />
   <Project Path="UMA.TexturePaint.Tests.csproj" />
   <Project Path="UMA3.Samples.csproj" />
+  <Project Path="Assembly-CSharp-firstpass.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="UMA.TexturePaint.Editor.csproj" />
   <Project Path="UMA.TexturePaint.Runtime.csproj" />
@@ -14,6 +15,7 @@
   <Project Path="UMA_Editor.csproj" />
   <Project Path="UMA.Dismemberment.Editor.csproj" />
   <Project Path="UMA.TexturePaint.Examples.csproj" />
+  <Project Path="Assembly-CSharp-Editor-firstpass.csproj" />
   <Project Path="UMA_Utilities_Editor.csproj" />
   <Project Path="UMA.TestRunner.Editor.csproj" />
   <Project Path="Shaderpackager-editor.csproj" />
