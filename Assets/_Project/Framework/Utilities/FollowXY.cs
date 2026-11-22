@@ -9,7 +9,7 @@ public class FollowXY : MonoBehaviour
     {
         if (currentReferenceTransform == null || 
             (currentReferenceTransform != ReferenceTransform && currentReferenceTransform != SecondaryReferenceTransform))
-            currentReferenceTransform = ReferenceTransform ?? SecondaryReferenceTransform;
+            currentReferenceTransform = ReferenceTransform != null ? ReferenceTransform : SecondaryReferenceTransform;
 
         if (currentReferenceTransform != null)
             transform.position = new Vector3(currentReferenceTransform.position.x, transform.position.y, currentReferenceTransform.position.z);
