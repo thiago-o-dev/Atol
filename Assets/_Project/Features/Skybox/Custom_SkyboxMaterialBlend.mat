@@ -23,21 +23,60 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _GalaxyTexture:
+        m_Texture: {fileID: 8900000, guid: 14e50fcbc1a2ff842ba76151cc0d64d7, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _StarsNoiseTexture:
+        m_Texture: {fileID: 2800000, guid: c0e12b60cf1bfeb4a9e85b9f780abaa2, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _StarsTexture:
+        m_Texture: {fileID: 2800000, guid: 644f27aae8365bc4eac6e7c2899c78fb, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Tex1:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 8900000, guid: 162dc31de7b037a499723ffee6bd3e07, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex2:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 8900000, guid: d8b9a114dc91e7d4e9885d54ca9d957f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Exposure1: 1
+    - _Exposure1: 1.22
     - _Exposure2: 1
     - _FadeRatio: 0
-    - _Rotation: 0
+    - _FresnelBias: 0
+    - _FresnelEmissionIntensity: 0.46
+    - _FresnelHorizon: 0
+    - _FresnelHueShift: 0
+    - _FresnelInvert: 0
+    - _FresnelPower: 2.02
+    - _FresnelScale: 1
+    - _FresnelWidth: 0.25
+    - _GalaxyBaseColorIntensity: 0
+    - _GalaxyEmissionIntensity: 1
+    - _GalaxyHueShift: 0
+    - _GalaxySaturationShift: 0
+    - _Rotation: 137
+    - _Sky2Mode: 1
+    - _StarsDistortion: 0.05
+    - _StarsEmissionIntensity: 221.6
+    - _StarsHueShift: -0.08
+    - _StarsNoiseTileOverall: 1
+    - _StarsTileOverall: 8
+    - _UseReflectionVector: 1
     m_Colors:
+    - _FresnelColor: {r: 0, g: 0.7981409, b: 1, a: 0}
+    - _GalaxyTint: {r: 1, g: 1, b: 1, a: 0}
+    - _StarsColor01: {r: 0.12673411, g: 0, b: 1, a: 0}
+    - _StarsColor02: {r: 1, g: 0.514151, b: 0.6721208, a: 0}
+    - _StarsNoiseSpeed: {r: 0.1, g: 0.03, b: 0, a: 0}
+    - _StarsNoiseTile: {r: 1, g: 1, b: 0, a: 0}
+    - _StarsSpeed: {r: -0.03, g: -0.02, b: 0, a: 0}
+    - _StarsTile: {r: 1, g: 1, b: 0, a: 0}
     - _Tint1: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
     - _Tint2: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
   m_BuildTextureStacks: []
