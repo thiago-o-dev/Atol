@@ -107,9 +107,10 @@ GameObject:
   - component: {fileID: 8657221663229615731}
   - component: {fileID: 4880123821736701158}
   - component: {fileID: 1943209821000374001}
-  - component: {fileID: 2333455000001}
-  - component: {fileID: 2333455000002}
   - component: {fileID: 7267035963201083714}
+  - component: {fileID: 6872181874273322479}
+  - component: {fileID: 209589105001533412}
+  - component: {fileID: 1204170862630675201}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -259,18 +260,18 @@ MonoBehaviour:
   MovementRoot: {fileID: 0}
   Controller: {fileID: 5597441788725092936}
   Body: {fileID: 0}
-  BodyCollider: {fileID: 0}
+  BodyCollider: {fileID: 5597441788725092936}
   ReferenceTransform: {fileID: 0}
   Speed: 3.8
   Acceleration: 8
   Deceleration: 5
   TurnSmoothTime: 0.12
   Ocean: {fileID: 0}
-  TargetSubmersion: 0.55
-  AssumedBodyHeight: 1.8
-  AssumedBodyCenterOffset: 0.9
-  SurfaceSpring: 4.8
-  VerticalDamping: 10
+  TargetSubmersion: 0.62
+  AssumedBodyHeight: 1
+  AssumedBodyCenterOffset: 0.5
+  SurfaceSpring: 0.91
+  VerticalDamping: 0
   WaveLiftMultiplier: 0.12
   WaveVelocityFollow: 0.25
   MaximumWaveVerticalSpeed: 0.85
@@ -279,10 +280,10 @@ MonoBehaviour:
   DrowningBuoyancyRetention: 0.18
   DrowningWaveResponse: 0.3
   MaximumUpwardAcceleration: 5
-  MaximumDownwardAcceleration: 5.5
+  MaximumDownwardAcceleration: 2
   MaximumUpwardSpeed: 0.9
   MaximumDownwardSpeed: 1
-  WaveEjectionHeight: 0.2
+  WaveEjectionHeight: 0.55
   WaveReentryMargin: 0.05
   WaveEjectionConfirmationTime: 0.08
   VerticalSwimAcceleration: 8
@@ -302,11 +303,11 @@ MonoBehaviour:
   UseExternalPlayerFoam: 1
   RippleInterval: 2.1
   EnableJumpHop: 1
-  Stamina: {fileID: 0}
+  Stamina: {fileID: 6691349078233350827}
   JumpStaminaCost: 25
   JumpDelay: 0.18
   JumpCooldown: 1.2
-  JumpVelocity: 3.4
+  JumpVelocity: 5.5
   JumpSpeedBoost: 1.6
   JumpAirControl: 0.25
   JumpGravity: 9.81
@@ -387,7 +388,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationController
   player: {fileID: 8797379442825105498}
-  animator: {fileID: 0}
+  animator: {fileID: 3477816365977873455}
   speedParameter: Speed
   directionParameter: Direction
   movementModeParameter: MovementMode
@@ -410,80 +411,18 @@ MonoBehaviour:
   directionDampTime: 0.1
   verticalSpeedDampTime: 0.08
   fallDetectionDelay: 0.2
-  minimumFallingSpeed: 0.08
+  minimumFallingSpeed: 0.4
   groundSupportIgnoreDistance: 0.35
   groundSupportLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  maximumFallDurationForBlend: 1.5
+  maximumFallDurationForBlend: 2
   boatMaxAnimationSpeed: 12
   boatDodgeSpeedThreshold: 8
   boatDodgeRearmFraction: 0.55
   airborneThreshold: 0.1
   movementDeadZone: 0.04
   backwardThreshold: 0.12
---- !u!114 &2333455000001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 359553442384897938}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8f0604b1f3612574bad20a803964c973, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.WaterEffects.WaterContactFoam
-  trailRadiusMin: 0.5
-  trailRadiusMax: 1.1
-  trailFoamRate: 30
-  burstRadius: 1.6
-  burstStrength: 0.85
-  rippleRadiusSmall: 4
-  rippleRadiusLarge: 30
-  rippleLifeShort: 5
-  rippleLifeLong: 10
-  rippleStrength: 1
-  rippleFoam: 0.15
-  EmitFoam: 1
---- !u!114 &2333455000002
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 359553442384897938}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3aef1c5e8e64f39b6d09d4c7f2a9e11, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerWaterContactFoam
-  player: {fileID: 8797379442825105498}
-  ocean: {fileID: 0}
-  characterController: {fileID: 5597441788725092936}
-  foam: {fileID: 2333455000001}
-  sampleInterval: 0.08
-  maxSampleAge: 0.75
-  sampleRequestTimeout: 0.4
-  contactEnterFraction: 0.002
-  deepSubmersionStart: 0.78
-  deepSubmersionEnd: 0.94
-  fullFoamSpeed: 2.6
-  foamRate: 4
-  playerFoamStrength: 0.22
-  foamRadius: {x: 0.22, y: 0.36}
-  leadOffset: 0.06
-  emitRateHz: 4
-  idleRippleInterval: 2.1
-  idleRippleRadius: 2.4
-  idleRippleStrength: 0.32
-  wakeImpulseInterval: 0.65
-  wakeMaxLength: 12
-  wakeImpulseRadius: 0.48
-  wakeImpulseStrength: 0.24
-  minimumFallDuration: 0.2
-  maximumImpactFallDuration: 2.2
-  minimumImpactDownSpeed: 2.5
 --- !u!114 &7267035963201083714
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -508,6 +447,90 @@ MonoBehaviour:
   BailSound: {fileID: 8300000, guid: 9ff6ebc041c73804c89991defa11009a, type: 3}
   BailInterval: 0.7
   Volume: 0.5
+--- !u!114 &6872181874273322479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f0604b1f3612574bad20a803964c973, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.WaterEffects.WaterContactFoam
+  trailRadiusMin: 1.25
+  trailRadiusMax: 1.1
+  trailFoamRate: 30
+  burstRadius: 1.6
+  burstStrength: 0.85
+  rippleRadiusSmall: 4
+  rippleRadiusLarge: 30
+  rippleLifeShort: 5
+  rippleLifeLong: 10
+  rippleStrength: 1
+  rippleFoam: 0.15
+  EmitFoam: 1
+--- !u!114 &209589105001533412
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3aef1c5e8e64f39b6d09d4c7f2a9e11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWaterContactFoam
+  player: {fileID: 8797379442825105498}
+  ocean: {fileID: 0}
+  characterController: {fileID: 5597441788725092936}
+  foam: {fileID: 6872181874273322479}
+  sampleInterval: 0.12
+  maxSampleAge: 0.4
+  sampleRequestTimeout: 0.4
+  contactEnterFraction: 0.025
+  deepSubmersionStart: 0.78
+  deepSubmersionEnd: 0.94
+  fullFoamSpeed: 2.6
+  foamRate: 12
+  playerFoamStrength: 0.22
+  foamRadius: {x: 0.22, y: 0.52}
+  leadOffset: 0.22
+  emitRateHz: 12
+  idleRippleInterval: 2.1
+  idleRippleRadius: 2.4
+  idleRippleStrength: 0.32
+  wakeImpulseInterval: 0.35
+  wakeMaxLength: 8
+  wakeImpulseRadius: 0.55
+  wakeImpulseStrength: 0.5
+  minimumFallDuration: 0.2
+  maximumImpactFallDuration: 2.2
+  minimumImpactDownSpeed: 2.5
+--- !u!95 &1204170862630675201
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359553442384897938}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1251915431351904075
 GameObject:
   m_ObjectHideFlags: 0
@@ -667,6 +690,7 @@ GameObject:
   - component: {fileID: 614979813986405527}
   - component: {fileID: 346683385123566101}
   - component: {fileID: 9065881695726208711}
+  - component: {fileID: 4987110676248815185}
   m_Layer: 0
   m_Name: AnimaLight
   m_TagString: Untagged
@@ -773,6 +797,35 @@ MonoBehaviour:
   MaxIntensity: 5.5
   Speed: 1.5
   DayAmount: 0.15
+--- !u!114 &4987110676248815185
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4784316062049210718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1 &5272313439904013081
 GameObject:
   m_ObjectHideFlags: 0
@@ -1112,7 +1165,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startSizeY:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 1
       minScalar: 1
       maxCurve:
@@ -1165,7 +1218,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startSizeZ:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 1
       minScalar: 1
       maxCurve:
@@ -5641,8 +5694,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6581715764922298619}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.10450156, y: 0.000000033137574, z: -0.0000000034819927, w: 0.9945248}
-  m_LocalPosition: {x: 0.5, y: 2.28, z: -4}
+  m_LocalRotation: {x: 0.090282045, y: -0.09025637, z: 0.008216033, w: 0.99178404}
+  m_LocalPosition: {x: 1.2149445, y: 2.1570892, z: -3.8955338}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5725,7 +5778,7 @@ MonoBehaviour:
     SplineCurvature: 1
   RecenteringTarget: 2
   HorizontalAxis:
-    Value: 0
+    Value: -160.4
     Center: 0
     Range: {x: -180, y: 180}
     Wrap: 1
@@ -5735,7 +5788,7 @@ MonoBehaviour:
       Time: 2
     Restrictions: 0
   VerticalAxis:
-    Value: 17.5
+    Value: 16.4
     Center: 17.5
     Range: {x: -10, y: 45}
     Wrap: 0
@@ -6309,7 +6362,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startSizeY:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 1
       minScalar: 1
       maxCurve:
@@ -6362,7 +6415,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startSizeZ:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 1
       minScalar: 1
       maxCurve:
@@ -10866,5 +10919,10 @@ PrefabInstance:
 --- !u!4 &581197146020484893 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+  m_PrefabInstance: {fileID: 8069619059761006887}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &3477816365977873455 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 6899132311441270024, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
   m_PrefabInstance: {fileID: 8069619059761006887}
   m_PrefabAsset: {fileID: 0}
