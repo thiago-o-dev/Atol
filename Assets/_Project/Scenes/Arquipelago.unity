@@ -36330,8 +36330,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  canvasGroup: {fileID: 0}
-  graphics: []
+  canvasGroup: {fileID: 1562717741}
+  graphics:
+  - {fileID: 563999759}
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   pressedColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   fadeDuration: 0.2
