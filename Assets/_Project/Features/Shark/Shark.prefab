@@ -238,7 +238,8 @@ MonoBehaviour:
   TelegraphShake: 0.06
   RamShake: 0.35
   FlinchRoll: 50
-  BiteSound: {fileID: 8300000, guid: 8e4c4787bd226894da41a0fa3b898583, type: 3}
+  LeapSlowMotion: {x: 0.35, y: 0.9}
+  BiteSound: {fileID: 8300000, guid: f9e4dbd5d1d7e7942b650b3327137d6b, type: 3}
   HurtSound: {fileID: 8300000, guid: 808afeb4d6f73b444aad0884b123f6b5, type: 3}
   RamSound: {fileID: 8300000, guid: 7c4ede6f20d0bfe409b099bd1021589f, type: 3}
   SplashSound: {fileID: 8300000, guid: 9ff6ebc041c73804c89991defa11009a, type: 3}
