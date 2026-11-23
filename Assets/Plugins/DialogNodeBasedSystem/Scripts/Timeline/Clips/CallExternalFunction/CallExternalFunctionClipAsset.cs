@@ -1,4 +1,4 @@
-﻿#if UNITY_TIMELINE
+#if UNITY_TIMELINE
 using System;
 using UnityEngine;
 using UnityEngine.Playables;
@@ -10,6 +10,9 @@ namespace cherrydev
     public class CallExternalFunctionClipAsset : PlayableAsset, ITimelineClipAsset
     {
         public string FunctionName;
+
+        // Used by the editor importer to safely replace only clips generated from this graph.
+        [HideInInspector] public DialogNodeGraph SourceGraph;
 
         public ClipCaps clipCaps => ClipCaps.None;
 
