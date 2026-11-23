@@ -10619,6 +10619,8 @@ PlayableDirector:
     value: {fileID: 1838069442}
   - key: {fileID: 5762459495039977883, guid: 4281da08a1b99c242884c5cec4cbab5e, type: 2}
     value: {fileID: 1535505300}
+  - key: {fileID: -6875087746662441237, guid: 4281da08a1b99c242884c5cec4cbab5e, type: 2}
+    value: {fileID: 1492164014}
   m_ExposedReferences:
     m_References: []
 --- !u!114 &279418627
@@ -47871,19 +47873,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.8185071
+      value: -0.81850713
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.013129219
+      value: -0.01312866
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.57427263
+      value: 0.5742726
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.00921159
+      value: -0.00921131
       objectReference: {fileID: 0}
     - target: {fileID: 7266475739418501036, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: Ocean
