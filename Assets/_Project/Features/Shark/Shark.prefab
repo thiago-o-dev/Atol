@@ -363,7 +363,7 @@ PrefabInstance:
     - target: {fileID: -1504981713932161579, guid: 5772bcb6de9b6824b9e82880f54ac269, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: cb7e549d37e386942a62c93932c528e0, type: 2}
+      objectReference: {fileID: 2100000, guid: 180744bd7b0504a40b44d629b22d7c19, type: 2}
     - target: {fileID: -927199367670048503, guid: 5772bcb6de9b6824b9e82880f54ac269, type: 3}
       propertyPath: m_Name
       value: Shark
