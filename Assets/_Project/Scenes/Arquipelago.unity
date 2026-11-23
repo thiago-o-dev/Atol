@@ -49496,7 +49496,7 @@ MonoBehaviour:
   Camera: {fileID: 1143917828}
   Timeline: {fileID: 1870548699}
   Clip: {fileID: 0}
-  PlayOnAwake: 0
+  PlayOnAwake: 1
   SkipCutscene: 1
   OnCutsceneStarted:
     m_PersistentCalls:
@@ -50044,7 +50044,7 @@ Camera:
     height: 1
   near clip plane: 0.01
   far clip plane: 1000
-  field of view: 70
+  field of view: 40.589844
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -50070,8 +50070,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1888898773}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.00272988, y: 0.9852813, z: -0.015804382, w: -0.17018695}
-  m_LocalPosition: {x: 82.54558, y: 23.717093, z: -66.94888}
+  m_LocalRotation: {x: 0.020887978, y: -0.91666126, z: 0.048329297, w: 0.39618203}
+  m_LocalPosition: {x: 192.39233, y: 16.411623, z: -27.520731}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
