@@ -108,9 +108,9 @@ GameObject:
   - component: {fileID: 4880123821736701158}
   - component: {fileID: 1943209821000374001}
   - component: {fileID: 7267035963201083714}
-  - component: {fileID: 6872181874273322479}
-  - component: {fileID: 209589105001533412}
-  - component: {fileID: 1204170862630675201}
+  - component: {fileID: 2512409744876282319}
+  - component: {fileID: 774418141502285333}
+  - component: {fileID: 1961182102427653323}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -181,6 +181,8 @@ MonoBehaviour:
   JumpAction: {fileID: -2099379676528639254, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   DiveAction: {fileID: 0}
   DashAction: {fileID: 0}
+  CameraInputController: {fileID: 0}
+  CameraZoom: {fileID: 0}
   HudPrefab: {fileID: 738900181408381747, guid: 1e959e48fb11dfb44a15717b63a62cf1, type: 3}
   WindIndicatorPrefab: {fileID: 1840680984099877268, guid: c17fa6502a7433546afc93b4c05f8c89, type: 3}
   PauseMenuPrefab: {fileID: 6242906933977764522, guid: c8352081983c14546b411b16696cfad2, type: 3}
@@ -447,7 +449,7 @@ MonoBehaviour:
   BailSound: {fileID: 8300000, guid: 9ff6ebc041c73804c89991defa11009a, type: 3}
   BailInterval: 0.7
   Volume: 0.5
---- !u!114 &6872181874273322479
+--- !u!114 &2512409744876282319
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -471,7 +473,7 @@ MonoBehaviour:
   rippleStrength: 1
   rippleFoam: 0.15
   EmitFoam: 1
---- !u!114 &209589105001533412
+--- !u!114 &774418141502285333
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -486,7 +488,7 @@ MonoBehaviour:
   player: {fileID: 8797379442825105498}
   ocean: {fileID: 0}
   characterController: {fileID: 5597441788725092936}
-  foam: {fileID: 6872181874273322479}
+  foam: {fileID: 2512409744876282319}
   sampleInterval: 0.12
   maxSampleAge: 0.4
   sampleRequestTimeout: 0.4
@@ -509,7 +511,7 @@ MonoBehaviour:
   minimumFallDuration: 0.2
   maximumImpactFallDuration: 2.2
   minimumImpactDownSpeed: 2.5
---- !u!95 &1204170862630675201
+--- !u!95 &1961182102427653323
 Animator:
   serializedVersion: 7
   m_ObjectHideFlags: 0
@@ -690,7 +692,7 @@ GameObject:
   - component: {fileID: 614979813986405527}
   - component: {fileID: 346683385123566101}
   - component: {fileID: 9065881695726208711}
-  - component: {fileID: 4987110676248815185}
+  - component: {fileID: 6836542259058342509}
   m_Layer: 0
   m_Name: AnimaLight
   m_TagString: Untagged
@@ -797,7 +799,7 @@ MonoBehaviour:
   MaxIntensity: 5.5
   Speed: 1.5
   DayAmount: 0.15
---- !u!114 &4987110676248815185
+--- !u!114 &6836542259058342509
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5694,8 +5696,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6581715764922298619}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.090282045, y: -0.09025637, z: 0.008216033, w: 0.99178404}
-  m_LocalPosition: {x: 1.2149445, y: 2.1570892, z: -3.8955338}
+  m_LocalRotation: {x: 0.01597237, y: -0.09061779, z: 0.0014535489, w: 0.9957566}
+  m_LocalPosition: {x: 1.2149416, y: 1.8470917, z: -3.8955443}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5756,7 +5758,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b5d7c088409d9a40b7b09aa707777f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineOrbitalFollow
-  TargetOffset: {x: 0, y: 1.03, z: 0}
+  TargetOffset: {x: 0, y: -1, z: 0}
   TrackerSettings:
     BindingMode: 4
     PositionDamping: {x: 0.4, y: 1, z: 0.4}
@@ -5829,7 +5831,7 @@ MonoBehaviour:
       Size: {x: 0.8, y: 0.8}
       Offset: {x: 0, y: 0}
   CenterOnActivate: 1
-  TargetOffset: {x: 0, y: 1.43, z: 0}
+  TargetOffset: {x: 0, y: 0, z: 0}
   Damping: {x: 0.5, y: 1}
   Lookahead:
     Enabled: 0
@@ -5876,6 +5878,8 @@ MonoBehaviour:
       Input:
         InputAction: {fileID: -5630151704836100654, guid: 1d6e640e716dc4ff6989b73d02023f2b, type: 3}
         Gain: 2
+        LegacyInput: 
+        LegacyGain: 1
         CancelDeltaTime: 0
       InputValue: 0
       Driver:
@@ -5887,6 +5891,8 @@ MonoBehaviour:
       Input:
         InputAction: {fileID: -5630151704836100654, guid: 1d6e640e716dc4ff6989b73d02023f2b, type: 3}
         Gain: -1
+        LegacyInput: 
+        LegacyGain: 1
         CancelDeltaTime: 0
       InputValue: -0
       Driver:
@@ -5898,6 +5904,8 @@ MonoBehaviour:
       Input:
         InputAction: {fileID: 5082991133974614888, guid: 1d6e640e716dc4ff6989b73d02023f2b, type: 3}
         Gain: -1
+        LegacyInput: 
+        LegacyGain: 1
         CancelDeltaTime: 0
       InputValue: -0
       Driver:
@@ -6017,7 +6025,7 @@ Transform:
   m_GameObject: {fileID: 7282339514725207314}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0, z: 0}
+  m_LocalPosition: {x: 0.5, y: 1.72, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10914,13 +10922,79 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5577229398164003525, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5443721934901942059}
   m_SourcePrefab: {fileID: 100100000, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
 --- !u!4 &581197146020484893 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7488879791614156346, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
   m_PrefabInstance: {fileID: 8069619059761006887}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2493665232663647202 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5577229398164003525, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
+  m_PrefabInstance: {fileID: 8069619059761006887}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5443721934901942059
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2493665232663647202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70cbe5700a3678d468ffc05ba4182bee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FootIK
+  animator: {fileID: 3477816365977873455}
+  externalWeight: 1
+  blendTime: 0.12
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  maxStepUp: 0.4
+  maxStepDown: 0.5
+  maxGroundSlope: 65
+  baseHeightOffset: 0
+  footHeightOffset: 0
+  plantedHeight: 0.02
+  liftedHeight: 0.14
+  toeHeightOffset: 0.03
+  contactBlendSpeed: 12
+  swingLift: 1
+  useAnimatorCurves: 1
+  leftCurveParam: LeftFootIK
+  rightCurveParam: RightFootIK
+  footRaiseTime: 0.05
+  footLowerTime: 0.09
+  pelvisTime: 0.12
+  normalSpeed: 12
+  alignFootToGround: 1
+  maxFootAngle: 35
+  adjustPelvis: 1
+  maxPelvisDrop: 0.4
+  maxPelvisRaise: 0.25
+  pelvisRaise: 0.5
+  pelvisDropScale: 1
+  softLegLimit: 1
+  softLegStart: 0.9
+  preventPenetration: 1
+  toeTipOffset: 0.05
+  heelOffset: 0.07
+  maxPenetrationFix: 0.15
+  airborneHeight: 0.35
+  groundedParameter: Grounded
+  disableTags:
+  - Player
+  disableBoolParameters:
+  - Swimming
+  waterMask:
+    serializedVersion: 2
+    m_Bits: 16
+  drawGizmos: 1
 --- !u!95 &3477816365977873455 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 6899132311441270024, guid: d62f29d60e5a7314496db10a067a1b5e, type: 3}
