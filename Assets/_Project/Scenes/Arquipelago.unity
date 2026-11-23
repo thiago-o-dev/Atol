@@ -10965,7 +10965,7 @@ MonoBehaviour:
   Camera: {fileID: 0}
   Timeline: {fileID: 279418626}
   Clip: {fileID: 0}
-  PlayOnAwake: 1
+  PlayOnAwake: 0
   SkipCutscene: 0
   OnCutsceneStarted:
     m_PersistentCalls:
@@ -21771,7 +21771,7 @@ PlayableDirector:
   m_Enabled: 1
   serializedVersion: 3
   m_PlayableAsset: {fileID: 11400000, guid: 61afd9ce6ff63484587fc5c8bd0564cf, type: 2}
-  m_InitialState: 1
+  m_InitialState: 0
   m_WrapMode: 2
   m_DirectorUpdateMode: 1
   m_InitialTime: 0
@@ -21780,6 +21780,8 @@ PlayableDirector:
     value: {fileID: 1607810144}
   - key: {fileID: 5345570764694613641, guid: 61afd9ce6ff63484587fc5c8bd0564cf, type: 2}
     value: {fileID: 1607810145}
+  - key: {fileID: 7284458265549877221, guid: 61afd9ce6ff63484587fc5c8bd0564cf, type: 2}
+    value: {fileID: 889901893}
   m_ExposedReferences:
     m_References: []
 --- !u!114 &716641497
@@ -21931,8 +21933,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 6.2, y: 4.25, z: 7.79}
-  m_Center: {x: 0, y: 0.82, z: -1.14}
+  m_Size: {x: 1.75, y: 4.25, z: 2.48}
+  m_Center: {x: 1.98, y: 0.82, z: 0.06}
 --- !u!114 &719611205
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21951,13 +21953,13 @@ MonoBehaviour:
   OnInteracted:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
-        m_Mode: 0
+      - m_Target: {fileID: 279418627}
+        m_TargetAssemblyTypeName: CutsceneComponent, Assembly-CSharp
+        m_MethodName: StartCutscene
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -29368,8 +29370,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 889901893}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.00043630067, y: 0.99999994, z: -0.0000000012872744, w: 0.0000029504292}
-  m_LocalPosition: {x: -7.560179, y: 41.89, z: -141.71999}
+  m_LocalRotation: {x: 0.09198991, y: 0.70109767, z: 0.09260165, w: -0.7010171}
+  m_LocalPosition: {x: -260.41, y: 36.89, z: 444.24}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -29438,7 +29440,7 @@ MonoBehaviour:
     LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 0
   Lens:
-    FieldOfView: 40
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.01
     FarClipPlane: 1000
@@ -47402,7 +47404,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c37e3de2f9a4f447aa239f832bae4b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorldStateController
-  Decay: 2
+  Decay: 0
   SpectralOcean: {fileID: 746659107}
 --- !u!114 &1687703244
 MonoBehaviour:
@@ -48974,13 +48976,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1768064464}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.00043630067, y: 0.99999994, z: -0.0000000012872744, w: 0.0000029504292}
-  m_LocalPosition: {x: -7.560179, y: 41.89, z: -141.71999}
+  m_LocalRotation: {x: 0.09198991, y: 0.70109767, z: 0.09260165, w: -0.7010171}
+  m_LocalPosition: {x: -260.41, y: 36.89, z: 444.24}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 716641495}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -0.05}
+  m_LocalEulerAnglesHint: {x: -15, y: 270, z: -0.05}
 --- !u!95 &1768064466
 Animator:
   serializedVersion: 7
@@ -49044,7 +49046,7 @@ MonoBehaviour:
     LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 0
   Lens:
-    FieldOfView: 40
+    FieldOfView: 52
     OrthographicSize: 5
     NearClipPlane: 0.01
     FarClipPlane: 1000
@@ -50362,15 +50364,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.015972368
+      value: 0.015972363
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.09061784
+      value: -0.09061778
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.0014535495
+      value: 0.001453548
       objectReference: {fileID: 0}
     - target: {fileID: 7266475739418501036, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: Ocean
@@ -50948,7 +50950,7 @@ MonoBehaviour:
   Timeline: {fileID: 1870548699}
   Clip: {fileID: 0}
   PlayOnAwake: 1
-  SkipCutscene: 1
+  SkipCutscene: 0
   OnCutsceneStarted:
     m_PersistentCalls:
       m_Calls:
@@ -51521,7 +51523,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1888898773}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.0027298809, y: 0.98528117, z: -0.015804335, w: -0.17018749}
+  m_LocalRotation: {x: -0.002729884, y: 0.98528117, z: -0.015804343, w: -0.1701876}
   m_LocalPosition: {x: 82.54558, y: 23.717093, z: -66.94888}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -61040,6 +61042,10 @@ PrefabInstance:
       propertyPath: ocean
       value: 
       objectReference: {fileID: 746659107}
+    - target: {fileID: 5738198442180057773, guid: 4ff1b33b86113c742bb8cc679131c588, type: 3}
+      propertyPath: startingSailTrim
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -61112,7 +61118,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3798075987593443356, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
       propertyPath: windStrength
-      value: 0.6666667
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3798075987593443356, guid: a14917a3870bf1744974c0e25292ded3, type: 3}
       propertyPath: shoreMapSizeXZ.x
