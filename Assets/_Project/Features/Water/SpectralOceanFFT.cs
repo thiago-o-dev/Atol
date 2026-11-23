@@ -16,6 +16,7 @@ using UnityEngine.Rendering;
 [RequireComponent(typeof(MeshRenderer))]
 public sealed class SpectralOceanFFT : MonoBehaviour
 {
+    public bool IsCheckingOnValidatedFixedTime = false;
     /// <summary>Cached shader property IDs (avoids per-call string hashing).</summary>
     private static class PropID
     {
@@ -1756,5 +1757,17 @@ public sealed class SpectralOceanFFT : MonoBehaviour
         texture.Release();
         Destroy(texture);
         texture = null;
+    }
+
+    public void SetCheckingOnValidatedFixedTime(bool state = false)
+    {
+        IsCheckingOnValidatedFixedTime = state;
+    }
+    private void FixedUpdate()
+    {
+        if (IsCheckingOnValidatedFixedTime)
+        {
+            OnValidate();
+        }
     }
 }
