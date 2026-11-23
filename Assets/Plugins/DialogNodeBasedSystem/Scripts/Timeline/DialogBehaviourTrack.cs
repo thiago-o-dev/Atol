@@ -13,6 +13,7 @@ namespace cherrydev
     [TrackBindingType(typeof(DialogBehaviour))]
     [TrackClipType(typeof(SentencePerformingClipAsset))]
     [TrackClipType(typeof(CallExternalFunctionClipAsset))]
+    [TrackClipType(typeof(CloseDialogClipAsset))]
     public class DialogBehaviourTrack : TrackAsset
     {
     }

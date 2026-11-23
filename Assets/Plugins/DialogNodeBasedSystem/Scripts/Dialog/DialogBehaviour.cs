@@ -16,6 +16,8 @@ namespace cherrydev
         [SerializeField] private float _dialogCharDelay;
         [SerializeField] private List<KeyCode> _nextSentenceKeyCodes;
         [SerializeField] private bool _isCanSkippingText = true;
+        [Tooltip("Allows player input to advance to the next dialog node. Disable this for dialog that must remain until closed by code or Timeline.")]
+        [SerializeField] private bool _isCanAdvanceDialog = true;
 #if UNITY_LOCALIZATION
         [SerializeField] private bool _reloadTextOnLanguageChange = true;
 #endif
@@ -44,6 +46,7 @@ namespace cherrydev
         private int _maxAmountOfAnswerButtons;
 
         private bool _isDialogStarted;
+        private bool _isDialogOpen;
         private bool _isCurrentSentenceSkipped;
         private bool _isCurrentSentenceTyping;
 
@@ -51,10 +54,24 @@ namespace cherrydev
 
         public bool IsActive { get; set; } = true;
 
+        /// <summary>
+        /// Controls whether the player can instantly reveal the rest of the current sentence.
+        /// This does not control moving to the next dialog node.
+        /// </summary>
         public bool IsCanSkippingText
         {
             get => _isCanSkippingText;
             set => _isCanSkippingText = value;
+        }
+
+        /// <summary>
+        /// Controls whether player input can advance to the next dialog node.
+        /// Set this to false when the dialog should only be closed by CloseDialog() or a Timeline clip.
+        /// </summary>
+        public bool IsCanAdvanceDialog
+        {
+            get => _isCanAdvanceDialog;
+            set => _isCanAdvanceDialog = value;
         }
 
         public event Action SentenceStarted;
@@ -150,6 +167,19 @@ namespace cherrydev
         public void Disable() => DialogDisabled?.Invoke();
 
         /// <summary>
+        /// Closes the current dialog immediately, regardless of the player-advance setting.
+        /// Safe to call from other scripts or from a Timeline clip.
+        /// </summary>
+        public void CloseDialog()
+        {
+            if (!_isDialogOpen && !_isDialogStarted)
+                return;
+
+            StopAllCoroutines();
+            EndDialog();
+        }
+
+        /// <summary>
         /// Setting dialogCharDelay float parameter
         /// </summary>
         /// <param name="value"></param>
@@ -173,6 +203,7 @@ namespace cherrydev
             Action<DialogVariablesHandler> onDialogFinished = null)
         {
             _isDialogStarted = true;
+            _isDialogOpen = true;
             _boundFunctionNames.Clear();
 
             if (dialogNodeGraph.NodesList == null)
@@ -339,6 +370,8 @@ namespace cherrydev
             if (sentenceNode == null)
                 return;
 
+            // Timeline-driven sentences do not go through StartDialog, so track their open state here.
+            _isDialogOpen = true;
             CurrentSentenceNode = sentenceNode;
             SentenceNodeActivated?.Invoke();
 
@@ -549,7 +582,13 @@ namespace cherrydev
         /// </summary>
         private void EndDialog()
         {
+            if (!_isDialogOpen && !_isDialogStarted)
+                return;
+
             _isDialogStarted = false;
+            _isDialogOpen = false;
+            _isCurrentSentenceTyping = false;
+            _isCurrentSentenceSkipped = false;
 
             _dialogFinished?.Invoke(_variablesHandler);
             
@@ -658,7 +697,8 @@ namespace cherrydev
             _isCurrentSentenceTyping = false;
             SentenceEnded?.Invoke();
 
-            yield return new WaitUntil(() => CheckNextSentenceKeyCodes() && IsActive);
+            yield return new WaitUntil(() =>
+                _isCanAdvanceDialog && CheckNextSentenceKeyCodes() && IsActive);
 
             CheckForDialogNextNode();
         }
