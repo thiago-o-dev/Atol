@@ -6932,7 +6932,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &123059919
 Transform:
   m_ObjectHideFlags: 0
@@ -29832,6 +29832,8 @@ PlayableDirector:
     value: {fileID: 338446152}
   - key: {fileID: 3714892467286151044, guid: 67de8af2561c6a741a82116e2b7459fa, type: 2}
     value: {fileID: 1687703245}
+  - key: {fileID: -951642600833361947, guid: 67de8af2561c6a741a82116e2b7459fa, type: 2}
+    value: {fileID: 1492164014}
   m_ExposedReferences:
     m_References: []
 --- !u!114 &981968679
@@ -29849,7 +29851,7 @@ MonoBehaviour:
   Camera: {fileID: 123059920}
   Timeline: {fileID: 981968678}
   Clip: {fileID: 0}
-  PlayOnAwake: 0
+  PlayOnAwake: 1
   SkipCutscene: 0
   OnCutsceneStarted:
     m_PersistentCalls:
@@ -46918,27 +46920,27 @@ PrefabInstance:
       objectReference: {fileID: 1888898776}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.2149416
+      value: -1.200679
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.8955443
+      value: -3.5768929
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9957566
+      value: -0.97535276
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.015972393
+      value: -0.01564482
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.090617806
+      value: -0.2200678
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.0014535504
+      value: 0.0035299237
       objectReference: {fileID: 0}
     - target: {fileID: 7266475739418501036, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: Ocean
@@ -48055,7 +48057,7 @@ Camera:
     height: 1
   near clip plane: 0.01
   far clip plane: 1000
-  field of view: 70
+  field of view: 40
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -48081,8 +48083,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1888898773}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.0027298853, y: 0.98528117, z: -0.01580436, w: -0.17018752}
-  m_LocalPosition: {x: 82.54558, y: 23.717093, z: -66.94888}
+  m_LocalRotation: {x: -0.04346469, y: -0.82907283, z: -0.07144498, w: 0.5528514}
+  m_LocalPosition: {x: 7.189989, y: 38.350002, z: -170.1899}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
