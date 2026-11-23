@@ -24,7 +24,7 @@ public sealed class ProximityInteractionComponent : MonoBehaviour
     [SerializeField] private Graphic[] graphics;
     [SerializeField] private Color normalColor = Color.white;
     [SerializeField] private Color pressedColor = Color.gray;
-    [Min(0f)][SerializeField] private float fadeDuration = 0.2f;
+    [Min(0f)] [SerializeField] private float fadeDuration = 0.2f;
 
     private readonly HashSet<Collider> playerColliders = new HashSet<Collider>();
     private bool waiting;
@@ -129,12 +129,26 @@ public sealed class ProximityInteractionComponent : MonoBehaviour
 
     private void Interact()
     {
-        OnInteracted?.Invoke();
-        if (!this || !isActiveAndEnabled || !autoDeactivate) return;
+        bool deactivateAfterUse = autoDeactivate;
 
-        waiting = false;
-        ProximityInteractionManager.RemoveOwner(this);
-        enabled = false;
+        // Release the prompt before invoking user events. This prevents this
+        // component from being considered an active prompt owner during callbacks.
+        if (deactivateAfterUse)
+        {
+            waiting = false;
+            pressed = false;
+            ProximityInteractionManager.RemoveOwner(this);
+        }
+
+        try
+        {
+            OnInteracted?.Invoke();
+        }
+        finally
+        {
+            if (deactivateAfterUse && this && isActiveAndEnabled)
+                enabled = false;
+        }
     }
 
     internal void CancelPress() => pressed = false;
@@ -153,6 +167,8 @@ internal sealed class ProximityInteractionManager : MonoBehaviour
     private static ProximityInteractionManager instance;
     private readonly List<ProximityInteractionComponent> waiting = new List<ProximityInteractionComponent>();
     private readonly Dictionary<CanvasGroup, Prompt> prompts = new Dictionary<CanvasGroup, Prompt>();
+    private readonly Dictionary<ProximityInteractionComponent, CanvasGroup> ownerGroups =
+        new Dictionary<ProximityInteractionComponent, CanvasGroup>();
     private ProximityInteractionComponent pressedTarget;
 
     public static ProximityInteractionManager Instance
@@ -174,13 +190,25 @@ internal sealed class ProximityInteractionManager : MonoBehaviour
 
     public void Show(ProximityInteractionComponent item)
     {
+        if (!item || !item.CanInteract) return;
+
+        CanvasGroup group = item.PromptGroup;
+        if (!group) return;
+
+        // If the reference was changed at runtime, release the old group first.
+        if (ownerGroups.TryGetValue(item, out CanvasGroup previousGroup) && previousGroup != group)
+            Hide(item);
+
         if (!waiting.Contains(item)) waiting.Add(item);
-        if (!item.PromptGroup) return;
-        Prompt prompt = GetPrompt(item.PromptGroup);
+        Prompt prompt = GetPrompt(group);
+        PruneOwners(group, prompt);
         prompt.owners.Add(item);
+        ownerGroups[item] = group;
         AddGraphics(prompt, item);
-        RefreshPrompt(item.PromptGroup, prompt);
-        Fade(item.PromptGroup, prompt, 1f, item.FadeDuration);
+        RefreshPrompt(group, prompt);
+
+        // Only a currently-interactable owner may request the visible state.
+        Fade(group, prompt, 1f, item.FadeDuration);
     }
 
     public void Refresh(ProximityInteractionComponent item)
@@ -191,6 +219,7 @@ internal sealed class ProximityInteractionManager : MonoBehaviour
 
     public void Hide(ProximityInteractionComponent item)
     {
+        if (!item) return;
         waiting.Remove(item);
         if (pressedTarget == item)
         {
@@ -198,23 +227,50 @@ internal sealed class ProximityInteractionManager : MonoBehaviour
             pressedTarget = null;
         }
 
-        CanvasGroup group = item.PromptGroup;
-        if (!group || !prompts.TryGetValue(group, out Prompt prompt) || !prompt.owners.Remove(item))
-        {
-            return;
-        }
+        // Use the group that was registered by Show, not the component's
+        // current serialized reference (which may have changed since entry).
+        if (!ownerGroups.TryGetValue(item, out CanvasGroup group)) return;
+        ownerGroups.Remove(item);
+        if (!group || !prompts.TryGetValue(group, out Prompt prompt)) return;
 
+        prompt.owners.Remove(item);
+        PruneOwners(group, prompt);
         RefreshPrompt(group, prompt);
         if (prompt.owners.Count > 0) return;
 
         Fade(group, prompt, 0f, item.FadeDuration, () =>
         {
+            PruneOwners(group, prompt);
+            // A new owner calls Show(), which cancels this fade and fades in.
+            // Never force alpha back to 1 from a fade-out completion callback.
             if (prompt.owners.Count == 0)
             {
                 RestoreGraphics(prompt);
                 prompts.Remove(group);
             }
         });
+    }
+
+    private void PruneOwners(CanvasGroup group, Prompt prompt)
+    {
+        List<ProximityInteractionComponent> stale = null;
+        foreach (ProximityInteractionComponent owner in prompt.owners)
+        {
+            if (owner && owner.CanInteract && owner.PromptGroup == group) continue;
+            stale ??= new List<ProximityInteractionComponent>();
+            stale.Add(owner);
+        }
+
+        if (stale == null) return;
+        foreach (ProximityInteractionComponent owner in stale)
+        {
+            prompt.owners.Remove(owner);
+            if (owner)
+            {
+                waiting.Remove(owner);
+                ownerGroups.Remove(owner);
+            }
+        }
     }
 
 #if ENABLE_INPUT_SYSTEM
