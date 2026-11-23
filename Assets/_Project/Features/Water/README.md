@@ -63,6 +63,18 @@ Tuning
 - Increase Phillips Amplitude to raise overall spectral energy.
 - Adjust each cascade's min/max wavelength to redistribute frequency bands.
 
+Reflections and sun highlights
+------------------------------
+- Enable Use Custom Cubemap and assign an HDR cubemap to control the reflected
+  environment independently from the scene Lighting settings.
+- Custom Cubemap Rotation yaws the assigned cubemap from 0 to 360 degrees.
+  It does not rotate the scene reflection probe.
+- Sun Ray Reflection Strength / Sharpness control the broad, elongated sun
+  highlight; Sun Ray Streak Length adds anisotropic breakup along the sun axis.
+- Water Sun Twinkle Strength, Scale, Density, Sharpness and Speed control small
+  animated glints. They are strongest where the live FFT wave normals align
+  with the sun/camera reflection direction, so the highlights move with waves.
+
 Notes / limitations
 -------------------
 - This is a Tessendorf/Phillips-style spectral ocean inspired by the public
