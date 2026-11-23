@@ -4,6 +4,7 @@ using Assets._Project.Features.Movement;
 using Assets._Project.Features.Pause;
 using Assets._Project.Features.StatusViewModels;
 using Assets._Project.Features.WaterEffects;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -26,6 +27,12 @@ public sealed class PlayerController : MonoBehaviour
     public InputActionReference DiveAction;
     [Tooltip("Optional. If unassigned, Left Alt is used.")]
     public InputActionReference DashAction;
+
+    [Header("Camera Input")]
+    [Tooltip("Optional. If empty, the Cinemachine input controller is searched for on this object and its children.")]
+    public CinemachineInputAxisController CameraInputController;
+    [Tooltip("Optional. If empty, OrbitalZoom is searched for on this object and its children.")]
+    public OrbitalZoom CameraZoom;
 
     [Header("HUD")]
     public PlayerHud HudPrefab;
@@ -75,6 +82,11 @@ public sealed class PlayerController : MonoBehaviour
     private BoatControlHintUI boatControlHint;
     private WindIndicatorUI windIndicator;
     private bool interactionPressPending;
+    private bool playerMovementLocked;
+    private bool cameraControlLocked;
+    private bool cameraControlStateCached;
+    private bool cameraInputControllerWasEnabled;
+    private bool cameraZoomWasEnabled;
     private readonly System.Collections.Generic.List<Collider> ignoredBoatColliders = new System.Collections.Generic.List<Collider>(16);
     private readonly System.Collections.Generic.List<Collider> ignoredPlayerColliders = new System.Collections.Generic.List<Collider>(4);
     private float ignoreBoatCollisionUntil;
@@ -97,6 +109,8 @@ public sealed class PlayerController : MonoBehaviour
     public bool IsBailing => bailing;
     /// <summary>True while the player must not act: locked, in a cutscene or paused.</summary>
     public bool InputBlocked => InputLocked || CutsceneComponent.AnyPlaying || PauseMenu.IsPaused;
+    /// <summary>True while movement is explicitly disabled, paused, or blocked by a cutscene.</summary>
+    public bool MovementInputBlocked => playerMovementLocked || InputBlocked;
     public bool IsAboardBoat => isAboardBoat;
     public BoatController CurrentBoat => currentBoat;
 
@@ -123,8 +137,105 @@ public sealed class PlayerController : MonoBehaviour
             hud.UseAutomaticVisibility();
     }
 
+    /// <summary>Disables player look/zoom input. Callable from a UnityEvent.</summary>
+    public void DisableCameraControl()
+    {
+        if (cameraControlLocked)
+            return;
+
+        cameraControlLocked = true;
+        if (!cameraControlStateCached)
+        {
+            cameraInputControllerWasEnabled = CameraInputController != null && CameraInputController.enabled;
+            cameraZoomWasEnabled = CameraZoom != null && CameraZoom.enabled;
+            cameraControlStateCached = true;
+        }
+
+        if (CameraInputController != null)
+            CameraInputController.enabled = false;
+        if (CameraZoom != null)
+            CameraZoom.enabled = false;
+    }
+
+    /// <summary>Restores camera input to the enabled/disabled state it had before it was locked.</summary>
+    public void EnableCameraControl()
+    {
+        if (!cameraControlLocked)
+            return;
+
+        cameraControlLocked = false;
+        if (cameraControlStateCached)
+        {
+            if (CameraInputController != null)
+                CameraInputController.enabled = cameraInputControllerWasEnabled;
+            if (CameraZoom != null)
+                CameraZoom.enabled = cameraZoomWasEnabled;
+        }
+
+        cameraControlStateCached = false;
+    }
+
+    /// <summary>Stops walking, swimming input, jumping, and dashing. Callable from a UnityEvent.</summary>
+    public void DisablePlayerMovement()
+    {
+        if (playerMovementLocked)
+            return;
+
+        playerMovementLocked = true;
+        latestDirection = Vector2.zero;
+        activeMovement?.Move(Vector2.zero);
+        activeMovement?.Jump(true);
+
+        // Clear stored momentum and any active dash so movement stops immediately,
+        // rather than coasting while the normal deceleration takes effect.
+        if (GroundedMovement != null)
+            GroundedMovement.SetPlanarVelocity(Vector3.zero);
+        if (SwimmingMovement != null)
+        {
+            SwimmingMovement.SetPlanarVelocity(Vector3.zero);
+            SwimmingMovement.SetDiveInput(false);
+        }
+
+        if (BoatMovement != null)
+            BoatMovement.StopDriving();
+
+        sailInputActive = false;
+    }
+
+    /// <summary>Allows player movement input again. Callable from a UnityEvent.</summary>
+    public void EnablePlayerMovement()
+    {
+        if (!playerMovementLocked)
+            return;
+
+        playerMovementLocked = false;
+        latestDirection = MovementAction != null && MovementAction.action != null && MovementAction.action.enabled
+            ? Vector2.ClampMagnitude(MovementAction.action.ReadValue<Vector2>(), 1f)
+            : Vector2.zero;
+        activeMovement?.Move(latestDirection);
+    }
+
+    /// <summary>Disables both camera input and player movement. Callable from a UnityEvent.</summary>
+    public void DisableCameraAndPlayerMovement()
+    {
+        DisableCameraControl();
+        DisablePlayerMovement();
+    }
+
+    /// <summary>Restores both camera input and player movement. Callable from a UnityEvent.</summary>
+    public void EnableCameraAndPlayerMovement()
+    {
+        EnableCameraControl();
+        EnablePlayerMovement();
+    }
+
     private void Awake()
     {
+        if (CameraInputController == null)
+            CameraInputController = GetComponentInChildren<CinemachineInputAxisController>(true);
+        if (CameraZoom == null)
+            CameraZoom = GetComponentInChildren<OrbitalZoom>(true);
+
         if (CharacterController == null)
             CharacterController = GetComponent<CharacterController>();
 
@@ -251,7 +362,7 @@ public sealed class PlayerController : MonoBehaviour
             return;
 
         // The player only takes control once the cutscene is over.
-        activeMovement.Move(InputBlocked || bailing ? Vector2.zero : latestDirection);
+        activeMovement.Move(MovementInputBlocked || bailing ? Vector2.zero : latestDirection);
         activeMovement.ApplyMovement();
     }
 
@@ -659,6 +770,13 @@ public sealed class PlayerController : MonoBehaviour
 
     private void UpdateSailRotationInput()
     {
+        if (MovementInputBlocked)
+        {
+            BoatMovement?.SetSailRotationInput(0f);
+            sailInputActive = false;
+            return;
+        }
+
         if (!isAboardBoat || BoatMovement == null)
         {
             if (sailInputActive)
@@ -1013,12 +1131,14 @@ public sealed class PlayerController : MonoBehaviour
 
     private void OnMoved(InputAction.CallbackContext context)
     {
-        latestDirection = Vector2.ClampMagnitude(context.ReadValue<Vector2>(), 1f);
+        latestDirection = playerMovementLocked
+            ? Vector2.zero
+            : Vector2.ClampMagnitude(context.ReadValue<Vector2>(), 1f);
     }
 
     private void OnJumped(InputAction.CallbackContext context)
     {
-        if (InputBlocked)
+        if (MovementInputBlocked)
             return;
 
         if (isAboardBoat)
@@ -1061,8 +1181,10 @@ public sealed class PlayerController : MonoBehaviour
 
     private void OnDiveChanged(InputAction.CallbackContext context)
     {
-        if (SwimmingMovement != null)
-            SwimmingMovement.SetDiveInput(!context.canceled);
+        if (SwimmingMovement == null)
+            return;
+
+        SwimmingMovement.SetDiveInput(!MovementInputBlocked && !context.canceled);
     }
 
     private void OnDashed(InputAction.CallbackContext context)
@@ -1073,7 +1195,7 @@ public sealed class PlayerController : MonoBehaviour
 
     private void TryDash()
     {
-        if (!InputBlocked && GroundedMovement != null && !isAboardBoat && IsSameMovement(activeMovement, GroundedMovement))
+        if (!MovementInputBlocked && GroundedMovement != null && !isAboardBoat && IsSameMovement(activeMovement, GroundedMovement))
             GroundedMovement.Dash();
     }
 
