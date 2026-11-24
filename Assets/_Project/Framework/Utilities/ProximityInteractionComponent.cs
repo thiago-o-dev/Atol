@@ -41,6 +41,15 @@ public sealed class ProximityInteractionComponent : MonoBehaviour
             Debug.LogWarning($"{name}: Proximity Collider must have Is Trigger enabled.", this);
     }
 
+    private void OnEnable()
+    {
+        // A disabled MonoBehaviour can still receive Unity physics messages.
+        // Start from a clean state and discard any stale manager registration.
+        playerColliders.Clear();
+        waiting = pressed = false;
+        ProximityInteractionManager.RemoveOwner(this);
+    }
+
     private void OnDisable()
     {
         playerColliders.Clear();
@@ -53,19 +62,26 @@ public sealed class ProximityInteractionComponent : MonoBehaviour
     // Also catches a player that was already overlapping when this component enabled.
     private void OnTriggerStay(Collider other)
     {
+        if (!isActiveAndEnabled) return;
         if (!playerColliders.Contains(other)) TryEnter(other);
     }
 
     private void OnTriggerExit(Collider other)
     {
+        if (!isActiveAndEnabled) return;
         playerColliders.Remove(other);
         if (playerColliders.Count == 0) Leave();
     }
 
     private void TryEnter(Collider other)
     {
-        bool isPlayer = other && (HasPlayerTag(other.transform) ||
-            (other.attachedRigidbody && HasPlayerTag(other.attachedRigidbody.transform)));
+        // Unity may send OnTriggerEnter/Stay to disabled MonoBehaviours.
+        // Never let an inactive interaction enter the overlap/input system or
+        // invoke an Instantaneous interaction from a physics callback.
+        if (!isActiveAndEnabled || !other) return;
+
+        bool isPlayer = HasPlayerTag(other.transform) ||
+            (other.attachedRigidbody && HasPlayerTag(other.attachedRigidbody.transform));
         if (!isPlayer || !playerColliders.Add(other)) return;
         if (playerColliders.Count != 1) return;
 
@@ -301,14 +317,22 @@ internal sealed class ProximityInteractionManager : MonoBehaviour
     private void PressTopWaiting()
     {
         if (pressedTarget) return;
+
         for (int i = waiting.Count - 1; i >= 0; i--)
         {
-            if (waiting[i] && waiting[i].CanInteract)
+            ProximityInteractionComponent candidate = waiting[i];
+            if (!candidate || !candidate.CanInteract)
             {
-                pressedTarget = waiting[i];
-                pressedTarget.Press();
-                return;
+                // Do not leave disabled/destroyed components in the global
+                // input queue. Hide also removes any remaining prompt ownership.
+                waiting.RemoveAt(i);
+                if (candidate) Hide(candidate);
+                continue;
             }
+
+            pressedTarget = candidate;
+            pressedTarget.Press();
+            return;
         }
     }
 

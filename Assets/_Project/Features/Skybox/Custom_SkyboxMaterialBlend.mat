@@ -12,8 +12,7 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _USEREFLECTIONVECTOR_ON
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -25,6 +24,10 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _GalaxyTexture:
+        m_Texture: {fileID: 8900000, guid: 1d6fdd0f36e89894faee4135ae1e6ce8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GalaxyTexture_S1:
         m_Texture: {fileID: 8900000, guid: 14e50fcbc1a2ff842ba76151cc0d64d7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -32,7 +35,15 @@ Material:
         m_Texture: {fileID: 2800000, guid: c0e12b60cf1bfeb4a9e85b9f780abaa2, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _StarsNoiseTexture_S1:
+        m_Texture: {fileID: 2800000, guid: c0e12b60cf1bfeb4a9e85b9f780abaa2, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _StarsTexture:
+        m_Texture: {fileID: 2800000, guid: 644f27aae8365bc4eac6e7c2899c78fb, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _StarsTexture_S1:
         m_Texture: {fileID: 2800000, guid: 644f27aae8365bc4eac6e7c2899c78fb, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -50,34 +61,61 @@ Material:
     - _Exposure2: 1
     - _FadeRatio: 0
     - _FresnelBias: 0
-    - _FresnelEmissionIntensity: 0.46
+    - _FresnelBias_S1: 0
+    - _FresnelEmissionIntensity: 2
+    - _FresnelEmissionIntensity_S1: 13
     - _FresnelHorizon: 0
+    - _FresnelHorizon_S1: 0
     - _FresnelHueShift: 0
+    - _FresnelHueShift_S1: 0
     - _FresnelInvert: 0
-    - _FresnelPower: 2.02
+    - _FresnelInvert_S1: 0
+    - _FresnelPower: 3
+    - _FresnelPower_S1: 5
     - _FresnelScale: 1
+    - _FresnelScale_S1: 1
     - _FresnelWidth: 0.25
+    - _FresnelWidth_S1: 0.25
     - _GalaxyBaseColorIntensity: 0
+    - _GalaxyBaseColorIntensity_S1: 0
     - _GalaxyEmissionIntensity: 1
+    - _GalaxyEmissionIntensity_S1: 1
     - _GalaxyHueShift: 0
+    - _GalaxyHueShift_S1: 0
     - _GalaxySaturationShift: 0
+    - _GalaxySaturationShift_S1: 0
     - _Rotation: 137
+    - _Sky1Mode: 0
     - _Sky2Mode: 1
     - _StarsDistortion: 0.05
-    - _StarsEmissionIntensity: 221.6
-    - _StarsHueShift: -0.08
+    - _StarsDistortion_S1: 0.05
+    - _StarsEmissionIntensity: 333
+    - _StarsEmissionIntensity_S1: 333
+    - _StarsHueShift: 0
+    - _StarsHueShift_S1: 0
     - _StarsNoiseTileOverall: 1
-    - _StarsTileOverall: 8
-    - _UseReflectionVector: 1
+    - _StarsNoiseTileOverall_S1: 1
+    - _StarsTileOverall: 5
+    - _StarsTileOverall_S1: 3
+    - _UseReflectionVector: 0
+    - _UseReflectionVector_S1: 0
     m_Colors:
-    - _FresnelColor: {r: 0, g: 0.7981409, b: 1, a: 0}
-    - _GalaxyTint: {r: 1, g: 1, b: 1, a: 0}
-    - _StarsColor01: {r: 0.12673411, g: 0, b: 1, a: 0}
-    - _StarsColor02: {r: 1, g: 0.514151, b: 0.6721208, a: 0}
+    - _FresnelColor: {r: 0.76715946, g: 0.6367924, b: 1, a: 0}
+    - _FresnelColor_S1: {r: 1, g: 0, b: 0.5803921, a: 0}
+    - _GalaxyTint: {r: 0.5981454, g: 0.4386792, b: 1, a: 0}
+    - _GalaxyTint_S1: {r: 1, g: 1, b: 1, a: 0}
+    - _StarsColor01: {r: 0.3835549, g: 0, b: 1, a: 0}
+    - _StarsColor01_S1: {r: 0, g: 0.2466726, b: 1, a: 0}
+    - _StarsColor02: {r: 1, g: 1, b: 1, a: 0}
+    - _StarsColor02_S1: {r: 1, g: 0.514151, b: 0.6721208, a: 0}
     - _StarsNoiseSpeed: {r: 0.1, g: 0.03, b: 0, a: 0}
+    - _StarsNoiseSpeed_S1: {r: 0.1, g: 0.03, b: 0, a: 0}
     - _StarsNoiseTile: {r: 1, g: 1, b: 0, a: 0}
+    - _StarsNoiseTile_S1: {r: 1, g: 1, b: 0, a: 0}
     - _StarsSpeed: {r: -0.03, g: -0.02, b: 0, a: 0}
+    - _StarsSpeed_S1: {r: -0.03, g: -0.02, b: 0, a: 0}
     - _StarsTile: {r: 1, g: 1, b: 0, a: 0}
+    - _StarsTile_S1: {r: 1, g: 1, b: 0, a: 0}
     - _Tint1: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
     - _Tint2: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
   m_BuildTextureStacks: []

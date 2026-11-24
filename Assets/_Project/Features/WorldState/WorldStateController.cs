@@ -1,6 +1,7 @@
 using Assets._Project.Framework.Architecture;
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class WorldStateController : Singleton<WorldStateController>
 {
@@ -9,6 +10,8 @@ public class WorldStateController : Singleton<WorldStateController>
     public SpectralOceanFFT SpectralOcean;
 
     private int latestDecay = 0;
+
+    public UnityEvent OnGameOver;
     
     public void UpdateDecay(int value)
     {
@@ -17,6 +20,15 @@ public class WorldStateController : Singleton<WorldStateController>
 
         // É O OBJETIVO O BARCO NÃO SAIR DO LUGAR COM 0 DECAYYYY
         SpectralOcean.SetWindStrength(Mathf.Lerp(0f, 1f, Decay / (float)DecayMaximum));
+
+        if (latestDecay != 0 && value == 0)
+        {
+            OnGameOver.Invoke();
+        }
+    }
+    public void AddDecay(int value)
+    {
+        UpdateDecay(Decay + value);
     }
 
     private void OnValidate()

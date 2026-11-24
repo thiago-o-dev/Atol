@@ -18,6 +18,7 @@ namespace cherrydev
         [SerializeField] private bool _isCanSkippingText = true;
         [Tooltip("Allows player input to advance to the next dialog node. Disable this for dialog that must remain until closed by code or Timeline.")]
         [SerializeField] private bool _isCanAdvanceDialog = true;
+        [SerializeField] private CanvasGroup _sentenceCanvasGroup;
 #if UNITY_LOCALIZATION
         [SerializeField] private bool _reloadTextOnLanguageChange = true;
 #endif
@@ -770,6 +771,11 @@ namespace cherrydev
         /// </summary>
         private void HandleSentenceSkipping()
         {
+            if (Input.GetKeyDown(KeyCode.RightBracket))
+            {
+                _sentenceCanvasGroup.alpha = _sentenceCanvasGroup.alpha == 1 ? 0 : 1;
+            }
+
             if (!_isDialogStarted || !_isCanSkippingText)
                 return;
 
