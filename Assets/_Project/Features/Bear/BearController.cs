@@ -529,7 +529,7 @@ namespace Assets._Project.Features.Bear
             _movement.SetPlanarVelocity(transform.forward * ClawLunge);
 
             AttackStruck?.Invoke(BearAttack.Claw);
-            Sound.Play(ClawSound, transform.position);
+            Sound.Play(ClawSound, transform.position, 1f, 2f, 18f);
 
             if (!CanHitTarget(ClawRange, ClawArc))
                 return;
@@ -633,7 +633,7 @@ namespace Assets._Project.Features.Bear
             _movement.LaunchJump(direction * _jumpSpeed, JumpHeight);
 
             AttackStruck?.Invoke(BearAttack.Jump);
-            Sound.Play(JumpSound, transform.position);
+            Sound.Play(JumpSound, transform.position, 1f, 5f, 35f);
         }
 
         private void JumpSlam()
@@ -642,7 +642,7 @@ namespace Assets._Project.Features.Bear
             _movement.SetPlanarVelocity(Vector3.zero);
 
             AttackStruck?.Invoke(BearAttack.Jump);
-            Sound.Play(SlamSound, transform.position);
+            Sound.Play(SlamSound, transform.position, 1f, 6f, 45f);
             CameraFeel.Shake(JumpLandShake);
 
             if (_attackHit || Target == null)
@@ -710,7 +710,7 @@ namespace Assets._Project.Features.Bear
             SetPhase(AttackPhase.Active);
 
             AttackStruck?.Invoke(BearAttack.Ram);
-            Sound.Play(RamSound, transform.position);
+            Sound.Play(RamSound, transform.position, 1f, 8f, 65f);
         }
 
         private void UpdateCharge()
@@ -747,7 +747,7 @@ namespace Assets._Project.Features.Bear
                 _attackHit = true;
                 DamageTarget(RamDamage, _ramDirection, RamKnockback);
                 CameraFeel.Shake(RamShake);
-                Sound.Play(RamImpactSound, transform.position);
+                Sound.Play(RamImpactSound, transform.position, 1f, 4f, 35f);
 
                 // Acertou o player: segue só mais um pouco e desacelera.
                 EndCharge(false);
@@ -772,7 +772,7 @@ namespace Assets._Project.Features.Bear
             if (hitObstacle)
             {
                 CameraFeel.Shake(RamShake);
-                Sound.Play(RamImpactSound, transform.position);
+                Sound.Play(RamImpactSound, transform.position, 1f, 4f, 35f);
                 Stunned?.Invoke();
                 _log.Log("Rammed a wall, stunned");
             }
@@ -1105,7 +1105,7 @@ namespace Assets._Project.Features.Bear
             if (IsDead)
                 return;
 
-            Sound.Play(HurtSound, transform.position);
+            Sound.Play(HurtSound, transform.position, 1f, 3f, 25f);
             Staggered?.Invoke();
 
             // Levou um golpe sem ter notado o player: vai direto pra cima dele.
@@ -1115,7 +1115,7 @@ namespace Assets._Project.Features.Bear
 
         private void OnDied()
         {
-            Sound.Play(DeathSound, transform.position);
+            Sound.Play(DeathSound, transform.position, 1f, 8f, 65f);
             SetState(State.Dead);
         }
 
@@ -1154,7 +1154,7 @@ namespace Assets._Project.Features.Bear
                     _lostSightTime = 0f;
                     _blockedTime = 0f;
                     _lastKnownPosition = Target ? Target.transform.position : transform.position;
-                    Sound.Play(RoarSound, transform.position);
+                    Sound.Play(RoarSound, transform.position, 1f, 8f, 70f);
                     Alerted?.Invoke();
                     break;
 
