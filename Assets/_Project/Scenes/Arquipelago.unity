@@ -52552,7 +52552,7 @@ MonoBehaviour:
   Timeline: {fileID: 1870548699}
   Clip: {fileID: 0}
   PlayOnAwake: 1
-  SkipCutscene: 1
+  SkipCutscene: 0
   OnCutsceneStarted:
     m_PersistentCalls:
       m_Calls:
@@ -53126,7 +53126,7 @@ Transform:
   m_GameObject: {fileID: 1888898773}
   serializedVersion: 2
   m_LocalRotation: {x: -0.0027298823, y: 0.98528117, z: -0.015804345, w: -0.17018749}
-  m_LocalPosition: {x: 82.54558, y: 23.717093, z: -66.94888}
+  m_LocalPosition: {x: 129.77856, y: -9.781794, z: -82.62671}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
