@@ -117,9 +117,6 @@ public sealed class PlayerRespawn : MonoBehaviour
 
         WorldStateController world = WorldStateController.Instance;
 
-        if (world)
-            world.UpdateDecay(world.Decay + 1);
-
         _player.Health.Fill();
         _player.Stamina.Fill();
     }
