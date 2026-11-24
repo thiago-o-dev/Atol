@@ -1,24 +1,38 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
+/// <summary>
+/// Four skybox slots (Primary, Secondary, Tertiary, Quaternary). Each slot can hold a skybox Material
+/// (cubemap material, or a Vefects Galaxy material) or a plain Cubemap.
+/// ActivePrimary / ActiveSecondary choose which two slots are the ends of the fade:
+/// fadeRatio 0 = slot ActivePrimary, fadeRatio 1 = slot ActiveSecondary.
+/// </summary>
 [ExecuteAlways]
 public class SkyboxController : MonoBehaviour
 {
-    [Header("Assign Your Skybox Materials")]
-    [Tooltip("Fixed. Must be a cubemap skybox material (has _Tex / _Tint / _Exposure).")]
+    public const int SlotCount = 4;
+
+    [Header("Skybox Slots (Material: cubemap skybox or Galaxy)")]
     public Material skybox1;
-    [Tooltip("Either a cubemap skybox material OR a Vefects Galaxy material (detected automatically).")]
     public Material skybox2;
+    public Material skybox3;
+    public Material skybox4;
 
-    [Tooltip("Used only when the matching Skybox material above is empty. Set through SetSkyboxPrimary/Secondary(Cubemap).")]
+    [Header("Skybox Slots (Cubemap, used only if the slot's Material is empty)")]
     public Cubemap skybox1Cubemap;
-    [Tooltip("Used only when the matching Skybox material above is empty. Set through SetSkyboxPrimary/Secondary(Cubemap).")]
     public Cubemap skybox2Cubemap;
+    public Cubemap skybox3Cubemap;
+    public Cubemap skybox4Cubemap;
 
+    [Header("Which slots are blended (0 = Primary, 1 = Secondary, 2 = Tertiary, 3 = Quaternary)")]
+    [Range(0, 3)] public int activePrimary = 0;
+    [Range(0, 3)] public int activeSecondary = 1;
+
+    [Tooltip("0 = ActivePrimary slot, 1 = ActiveSecondary slot.")]
     [Range(0f, 1f)]
     public float fadeRatio = 0f;
 
-    [Tooltip("Re-copies the Skybox 2 values every frame, so editing the Galaxy material live is reflected. Turn off to sync only when a material is swapped.")]
+    [Tooltip("Re-copies the active slots every frame, so editing a Galaxy/skybox material live is reflected. Turn off to sync only when something is swapped.")]
     public bool liveSync = true;
 
     [Header("Realtime Reflection Cubemap (for Wave / water)")]
@@ -33,10 +47,11 @@ public class SkyboxController : MonoBehaviour
     [Header("Internal Blend Material")]
     [SerializeField] private Material blendMaterial;
 
-    private Material lastSky1;
-    private Material lastSky2;
-    private Cubemap lastCube1;
-    private Cubemap lastCube2;
+    // Change detection
+    private readonly Material[] lastMats = new Material[SlotCount];
+    private readonly Cubemap[] lastCubes = new Cubemap[SlotCount];
+    private int lastActiveA = -1;
+    private int lastActiveB = -1;
 
     private RenderTexture reflectionRT;
     private CommandBuffer bakeCmd;
@@ -46,10 +61,11 @@ public class SkyboxController : MonoBehaviour
 
     // ---- property ids -------------------------------------------------------
     private static readonly int FadeId = Shader.PropertyToID("_FadeRatio");
+    private static readonly int Sky1ModeId = Shader.PropertyToID("_Sky1Mode");
     private static readonly int Sky2ModeId = Shader.PropertyToID("_Sky2Mode");
-    private static readonly int GalaxyTexId = Shader.PropertyToID("_GalaxyTexture");
 
-    // Galaxy properties copied 1:1 (same names in the Galaxy material and the blend shader).
+    // Galaxy properties copied 1:1. Side 2 of the blend shader uses the same names as the
+    // Galaxy material; side 1 uses the same names with the suffix "_S1".
     private static readonly string[] GalaxyFloats =
     {
         "_GalaxyEmissionIntensity", "_GalaxyBaseColorIntensity", "_GalaxyHueShift", "_GalaxySaturationShift",
@@ -59,19 +75,36 @@ public class SkyboxController : MonoBehaviour
         "_FresnelPower", "_FresnelInvert", "_FresnelHorizon", "_FresnelWidth",
         "_UseReflectionVector"
     };
-
-    private static readonly string[] GalaxyColors =
-    {
-        "_GalaxyTint", "_StarsColor01", "_StarsColor02", "_FresnelColor"
-    };
-
-    private static readonly string[] GalaxyVectors =
-    {
-        "_StarsTile", "_StarsSpeed", "_StarsNoiseTile", "_StarsNoiseSpeed"
-    };
-
+    private static readonly string[] GalaxyColors = { "_GalaxyTint", "_StarsColor01", "_StarsColor02", "_FresnelColor" };
+    private static readonly string[] GalaxyVectors = { "_StarsTile", "_StarsSpeed", "_StarsNoiseTile", "_StarsNoiseSpeed" };
     // Textures that also carry Tiling/Offset (used by the shader as _ST).
     private static readonly string[] GalaxyTexturesWithST = { "_StarsTexture", "_StarsNoiseTexture" };
+
+    private class GalaxyIds
+    {
+        public int galaxyTex;
+        public int[] floats, colors, vectors, stTextures;
+
+        public GalaxyIds(string suffix)
+        {
+            galaxyTex = Shader.PropertyToID("_GalaxyTexture" + suffix);
+            floats = Build(GalaxyFloats, suffix);
+            colors = Build(GalaxyColors, suffix);
+            vectors = Build(GalaxyVectors, suffix);
+            stTextures = Build(GalaxyTexturesWithST, suffix);
+        }
+
+        private static int[] Build(string[] names, string suffix)
+        {
+            var ids = new int[names.Length];
+            for (int i = 0; i < names.Length; i++) ids[i] = Shader.PropertyToID(names[i] + suffix);
+            return ids;
+        }
+    }
+
+    private static readonly GalaxyIds SourceIds = new GalaxyIds("");   // names in the Galaxy material
+    private static readonly GalaxyIds Side1Ids = new GalaxyIds("_S1"); // names in the blend shader, side 1
+    private static readonly GalaxyIds Side2Ids = SourceIds;            // names in the blend shader, side 2
 
     private void OnEnable()
     {
@@ -87,17 +120,18 @@ public class SkyboxController : MonoBehaviour
     private void OnValidate()
     {
         reflectionResolution = Mathf.Clamp(Mathf.ClosestPowerOfTwo(reflectionResolution), 16, 1024);
+        activePrimary = Mathf.Clamp(activePrimary, 0, SlotCount - 1);
+        activeSecondary = Mathf.Clamp(activeSecondary, 0, SlotCount - 1);
     }
 
     private void Update()
     {
         if (blendMaterial == null) return;
 
-        if (skybox1 != lastSky1 || skybox2 != lastSky2 ||
-            skybox1Cubemap != lastCube1 || skybox2Cubemap != lastCube2)
+        if (SlotsChanged())
             SyncMaterials(force: true);
         else if (liveSync)
-            SyncSkybox2();
+            ApplySides();
 
         blendMaterial.SetFloat(FadeId, fadeRatio);
 
@@ -164,64 +198,115 @@ public class SkyboxController : MonoBehaviour
         if (bakeCmd != null) { bakeCmd.Release(); bakeCmd = null; }
     }
 
+    // ---- slot helpers ----------------------------------------------------------
+
+    private Material GetMat(int i)
+    {
+        switch (i) { case 0: return skybox1; case 1: return skybox2; case 2: return skybox3; default: return skybox4; }
+    }
+
+    private Cubemap GetCube(int i)
+    {
+        switch (i) { case 0: return skybox1Cubemap; case 1: return skybox2Cubemap; case 2: return skybox3Cubemap; default: return skybox4Cubemap; }
+    }
+
+    private bool SlotsChanged()
+    {
+        if (activePrimary != lastActiveA || activeSecondary != lastActiveB) return true;
+        for (int i = 0; i < SlotCount; i++)
+            if (GetMat(i) != lastMats[i] || GetCube(i) != lastCubes[i]) return true;
+        return false;
+    }
+
     public void SyncMaterials(bool force = false)
     {
         if (blendMaterial == null) return;
 
-        // Skybox 1: always a cubemap.
-        if (skybox1 != null)
+        ApplySides();
+
+        for (int i = 0; i < SlotCount; i++) { lastMats[i] = GetMat(i); lastCubes[i] = GetCube(i); }
+        lastActiveA = activePrimary;
+        lastActiveB = activeSecondary;
+    }
+
+    // Both sides of the shader accept a cubemap or a Galaxy, so any two slots can be blended
+    // (including two different Galaxies at once).
+    private void ApplySides()
+    {
+        ApplySide(Mathf.Clamp(activePrimary, 0, SlotCount - 1), 1);
+        ApplySide(Mathf.Clamp(activeSecondary, 0, SlotCount - 1), 2);
+    }
+
+    private static readonly Color NeutralTint = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+
+    private void ApplySide(int slot, int side)
+    {
+        string suffix = side == 1 ? "1" : "2";
+        int modeId = side == 1 ? Sky1ModeId : Sky2ModeId;
+        var m = GetMat(slot);
+
+        if (m != null && m.HasProperty(SourceIds.galaxyTex))
         {
-            if (skybox1.HasProperty("_Tex")) blendMaterial.SetTexture("_Tex1", skybox1.GetTexture("_Tex"));
-            if (skybox1.HasProperty("_Tint")) blendMaterial.SetColor("_Tint1", skybox1.GetColor("_Tint"));
-            if (skybox1.HasProperty("_Exposure")) blendMaterial.SetFloat("_Exposure1", skybox1.GetFloat("_Exposure"));
-        }
-        else if (skybox1Cubemap != null)
-        {
-            // Plain cubemap: neutral tint (0.5 is 1.0 after the shader's color-space double) and exposure 1.
-            blendMaterial.SetTexture("_Tex1", skybox1Cubemap);
-            blendMaterial.SetColor("_Tint1", new Color(0.5f, 0.5f, 0.5f, 0.5f));
-            blendMaterial.SetFloat("_Exposure1", 1f);
+            blendMaterial.SetFloat(modeId, 1f);
+            CopyGalaxy(m, side == 1 ? Side1Ids : Side2Ids);
+            return;
         }
 
-        SyncSkybox2();
+        blendMaterial.SetFloat(modeId, 0f);
+        if (m != null)
+        {
+            if (m.HasProperty("_Tex")) blendMaterial.SetTexture("_Tex" + suffix, m.GetTexture("_Tex"));
+            if (m.HasProperty("_Tint")) blendMaterial.SetColor("_Tint" + suffix, m.GetColor("_Tint"));
+            if (m.HasProperty("_Exposure")) blendMaterial.SetFloat("_Exposure" + suffix, m.GetFloat("_Exposure"));
+            return;
+        }
 
-        lastSky1 = skybox1;
-        lastSky2 = skybox2;
-        lastCube1 = skybox1Cubemap;
-        lastCube2 = skybox2Cubemap;
+        var c = GetCube(slot);
+        if (c != null)
+        {
+            // Plain cubemap: neutral tint (0.5 becomes 1.0 after the shader's color-space double), exposure 1.
+            blendMaterial.SetTexture("_Tex" + suffix, c);
+            blendMaterial.SetColor("_Tint" + suffix, NeutralTint);
+            blendMaterial.SetFloat("_Exposure" + suffix, 1f);
+        }
     }
 
     // ---- UnityEvent API ------------------------------------------------------
-    // Overloads show up in the UnityEvent dropdown as (Material) and (Cubemap).
-    // Setting one clears the other, so the last call always wins.
+    // Each slot has a (Material) and a (Cubemap) overload; setting one clears the other,
+    // so the last call wins. Slots can be filled while inactive and selected later with SetActive*.
 
-    /// <summary>Primary skybox (always a cubemap skybox material).</summary>
-    public void SetSkyboxPrimary(Material material)
+    private void SetSlot(int slot, Material m, Cubemap c)
     {
-        skybox1 = material;
-        skybox1Cubemap = null;
+        switch (slot)
+        {
+            case 0: skybox1 = m; skybox1Cubemap = c; break;
+            case 1: skybox2 = m; skybox2Cubemap = c; break;
+            case 2: skybox3 = m; skybox3Cubemap = c; break;
+            default: skybox4 = m; skybox4Cubemap = c; break;
+        }
         SyncMaterials(force: true);
     }
 
-    public void SetSkyboxPrimary(Cubemap cubemap)
+    public void SetSkyboxPrimary(Material material)      => SetSlot(0, material, null);
+    public void SetSkyboxPrimary(Cubemap cubemap)        => SetSlot(0, null, cubemap);
+    public void SetSkyboxSecondary(Material material)    => SetSlot(1, material, null);
+    public void SetSkyboxSecondary(Cubemap cubemap)      => SetSlot(1, null, cubemap);
+    public void SetSkyboxTertiary(Material material)     => SetSlot(2, material, null);
+    public void SetSkyboxTertiary(Cubemap cubemap)       => SetSlot(2, null, cubemap);
+    public void SetSkyboxQuaternary(Material material)   => SetSlot(3, material, null);
+    public void SetSkyboxQuaternary(Cubemap cubemap)     => SetSlot(3, null, cubemap);
+
+    /// <summary>Slot (0-3) used at fadeRatio 0.</summary>
+    public void SetActivePrimary(int slot)
     {
-        skybox1 = null;
-        skybox1Cubemap = cubemap;
+        activePrimary = Mathf.Clamp(slot, 0, SlotCount - 1);
         SyncMaterials(force: true);
     }
 
-    /// <summary>Secondary skybox: a cubemap skybox material or a Vefects Galaxy material.</summary>
-    public void SetSkyboxSecondary(Material material)
+    /// <summary>Slot (0-3) used at fadeRatio 1.</summary>
+    public void SetActiveSecondary(int slot)
     {
-        skybox2 = material;
-        skybox2Cubemap = null;
-        SyncMaterials(force: true);
-    }
-
-    public void SetSkyboxSecondary(Cubemap cubemap)
-    {
-        skybox2 = null;
-        skybox2Cubemap = cubemap;
+        activeSecondary = Mathf.Clamp(slot, 0, SlotCount - 1);
         SyncMaterials(force: true);
     }
 
@@ -230,53 +315,26 @@ public class SkyboxController : MonoBehaviour
         fadeRatio = Mathf.Clamp01(value);
     }
 
-    private void SyncSkybox2()
+    private void CopyGalaxy(Material src, GalaxyIds dst)
     {
-        if (skybox2 == null)
+        blendMaterial.SetTexture(dst.galaxyTex, src.GetTexture(SourceIds.galaxyTex));
+
+        for (int i = 0; i < SourceIds.stTextures.Length; i++)
         {
-            if (skybox2Cubemap != null)
-            {
-                blendMaterial.SetFloat(Sky2ModeId, 0f);
-                blendMaterial.SetTexture("_Tex2", skybox2Cubemap);
-                blendMaterial.SetColor("_Tint2", new Color(0.5f, 0.5f, 0.5f, 0.5f));
-                blendMaterial.SetFloat("_Exposure2", 1f);
-            }
-            return;
+            int sid = SourceIds.stTextures[i], did = dst.stTextures[i];
+            if (!src.HasProperty(sid)) continue;
+            blendMaterial.SetTexture(did, src.GetTexture(sid));
+            blendMaterial.SetTextureScale(did, src.GetTextureScale(sid));
+            blendMaterial.SetTextureOffset(did, src.GetTextureOffset(sid));
         }
 
-        if (skybox2.HasProperty(GalaxyTexId))
-        {
-            blendMaterial.SetFloat(Sky2ModeId, 1f);
-            CopyGalaxy(skybox2);
-        }
-        else
-        {
-            blendMaterial.SetFloat(Sky2ModeId, 0f);
-            if (skybox2.HasProperty("_Tex")) blendMaterial.SetTexture("_Tex2", skybox2.GetTexture("_Tex"));
-            if (skybox2.HasProperty("_Tint")) blendMaterial.SetColor("_Tint2", skybox2.GetColor("_Tint"));
-            if (skybox2.HasProperty("_Exposure")) blendMaterial.SetFloat("_Exposure2", skybox2.GetFloat("_Exposure"));
-        }
-    }
+        for (int i = 0; i < SourceIds.floats.Length; i++)
+            if (src.HasProperty(SourceIds.floats[i])) blendMaterial.SetFloat(dst.floats[i], src.GetFloat(SourceIds.floats[i]));
 
-    private void CopyGalaxy(Material src)
-    {
-        blendMaterial.SetTexture(GalaxyTexId, src.GetTexture(GalaxyTexId));
+        for (int i = 0; i < SourceIds.colors.Length; i++)
+            if (src.HasProperty(SourceIds.colors[i])) blendMaterial.SetColor(dst.colors[i], src.GetColor(SourceIds.colors[i]));
 
-        foreach (var n in GalaxyTexturesWithST)
-        {
-            if (!src.HasProperty(n)) continue;
-            blendMaterial.SetTexture(n, src.GetTexture(n));
-            blendMaterial.SetTextureScale(n, src.GetTextureScale(n));
-            blendMaterial.SetTextureOffset(n, src.GetTextureOffset(n));
-        }
-
-        foreach (var n in GalaxyFloats)
-            if (src.HasProperty(n)) blendMaterial.SetFloat(n, src.GetFloat(n));
-
-        foreach (var n in GalaxyColors)
-            if (src.HasProperty(n)) blendMaterial.SetColor(n, src.GetColor(n));
-
-        foreach (var n in GalaxyVectors)
-            if (src.HasProperty(n)) blendMaterial.SetVector(n, src.GetVector(n));
+        for (int i = 0; i < SourceIds.vectors.Length; i++)
+            if (src.HasProperty(SourceIds.vectors[i])) blendMaterial.SetVector(dst.vectors[i], src.GetVector(SourceIds.vectors[i]));
     }
 }
