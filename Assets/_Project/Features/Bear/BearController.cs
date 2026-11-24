@@ -155,13 +155,21 @@ namespace Assets._Project.Features.Bear
         public float MaxDecayCooldown = 0.6f;
 
         [Header("Feedback")]
+        [Tooltip("Played immediately when the bear enters Alert after detecting the player by sight/hearing, or after being hurt while patrolling and able to see the player.")]
         public AudioClip RoarSound;
+        [Tooltip("Played when the claw strike is executed, after ClawWindup. It plays whether or not the player is inside the attack cone.")]
         public AudioClip ClawSound;
+        [Tooltip("Played at jump take-off, when the bear launches after JumpWindup.")]
         public AudioClip JumpSound;
+        [Tooltip("Played when the jump attack lands and the ground slam is performed, even if the player avoids the damage radius.")]
         public AudioClip SlamSound;
+        [Tooltip("Played once when the ram leaves its wind-up and the active charge begins.")]
         public AudioClip RamSound;
+        [Tooltip("Played when the active ram hits the player, or when it collides with a wall and the bear is stunned. Not played for water or cliff avoidance.")]
         public AudioClip RamImpactSound;
+        [Tooltip("Played whenever the bear receives damage, except after it is already dead.")]
         public AudioClip HurtSound;
+        [Tooltip("Played once when the bear's death event fires, immediately before it enters the Dead state.")]
         public AudioClip DeathSound;
 
         public bool ShowLogs = false;

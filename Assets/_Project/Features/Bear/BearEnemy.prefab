@@ -178,7 +178,7 @@ MonoBehaviour:
   JumpKnockback: 5
   ClawKnockback: 3
   FallbackSeaLevel: 0
-  MinGroundAboveWater: 0.6
+  MinGroundAboveWater: -0.6
   GroundProbeHeight: 2
   GroundProbeDepth: 8
   GroundMask:
@@ -252,6 +252,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4228987995287474725}
     m_Modifications:
+    - target: {fileID: 3734775969355451150, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 7c034ae2bbeb9504e80d77bf224c7366, type: 2}
     - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

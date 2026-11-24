@@ -165,7 +165,13 @@ public sealed class BearAnimatableComponent : MonoBehaviour
         subscribedMovement = null;
     }
 
-    private void OnAlerted() => SetTrigger(roarTriggerParameter);
+    private void OnAlerted()
+    {
+        // Damage while patrolling can raise Hit immediately before the AI enters Alert.
+        // The roar is the intended response in that case; do not leave a stale Hit trigger queued.
+        ResetTrigger(hitTriggerParameter);
+        SetTrigger(roarTriggerParameter);
+    }
 
     private void OnStaggered()
     {
@@ -200,9 +206,7 @@ public sealed class BearAnimatableComponent : MonoBehaviour
         wasGrounded = false;
         airTime = 0f;
 
-        if (HasParameter(landTriggerParameter))
-            animator.ResetTrigger(Animator.StringToHash(landTriggerParameter));
-
+        ResetTrigger(landTriggerParameter);
         SetTrigger(jumpTriggerParameter);
     }
 
@@ -296,6 +300,12 @@ public sealed class BearAnimatableComponent : MonoBehaviour
             if (fallingTime >= fallDetectionDelay)
                 fallQualified = true;
         }
+        else if (verticalSpeed > airborneThreshold && !fallQualified)
+        {
+            // Match the player controller: a new upward arc resets an unqualified descent,
+            // so small hops/vertical corrections cannot accumulate into a false fall.
+            fallingTime = 0f;
+        }
     }
 
     private void ResetFallTracking()
@@ -328,9 +338,20 @@ public sealed class BearAnimatableComponent : MonoBehaviour
             animator.SetInteger(Animator.StringToHash(parameterName), value);
     }
 
+    private void ResetTrigger(string parameterName)
+    {
+        if (animator != null && HasParameter(parameterName))
+            animator.ResetTrigger(Animator.StringToHash(parameterName));
+    }
+
     private void SetTrigger(string parameterName)
     {
-        if (HasParameter(parameterName))
-            animator.SetTrigger(Animator.StringToHash(parameterName));
+        if (animator == null || !HasParameter(parameterName))
+            return;
+
+        int hash = Animator.StringToHash(parameterName);
+        // A previously queued trigger must never fire later after an interruption.
+        animator.ResetTrigger(hash);
+        animator.SetTrigger(hash);
     }
 }
