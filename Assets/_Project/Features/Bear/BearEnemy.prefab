@@ -206,7 +206,7 @@ MonoBehaviour:
   RamImpactSound: {fileID: 8300000, guid: 0ea2567d922616e4c9eed7ad403819c1, type: 3}
   HurtSound: {fileID: 8300000, guid: 05101580d385ad348a8752304ee80fd9, type: 3}
   DeathSound: {fileID: 8300000, guid: 7cfd39220f5e015489e4b458250bc03c, type: 3}
-  ShowLogs: 1
+  ShowLogs: 0
 --- !u!114 &5089375405860806409
 MonoBehaviour:
   m_ObjectHideFlags: 0
