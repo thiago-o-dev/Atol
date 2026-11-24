@@ -1,0 +1,308 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7364896896523790400
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4228987995287474725}
+  - component: {fileID: 2704108562973302297}
+  - component: {fileID: 5379895567628757756}
+  - component: {fileID: 6419968502751140707}
+  - component: {fileID: 4094849272813694043}
+  - component: {fileID: 5089375405860806409}
+  m_Layer: 0
+  m_Name: BearEnemy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4228987995287474725
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7364896896523790400}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6609252492220949426}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!143 &2704108562973302297
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7364896896523790400}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 2
+  m_Radius: 1
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &5379895567628757756
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7364896896523790400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1276b7261a94934690d8fb869dade75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GroundedMovement
+  ReferenceTransform: {fileID: 0}
+  Controller: {fileID: 2704108562973302297}
+  Speed: 6
+  JumpHeight: 2
+  GravityMultiplier: 1
+  TurnSmoothTime: 0.1
+  Acceleration: 20
+  Deceleration: 15
+  UseCoyoteTiming: 1
+  CoyoteTime: 0.2
+  Stamina: {fileID: 0}
+  JumpStaminaCost: 10
+  DashSpeed: 16
+  DashDuration: 0.18
+  DashCooldown: 0.4
+  DashStaminaCost: 20
+--- !u!114 &6419968502751140707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7364896896523790400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a86a62f5dc844cfbb85e4ff14375a52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.StatusViewModels.HealthComponent
+  Maximum: 100
+--- !u!114 &4094849272813694043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7364896896523790400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee8f8ccd7cfa45c458f9f5d111f88f0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets._Project.Features.Bear.BearController
+  Target: {fileID: 0}
+  DetectionRadius: 25.6
+  HearingRadius: 8
+  ViewAngle: 140
+  GiveUpRadius: 40
+  RequireLineOfSight: 1
+  SightMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  EyeHeight: 1.4
+  LoseSightTime: 3
+  PatrolRadius: 15
+  PatrolSpeed: 1.8
+  IdleTime: {x: 2, y: 5}
+  PatrolPointTime: 12
+  ArriveDistance: 1.2
+  AlertTime: 1
+  TurnSpeed: 240
+  ChaseSpeed: 6.5
+  StuckTime: 3
+  IgnoreTime: 5
+  ClawRange: 2.4
+  ClawArc: 100
+  ClawDamage: 18
+  ClawWindup: 0.45
+  ClawRecover: 0.6
+  ClawCooldown: 1.2
+  ClawLunge: 3
+  ClawVariants: 2
+  ClawShake: 0.12
+  JumpMinRange: 5
+  JumpMaxRange: 8.56
+  JumpWindup: 0.55
+  JumpHeight: 1.6
+  JumpMaxSpeed: 12
+  JumpLead: 0.6
+  JumpHitRadius: 1.6
+  JumpSlamRadius: 2.6
+  JumpDamage: 30
+  JumpRecover: 0.9
+  JumpCooldown: 6
+  JumpLandShake: 0.3
+  RamMinRange: 7
+  RamMaxRange: 20
+  RamWindup: 0.8
+  RamSpeed: 11
+  RamAcceleration: 30
+  RamSteer: 25
+  RamMaxDistance: 22
+  RamMaxTime: 2.5
+  RamHitRadius: 1.5
+  RamDamage: 20
+  RamKnockback: 8
+  RamStunTime: 1.6
+  RamMissRecover: 1
+  RamCooldown: 8
+  RamShake: 0.35
+  RamChance: 0.5
+  SpecialGap: 1
+  VerticalReach: 1.6
+  JumpKnockback: 5
+  ClawKnockback: 3
+  FallbackSeaLevel: 0
+  MinGroundAboveWater: 0.6
+  GroundProbeHeight: 2
+  GroundProbeDepth: 8
+  GroundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  MaxStepDrop: 1.2
+  LookAhead: 2
+  LookAheadTime: 0.35
+  PathStep: 0.75
+  ObstacleHeight: 0.8
+  ObstacleRadius: 0.4
+  ObstacleMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  SteerInterval: 0.1
+  WaterEscapeTime: 0.75
+  MaxDecayDetection: 1.4
+  MaxDecaySpeed: 1.25
+  MaxDecayCooldown: 0.6
+  RoarSound: {fileID: 8300000, guid: f0a6faa3553799343a5f617f94518111, type: 3}
+  ClawSound: {fileID: 8300000, guid: 3b09d59f4499d45428baa7a21e954296, type: 3}
+  JumpSound: {fileID: 8300000, guid: d0f11e0c34c62e740a5e7a091606c3b6, type: 3}
+  SlamSound: {fileID: 8300000, guid: 0ea2567d922616e4c9eed7ad403819c1, type: 3}
+  RamSound: {fileID: 8300000, guid: 5df7488bc4804dc48b9c78cac7174f5d, type: 3}
+  RamImpactSound: {fileID: 8300000, guid: 0ea2567d922616e4c9eed7ad403819c1, type: 3}
+  HurtSound: {fileID: 8300000, guid: 05101580d385ad348a8752304ee80fd9, type: 3}
+  DeathSound: {fileID: 8300000, guid: 7cfd39220f5e015489e4b458250bc03c, type: 3}
+  ShowLogs: 1
+--- !u!114 &5089375405860806409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7364896896523790400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1005833842501fd4996c424c479e3281, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BearAnimatableComponent
+  bear: {fileID: 4094849272813694043}
+  animator: {fileID: 0}
+  speedParameter: Speed
+  verticalSpeedParameter: VerticalSpeed
+  groundedParameter: Grounded
+  jumpingParameter: Jumping
+  fallingParameter: Falling
+  aggroParameter: Aggro
+  chargingParameter: Charging
+  stunnedParameter: Stunned
+  deadParameter: Dead
+  clawVariantParameter: ClawVariant
+  roarTriggerParameter: Roar
+  clawTriggerParameter: Claw
+  jumpWindupTriggerParameter: JumpWindup
+  ramWindupTriggerParameter: RamWindup
+  jumpTriggerParameter: Jump
+  landTriggerParameter: Land
+  hitTriggerParameter: Hit
+  speedDampTime: 0.12
+  verticalSpeedDampTime: 0.08
+  fallDetectionDelay: 0.2
+  minimumFallingSpeed: 0.08
+  airborneThreshold: 0.1
+  minimumAirTimeForLanding: 0.25
+--- !u!1001 &4507102944311964358
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4228987995287474725}
+    m_Modifications:
+    - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7962199819078159310, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+      propertyPath: m_Name
+      value: Bear_4
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+--- !u!4 &6609252492220949426 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+  m_PrefabInstance: {fileID: 4507102944311964358}
+  m_PrefabAsset: {fileID: 0}
