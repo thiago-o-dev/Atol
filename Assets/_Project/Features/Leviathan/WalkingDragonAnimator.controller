@@ -493,7 +493,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Fly Glide
-  m_Speed: 1
+  m_Speed: 0.2
   m_CycleOffset: 0
   m_Transitions: []
   m_StateMachineBehaviours: []
@@ -641,7 +641,7 @@ BlendTree:
     m_Mirror: 0
   - serializedVersion: 2
     m_Motion: {fileID: 7400000, guid: 93048e03d4dc597468fce555d02e9274, type: 3}
-    m_Threshold: 13
+    m_Threshold: 60
     m_Position: {x: 0, y: 0}
     m_TimeScale: 1
     m_CycleOffset: 0
@@ -650,7 +650,7 @@ BlendTree:
   m_BlendParameter: Speed
   m_BlendParameterY: Blend
   m_MinThreshold: 0
-  m_MaxThreshold: 16
+  m_MaxThreshold: 60
   m_UseAutomaticThresholds: 0
   m_NormalizedBlendValues: 0
   m_BlendType: 0
@@ -842,10 +842,10 @@ AnimatorStateMachine:
   m_ChildStates:
   - serializedVersion: 1
     m_State: {fileID: -8050690908706554651}
-    m_Position: {x: 300, y: 80, z: 0}
+    m_Position: {x: -170, y: 450, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -973618120131101550}
-    m_Position: {x: 60, y: 280, z: 0}
+    m_Position: {x: -110, y: 280, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 1500113483528093456}
     m_Position: {x: 300, y: 420, z: 0}
@@ -869,7 +869,7 @@ AnimatorStateMachine:
     m_Position: {x: 980, y: 310, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -4139179029228147861}
-    m_Position: {x: 300, y: 780, z: 0}
+    m_Position: {x: -260, y: 90, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 2817567896958709332}
     m_Position: {x: 560, y: 780, z: 0}
@@ -884,10 +884,10 @@ AnimatorStateMachine:
     m_Position: {x: 1340, y: 780, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 8592338527776246462}
-    m_Position: {x: 60, y: 590, z: 0}
+    m_Position: {x: -130, y: 700, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -3103302858313386075}
-    m_Position: {x: 300, y: 590, z: 0}
+    m_Position: {x: 90, y: 690, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions:
   - {fileID: -3856820759325392806}
@@ -1453,7 +1453,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Fly Float
-  m_Speed: 1
+  m_Speed: 0.2
   m_CycleOffset: 0
   m_Transitions: []
   m_StateMachineBehaviours: []
