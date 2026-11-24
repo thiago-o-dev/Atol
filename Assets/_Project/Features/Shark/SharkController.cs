@@ -109,6 +109,43 @@ namespace Assets._Project.Features.Shark
         [Tooltip("Limite de subida/descida pra ele não ser catapultado por uma leitura ruim da onda.")]
         public float MaxVerticalSpeed = 4f;
 
+        [Header("Stealth Dip")]
+        [Tooltip("Liga o mergulho furtivo: patrulhando e recuando ele fica todo submerso, rondando só a barbatana aparece e some de tempos em tempos, e ele emerge rápido pra atacar.")]
+        public bool StealthDip = true;
+        [Tooltip("Centro do corpo abaixo da onda enquanto patrulha ou recua. Com o corpo de 1 m, acima de ~0.6 não aparece nada.")]
+        public float StealthDepth = 1.1f;
+        [Tooltip("Velocidade de descida ao se esconder, em m/s.")]
+        public float DiveRate = 0.9f;
+        [Tooltip("Velocidade de subida ao emergir pra atacar, em m/s.")]
+        public float SurfaceRate = 3f;
+        [Tooltip("Força que cola o corpo na profundidade desejada. Usada quando DepthFollow é 0.")]
+        public float DipFollow = 5f;
+        [Tooltip("Rondando, ele alterna entre mostrar a barbatana (CircleDepth) e se esconder (StealthDepth). Tempo mostrando e tempo escondido.")]
+        public Vector2 PeekTime = new Vector2(1.5f, 3f);
+        public Vector2 HiddenTime = new Vector2(1.2f, 2.5f);
+        [Tooltip("Graus de inclinação do focinho por m/s de descida ou subida.")]
+        public float DipPitch = 14f;
+
+        [Header("Death & Respawn")]
+        [Tooltip("Ao morrer ele rola até ficar de barriga pra cima.")]
+        public float DeathRollAngle = 180f;
+        public float DeathRollTime = 1.4f;
+        [Tooltip("Tempo boiando de barriga pra cima antes de começar a afundar.")]
+        public float DeathFloatTime = 2f;
+        [Tooltip("Profundidade do centro do corpo boiando morto.")]
+        public float DeathFloatDepth = 0.1f;
+        [Tooltip("Velocidade da queda, em m/s.")]
+        public float SinkSpeed = 0.5f;
+        [Tooltip("Ao chegar nessa profundidade o renderer é desligado.")]
+        public float SinkDepth = 4f;
+        [Tooltip("Segundos depois da morte pra ele voltar ao ponto de origem.")]
+        public float RespawnDelay = 60f;
+        [Tooltip("O respawn começa tanto abaixo do ponto original (em Y) e sobe até a profundidade de patrulha.")]
+        public float RespawnDepthOffset = 10f;
+        public float RespawnRiseTime = 5f;
+        [Tooltip("Objetos extras escondidos enquanto ele está morto (ex.: barra de vida em objeto separado).")]
+        public GameObject[] HideWhileDead;
+
         [Header("Aggression")]
         [Tooltip("Multiplicadores com o Decay do mundo no máximo. Com Decay 0 vale o valor normal.")]
         public float MaxDecayDetection = 1.5f;
@@ -194,6 +231,23 @@ namespace Assets._Project.Features.Shark
         private int _strikeCount;
         private float _fastSailTime;
 
+        private enum DeathPhase { None, Floating, Sinking, Hidden, Rising }
+
+        private DeathPhase _deathPhase;
+        private Quaternion _homeRotation;
+        private float _deathTime;
+        private float _deathRoll;
+        private float _deathRollSide = 1f;
+        private float _riseStart;
+        private float _diveRate;
+        private bool _peeking;
+        private float _peekPhaseEnd;
+        private readonly List<Renderer> _hiddenRenderers = new();
+        private readonly List<Canvas> _hiddenCanvases = new();
+        private WorldStatusBarUI _statusBar;
+
+        private bool Dying => _deathPhase is DeathPhase.Floating or DeathPhase.Sinking or DeathPhase.Hidden;
+
         private static readonly int TailPowerId = Shader.PropertyToID("_SwimmingPower");
         private static readonly int TailSpeedId = Shader.PropertyToID("_SwimmingSpeed");
 
@@ -214,7 +268,9 @@ namespace Assets._Project.Features.Shark
             _log = new(this, showLogs: ShowLogs, prefixColor: Color.red);
 
             _home = transform.position;
+            _homeRotation = transform.rotation;
             GetComponentsInChildren(_sharkColliders);
+            _statusBar = GetComponent<WorldStatusBarUI>();
 
             _swimming = GetComponent<SwimmingMovement>();
             _health = GetComponent<HealthComponent>();
@@ -224,8 +280,8 @@ namespace Assets._Project.Features.Shark
 
             _swimming.HopStarted += OnLeapLaunched;
             _swimming.HopLanded += OnLeapLanded;
-            _depth = SwimDepth;
-            _targetDepth = SwimDepth;
+            _depth = StealthDip ? StealthDepth : SwimDepth;
+            _targetDepth = _depth;
 
             // O salto usa o pulo do SwimmingMovement, com os valores do tubarão.
             _swimming.EnableJumpHop = true;
@@ -331,33 +387,312 @@ namespace Assets._Project.Features.Shark
                     UpdateLatch();
                     return;
                 case State.Dead:
-                    _swimming.Move(Vector2.zero);
+                    UpdateDeath();
                     break;
             }
 
             _swimming.ApplyMovement();
 
-            if (CurrentState is not (State.Leap or State.Dead) && !_swimming.IsAirborne)
+            if (CurrentState == State.Dead)
+                ApplyDeathMotion();
+            else if (CurrentState != State.Leap && !_swimming.IsAirborne)
                 FollowSurface();
+            else
+                _diveRate = 0f;
         }
+
+        private bool UsesDepthControl => StealthDip || DepthFollow > 0f;
 
         // O SwimmingMovement limita a submersão e a velocidade vertical, então o tubarão ficava pra fora
         // quando a onda passava. Aqui ele é colado na altura da onda que o próprio motor já mede.
+        // Com StealthDip a mesma colagem leva o corpo pra profundidade do estado: fundo pra patrulhar, raso pra atacar.
         private void FollowSurface()
         {
-            if (DepthFollow <= 0f || _swimming.SurfaceSampleAge > 1f)
+            if (!UsesDepthControl)
                 return;
 
-            _depth = Mathf.MoveTowards(_depth, _targetDepth, 0.5f * Time.fixedDeltaTime);
+            UpdatePeek();
+            FollowDepth(SurfaceRate, StealthDip ? DiveRate : 0.5f, DepthFollow > 0f ? DepthFollow : DipFollow);
+        }
+
+        // Move _depth até _targetDepth (subindo na velocidade riseRate, descendo em diveRate)
+        // e empurra o rigidbody pra essa profundidade abaixo da onda.
+        private void FollowDepth(float riseRate, float diveRate, float gain)
+        {
+            if (_swimming.IsAirborne)
+                return;
+
+            float before = _depth;
+            float rate = _depth < _targetDepth ? diveRate : riseRate;
+
+            if (_swimming.SurfaceSampleAge > 1f)
+            {
+                // Sem leitura da onda só a morte segue em frente (afunda na velocidade certa), pra nunca ficar presa no meio.
+                if (CurrentState == State.Dead)
+                {
+                    _depth = Mathf.MoveTowards(_depth, _targetDepth, rate * Time.fixedDeltaTime);
+                    _diveRate = (_depth - before) / Time.fixedDeltaTime;
+
+                    Vector3 blind = _rigidbody.linearVelocity;
+                    blind.y = -_diveRate;
+                    _rigidbody.linearVelocity = blind;
+                }
+
+                return;
+            }
+
+            _depth = Mathf.MoveTowards(_depth, _targetDepth, rate * Time.fixedDeltaTime);
+            _diveRate = (_depth - before) / Time.fixedDeltaTime;
 
             float targetY = _swimming.TrackedSurfaceHeight - _depth;
 
-            float correction = (targetY - _rigidbody.position.y) * DepthFollow;
+            float correction = (targetY - _rigidbody.position.y) * gain;
             float waveVelocity = Mathf.Clamp(_swimming.TrackedSurfaceVelocity, -MaxVerticalSpeed, MaxVerticalSpeed);
 
             Vector3 velocity = _rigidbody.linearVelocity;
             velocity.y = Mathf.Clamp(correction + waveVelocity, -MaxVerticalSpeed, MaxVerticalSpeed);
             _rigidbody.linearVelocity = velocity;
+        }
+
+        // Rondando a presa ou o barco ele mostra a barbatana por um tempo e some por outro, como quem testa a presa.
+        private void StartPeek()
+        {
+            _peeking = true;
+            _peekPhaseEnd = Time.time + Random.Range(PeekTime.x, PeekTime.y);
+        }
+
+        private void UpdatePeek()
+        {
+            if (!StealthDip || CurrentState is not (State.Stalk or State.Circle) || Time.time < _peekPhaseEnd)
+                return;
+
+            _peeking = !_peeking;
+            _peekPhaseEnd = Time.time + (_peeking ? Random.Range(PeekTime.x, PeekTime.y) : Random.Range(HiddenTime.x, HiddenTime.y));
+            _targetDepth = DepthForState(CurrentState);
+        }
+
+        private float DepthForState(State state)
+        {
+            if (!StealthDip)
+                return state is State.Circle or State.Stalk ? CircleDepth : SwimDepth;
+
+            return state switch
+            {
+                State.Patrol or State.Retreat => StealthDepth,
+                State.Stalk or State.Circle => _peeking ? CircleDepth : StealthDepth,
+                _ => SwimDepth,
+            };
+        }
+
+        // Morreu: rola de barriga pra cima, boia um pouco, afunda devagar, some, e volta depois de RespawnDelay.
+        private void UpdateDeath()
+        {
+            _swimming.Move(Vector2.zero);
+
+            float elapsed = Time.time - _deathTime;
+
+            // Morreu no meio do salto sobre terra firme: o pulo nunca aterrissa, então religa o motor.
+            if (_deathPhase != DeathPhase.Rising && _swimming.IsAirborne && elapsed > 4f)
+            {
+                _swimming.enabled = false;
+                _swimming.enabled = true;
+            }
+
+            switch (_deathPhase)
+            {
+                case DeathPhase.Floating:
+                    _targetDepth = DeathFloatDepth;
+
+                    if (elapsed >= DeathRollTime + DeathFloatTime)
+                        _deathPhase = DeathPhase.Sinking;
+                    break;
+
+                case DeathPhase.Sinking:
+                    _targetDepth = SinkDepth;
+
+                    if (_depth >= SinkDepth - 0.01f)
+                        HideBody();
+                    break;
+
+                case DeathPhase.Hidden:
+                    _targetDepth = SinkDepth;
+
+                    if (elapsed >= RespawnDelay)
+                        BeginRespawn();
+                    break;
+            }
+        }
+
+        private void ApplyDeathMotion()
+        {
+            switch (_deathPhase)
+            {
+                case DeathPhase.Floating:
+                    // Boia na onda, ainda subindo/descendo pro nível de boiar.
+                    FollowDepth(SurfaceRate, DiveRate, DipFollow);
+                    break;
+
+                case DeathPhase.Sinking:
+                case DeathPhase.Hidden:
+                    // Queda lenta e constante; o movimento da onda some conforme ele afunda.
+                    FollowDepth(SinkSpeed, SinkSpeed, DipFollow);
+                    break;
+
+                case DeathPhase.Rising:
+                    RiseFromBelow();
+                    break;
+            }
+        }
+
+        private void BeginDeath()
+        {
+            _deathPhase = DeathPhase.Floating;
+            _deathTime = Time.time;
+            _deathRollSide = Random.value < 0.5f ? -1f : 1f;
+            _targetDepth = DeathFloatDepth;
+
+            // Desliga o puxão de afogamento: a queda é controlada por FollowDepth, devagar.
+            _swimming.SetDrowning(false);
+            SetCollidersEnabled(false);
+        }
+
+        private void HideBody()
+        {
+            _deathPhase = DeathPhase.Hidden;
+
+            _hiddenRenderers.Clear();
+            _hiddenCanvases.Clear();
+
+            foreach (Renderer modelRenderer in GetComponentsInChildren<Renderer>())
+            {
+                if (!modelRenderer.enabled)
+                    continue;
+
+                modelRenderer.enabled = false;
+                _hiddenRenderers.Add(modelRenderer);
+            }
+
+            foreach (Canvas canvas in GetComponentsInChildren<Canvas>())
+            {
+                if (!canvas.enabled)
+                    continue;
+
+                canvas.enabled = false;
+                _hiddenCanvases.Add(canvas);
+            }
+
+            if (_statusBar)
+                _statusBar.enabled = false;
+
+            SetHideWhileDead(false);
+
+            _log.Log("Sank out of sight, respawning in " + Mathf.Max(0f, RespawnDelay - (Time.time - _deathTime)).ToString("F0") + "s");
+        }
+
+        // Volta ao ponto original, RespawnDepthOffset metros abaixo, e sobe de lá até a profundidade de patrulha.
+        private void BeginRespawn()
+        {
+            _deathPhase = DeathPhase.Rising;
+            _riseStart = Time.time;
+
+            _deathRoll = 0f;
+            _roll = 0f;
+            _pitch = 0f;
+
+            Vector3 start = new Vector3(_home.x, _home.y - RespawnDepthOffset, _home.z);
+
+            _rigidbody.linearVelocity = Vector3.zero;
+            _rigidbody.angularVelocity = Vector3.zero;
+            _rigidbody.position = start;
+            _rigidbody.rotation = _homeRotation;
+            transform.SetPositionAndRotation(start, _homeRotation);
+            Physics.SyncTransforms();
+
+            _swimming.SetPlanarVelocity(Vector3.zero);
+            _swimming.ResetVerticalVelocity();
+
+            foreach (Renderer modelRenderer in _hiddenRenderers)
+            {
+                if (modelRenderer)
+                    modelRenderer.enabled = true;
+            }
+
+            foreach (Canvas canvas in _hiddenCanvases)
+            {
+                if (canvas)
+                    canvas.enabled = true;
+            }
+
+            _hiddenRenderers.Clear();
+            _hiddenCanvases.Clear();
+
+            if (_statusBar)
+                _statusBar.enabled = true;
+
+            SetHideWhileDead(true);
+
+            _health.Fill();
+
+            _log.Log("Respawning from below");
+        }
+
+        private void RiseFromBelow()
+        {
+            float restingDepth = StealthDip ? StealthDepth : SwimDepth;
+            float startY = _home.y - RespawnDepthOffset;
+
+            // Sem leitura da onda ainda, sobe até a altura original.
+            float endY = _swimming.SurfaceSampleAge < 1f ? _swimming.TrackedSurfaceHeight - restingDepth : _home.y;
+
+            float t = Mathf.Clamp01((Time.time - _riseStart) / Mathf.Max(RespawnRiseTime, 0.01f));
+            float y = Mathf.Lerp(startY, endY, Mathf.SmoothStep(0f, 1f, t));
+
+            _rigidbody.position = new Vector3(_home.x, y, _home.z);
+            _rigidbody.rotation = _homeRotation;
+            _rigidbody.linearVelocity = Vector3.zero;
+            _swimming.SetPlanarVelocity(Vector3.zero);
+            _swimming.ResetVerticalVelocity();
+
+            if (t >= 1f)
+                EndRespawn(restingDepth);
+        }
+
+        private void EndRespawn(float restingDepth)
+        {
+            _deathPhase = DeathPhase.None;
+            _depth = restingDepth;
+            _diveRate = 0f;
+
+            SetCollidersEnabled(true);
+
+            _nextBiteTime = 0f;
+            _nextLeapTime = 0f;
+            _stuckTimer = 0f;
+            _lurkUntil = 0f;
+            _leapBoat = null;
+
+            SetState(State.Patrol);
+        }
+
+        private void SetCollidersEnabled(bool enabled)
+        {
+            foreach (Collider sharkCollider in _sharkColliders)
+            {
+                if (sharkCollider)
+                    sharkCollider.enabled = enabled;
+            }
+        }
+
+        private void SetHideWhileDead(bool visible)
+        {
+            if (HideWhileDead == null)
+                return;
+
+            foreach (GameObject hidden in HideWhileDead)
+            {
+                if (hidden)
+                    hidden.SetActive(visible);
+            }
         }
 
         // Encalhou na ilha ou travou em algo: muda de ideia em vez de ficar parado empurrando.
@@ -802,7 +1137,12 @@ namespace Assets._Project.Features.Shark
             _stateStartTime = Time.time;
 
             Bite.gameObject.SetActive(state == State.Bite);
-            _targetDepth = state is State.Circle or State.Stalk ? CircleDepth : SwimDepth;
+
+            // Sai do esconderijo pra rondar com a barbatana de fora; o resto do ciclo é em UpdatePeek.
+            if (state is State.Stalk or State.Circle)
+                StartPeek();
+
+            _targetDepth = DepthForState(state);
 
             switch (state)
             {
@@ -924,15 +1264,28 @@ namespace Assets._Project.Features.Shark
 
             if (_swimming.IsAirborne)
                 targetPitch = Mathf.Clamp(-Mathf.Atan2(velocity.y, Mathf.Max(planarSpeed, 0.5f)) * Mathf.Rad2Deg, -LeapPitch, LeapPitch);
+            else
+                targetPitch = Mathf.Clamp(_diveRate * DipPitch, -LeapPitch, LeapPitch); // mergulhando: focinho pra baixo
 
             if (CurrentState is State.Latch or State.Dead)
                 targetRoll = 0f;
+
+            // Morto: rola até ficar de barriga pra cima. Fica no ângulo enquanto afunda e some.
+            if (Dying)
+            {
+                float rollProgress = Mathf.Clamp01((Time.time - _deathTime) / Mathf.Max(DeathRollTime, 0.01f));
+                _deathRoll = DeathRollAngle * _deathRollSide * Mathf.SmoothStep(0f, 1f, rollProgress);
+            }
+            else
+            {
+                _deathRoll = 0f;
+            }
 
             _roll = Mathf.Lerp(_roll, targetRoll, 5f * Time.deltaTime);
             _pitch = Mathf.Lerp(_pitch, targetPitch, 8f * Time.deltaTime);
 
             // Gira em volta da raiz, não do pivô do modelo, que fica deslocado.
-            Quaternion tilt = Quaternion.Euler(_pitch, 0f, _roll);
+            Quaternion tilt = Quaternion.Euler(_pitch, 0f, _roll + _deathRoll);
             Model.SetLocalPositionAndRotation(tilt * _modelPosition, tilt * _modelRotation);
 
             if (_modelRenderer == null)
@@ -942,7 +1295,7 @@ namespace Assets._Project.Features.Shark
             float effort = Mathf.Clamp01(planarSpeed / Mathf.Max(ChaseSpeed, 0.1f));
 
             _modelRenderer.GetPropertyBlock(_modelProperties);
-            _modelProperties.SetFloat(TailPowerId, CurrentState == State.Dead ? 0f : Mathf.Lerp(TailPower.x, TailPower.y, effort));
+            _modelProperties.SetFloat(TailPowerId, Dying ? 0f : Mathf.Lerp(TailPower.x, TailPower.y, effort));
             _modelProperties.SetFloat(TailSpeedId, attacking ? TailSpeed.y : TailSpeed.x);
             _modelRenderer.SetPropertyBlock(_modelProperties);
         }
@@ -1041,7 +1394,7 @@ namespace Assets._Project.Features.Shark
 
             SetState(State.Dead);
 
-            _swimming.SetDrowning(true);
+            BeginDeath();
         }
 
         private void OnDrawGizmosSelected()
