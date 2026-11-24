@@ -6716,6 +6716,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 6
       objectReference: {fileID: 0}
+    - target: {fileID: 7762638412457611542, guid: 4a804b1b3146bf34a8d8ade983dc5b76, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -20358,6 +20362,10 @@ PrefabInstance:
     - target: {fileID: 400016, guid: a61c7e96268d14880bb2287b95422794, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6500016, guid: a61c7e96268d14880bb2287b95422794, type: 3}
+      propertyPath: m_Size.z
+      value: 21.8657
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -51195,27 +51203,27 @@ PrefabInstance:
       objectReference: {fileID: 1888898776}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.231101
+      value: 1.2149416
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.3286104
+      value: -3.8955443
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.8170412
+      value: 0.9957566
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.013105524
+      value: 0.015972374
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.5763562
+      value: -0.090617806
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.0092448825
+      value: 0.0014535488
       objectReference: {fileID: 0}
     - target: {fileID: 7266475739418501036, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: Ocean
@@ -52340,7 +52348,7 @@ Camera:
     height: 1
   near clip plane: 0.01
   far clip plane: 1000
-  field of view: 60
+  field of view: 70
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -52366,8 +52374,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1888898773}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.09195726, y: 0.70110184, z: 0.092568904, w: -0.7010215}
-  m_LocalPosition: {x: -260.4101, y: 36.89001, z: 444.24}
+  m_LocalRotation: {x: -0.0027298823, y: 0.98528117, z: -0.015804341, w: -0.17018752}
+  m_LocalPosition: {x: 82.54558, y: 23.717093, z: -66.94888}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -61707,6 +61715,10 @@ PrefabInstance:
     - target: {fileID: 1615212370464251565, guid: d173a26eddf7e3b4eb1d1dfb78171af8, type: 3}
       propertyPath: m_Name
       value: O terror do sete mares
+      objectReference: {fileID: 0}
+    - target: {fileID: 1615212370464251565, guid: d173a26eddf7e3b4eb1d1dfb78171af8, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2302644740352908899, guid: d173a26eddf7e3b4eb1d1dfb78171af8, type: 3}
       propertyPath: m_LocalPosition.x
