@@ -334,6 +334,41 @@ public sealed class PlayerController : MonoBehaviour
         waterSampleGeneration++;
         waterSamplePending = false;
         activeMovement?.Move(latestDirection);
+        UpdateCursorLock();
+    }
+
+    private void LateUpdate()
+    {
+        // Run independently of Update's pause early-return so the pointer is
+        // released as soon as the pause menu becomes active.
+        UpdateCursorLock();
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (hasFocus)
+            UpdateCursorLock();
+        else
+            ReleaseCursor();
+    }
+
+    private void UpdateCursorLock()
+    {
+        bool shouldLock = !PauseMenu.IsPaused;
+        CursorLockMode targetLockState = shouldLock ? CursorLockMode.Locked : CursorLockMode.None;
+
+        if (Cursor.lockState != targetLockState)
+            Cursor.lockState = targetLockState;
+
+        bool shouldShowCursor = !shouldLock;
+        if (Cursor.visible != shouldShowCursor)
+            Cursor.visible = shouldShowCursor;
+    }
+
+    private static void ReleaseCursor()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     private void Update()
@@ -392,6 +427,8 @@ public sealed class PlayerController : MonoBehaviour
 
         if (BoatMovement != null)
             BoatMovement.StopDriving();
+
+        ReleaseCursor();
     }
 
     /// <summary>
