@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 5372899224193693378}
   - component: {fileID: 4361414376179535329}
   - component: {fileID: 4239496454844545390}
+  - component: {fileID: 429877841375083199}
   m_Layer: 0
   m_Name: Shark
   m_TagString: Untagged
@@ -312,6 +313,26 @@ MonoBehaviour:
   BarPrefab: {fileID: 4639135032272302157, guid: e16b9def218cc704cb7559fe834a6ced, type: 3}
   Offset: {x: 0, y: 2, z: 0}
   ShowDistance: 12
+--- !u!205 &429877841375083199
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5699059314229719301}
+  serializedVersion: 3
+  m_LocalReferencePoint: {x: 0, y: 0, z: 0}
+  m_Size: 1
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_LastLODIsBillboard: 0
+  m_LODs:
+  - screenRelativeHeight: 0.015814396
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 8300678587115782514}
+  m_Enabled: 1
+  m_GlobalIlluminationLOD: 0
 --- !u!1001 &1742000428044201127
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -376,5 +397,10 @@ PrefabInstance:
 --- !u!4 &6725669636257253309 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4216859302048453862, guid: 5772bcb6de9b6824b9e82880f54ac269, type: 3}
+  m_PrefabInstance: {fileID: 1742000428044201127}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &8300678587115782514 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -1504981713932161579, guid: 5772bcb6de9b6824b9e82880f54ac269, type: 3}
   m_PrefabInstance: {fileID: 1742000428044201127}
   m_PrefabAsset: {fileID: 0}
