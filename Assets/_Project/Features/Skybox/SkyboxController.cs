@@ -315,6 +315,29 @@ public class SkyboxController : MonoBehaviour
         fadeRatio = Mathf.Clamp01(value);
     }
 
+    public void Fade1SecondRatio(float targetRatio)
+    {
+        StartCoroutine(FadeRatioCoroutine(targetRatio));
+    }
+
+    private System.Collections.IEnumerator FadeRatioCoroutine(float targetRatio, float duration = 1f)
+    {
+        float startRatio = fadeRatio;
+        float elapsed = 0f;
+        targetRatio = Mathf.Clamp01(targetRatio);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            fadeRatio = Mathf.Lerp(startRatio, targetRatio, Mathf.SmoothStep(0f, duration, t));
+
+            yield return null;
+        }
+
+        fadeRatio = targetRatio;
+    }
     private void CopyGalaxy(Material src, GalaxyIds dst)
     {
         blendMaterial.SetTexture(dst.galaxyTex, src.GetTexture(SourceIds.galaxyTex));
