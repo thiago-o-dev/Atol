@@ -24,11 +24,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _GalaxyTexture:
-        m_Texture: {fileID: 8900000, guid: 1d6fdd0f36e89894faee4135ae1e6ce8, type: 3}
+        m_Texture: {fileID: 8900000, guid: 14e50fcbc1a2ff842ba76151cc0d64d7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GalaxyTexture_S1:
-        m_Texture: {fileID: 8900000, guid: 14e50fcbc1a2ff842ba76151cc0d64d7, type: 3}
+        m_Texture: {fileID: 8900000, guid: 1d6fdd0f36e89894faee4135ae1e6ce8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _StarsNoiseTexture:
@@ -59,19 +59,19 @@ Material:
     m_Floats:
     - _Exposure1: 1.22
     - _Exposure2: 1
-    - _FadeRatio: 0
+    - _FadeRatio: 0.6915593
     - _FresnelBias: 0
     - _FresnelBias_S1: 0
-    - _FresnelEmissionIntensity: 2
-    - _FresnelEmissionIntensity_S1: 13
+    - _FresnelEmissionIntensity: 13
+    - _FresnelEmissionIntensity_S1: 2
     - _FresnelHorizon: 0
     - _FresnelHorizon_S1: 0
     - _FresnelHueShift: 0
     - _FresnelHueShift_S1: 0
     - _FresnelInvert: 0
     - _FresnelInvert_S1: 0
-    - _FresnelPower: 3
-    - _FresnelPower_S1: 5
+    - _FresnelPower: 5
+    - _FresnelPower_S1: 3
     - _FresnelScale: 1
     - _FresnelScale_S1: 1
     - _FresnelWidth: 0.25
@@ -95,19 +95,19 @@ Material:
     - _StarsHueShift_S1: 0
     - _StarsNoiseTileOverall: 1
     - _StarsNoiseTileOverall_S1: 1
-    - _StarsTileOverall: 5
-    - _StarsTileOverall_S1: 3
+    - _StarsTileOverall: 3
+    - _StarsTileOverall_S1: 5
     - _UseReflectionVector: 0
     - _UseReflectionVector_S1: 0
     m_Colors:
-    - _FresnelColor: {r: 0.76715946, g: 0.6367924, b: 1, a: 0}
-    - _FresnelColor_S1: {r: 1, g: 0, b: 0.5803921, a: 0}
-    - _GalaxyTint: {r: 0.5981454, g: 0.4386792, b: 1, a: 0}
-    - _GalaxyTint_S1: {r: 1, g: 1, b: 1, a: 0}
-    - _StarsColor01: {r: 0.3835549, g: 0, b: 1, a: 0}
-    - _StarsColor01_S1: {r: 0, g: 0.2466726, b: 1, a: 0}
-    - _StarsColor02: {r: 1, g: 1, b: 1, a: 0}
-    - _StarsColor02_S1: {r: 1, g: 0.514151, b: 0.6721208, a: 0}
+    - _FresnelColor: {r: 1, g: 0, b: 0.5803921, a: 0}
+    - _FresnelColor_S1: {r: 0.76715946, g: 0.6367924, b: 1, a: 0}
+    - _GalaxyTint: {r: 1, g: 1, b: 1, a: 0}
+    - _GalaxyTint_S1: {r: 0.5981454, g: 0.4386792, b: 1, a: 0}
+    - _StarsColor01: {r: 0, g: 0.2466726, b: 1, a: 0}
+    - _StarsColor01_S1: {r: 0.3835549, g: 0, b: 1, a: 0}
+    - _StarsColor02: {r: 1, g: 0.514151, b: 0.6721208, a: 0}
+    - _StarsColor02_S1: {r: 1, g: 1, b: 1, a: 0}
     - _StarsNoiseSpeed: {r: 0.1, g: 0.03, b: 0, a: 0}
     - _StarsNoiseSpeed_S1: {r: 0.1, g: 0.03, b: 0, a: 0}
     - _StarsNoiseTile: {r: 1, g: 1, b: 0, a: 0}

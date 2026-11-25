@@ -32,6 +32,8 @@ public sealed class PlayerAnimationController : MonoBehaviour
     [SerializeField] private string landTriggerParameter = "Land";
     [SerializeField] private string swimHopTriggerParameter = "SwimHop";
     [SerializeField] private string swimLandTriggerParameter = "SwimLand";
+    [SerializeField] private string dashTriggerParameter = "Dash";
+    [SerializeField] private string dashEndTriggerParameter = "DashEnd";
     [SerializeField] private string boatDodgeTriggerParameter = "BoatDodge";
     [SerializeField] private string attackTriggerParameter = "Attack";
     [SerializeField] private string deadParameter = "Dead";
@@ -75,6 +77,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
     private bool wasSwimmingAirborne;
     private bool wasGrounded;
     private bool boatDodgeArmed = true;
+    private bool wasDashing;
     private float groundedFallDuration;
     private bool groundedFallQualified;
 
@@ -100,6 +103,7 @@ public sealed class PlayerAnimationController : MonoBehaviour
         wasSwimmingAirborne = false;
         wasGrounded = false;
         boatDodgeArmed = true;
+        wasDashing = subscribedGroundedMovement != null && subscribedGroundedMovement.IsDashing;
     }
 
     private void OnDisable()
@@ -160,14 +164,33 @@ public sealed class PlayerAnimationController : MonoBehaviour
         UnbindGroundJumpEvent();
         subscribedGroundedMovement = target;
         if (subscribedGroundedMovement != null)
+        {
             subscribedGroundedMovement.JumpStarted += OnGroundJumpStarted;
+            subscribedGroundedMovement.DashStarted += OnGroundDashStarted;
+            wasDashing = subscribedGroundedMovement.IsDashing;
+        }
     }
 
     private void UnbindGroundJumpEvent()
     {
         if (subscribedGroundedMovement != null)
+        {
             subscribedGroundedMovement.JumpStarted -= OnGroundJumpStarted;
+            subscribedGroundedMovement.DashStarted -= OnGroundDashStarted;
+        }
         subscribedGroundedMovement = null;
+        wasDashing = false;
+    }
+
+    private void OnGroundDashStarted()
+    {
+        // Dash is an animation event, not a continuously polled Animator bool.
+        // Reset a stale end trigger before starting another dash state.
+        if (animator != null && HasParameter(dashEndTriggerParameter))
+            animator.ResetTrigger(Animator.StringToHash(dashEndTriggerParameter));
+
+        SetTrigger(dashTriggerParameter);
+        wasDashing = true;
     }
 
     private void OnGroundJumpStarted()
@@ -182,6 +205,10 @@ public sealed class PlayerAnimationController : MonoBehaviour
 
         if (animator != null)
         {
+            if (HasParameter(dashTriggerParameter))
+                animator.ResetTrigger(Animator.StringToHash(dashTriggerParameter));
+            if (HasParameter(dashEndTriggerParameter))
+                animator.ResetTrigger(Animator.StringToHash(dashEndTriggerParameter));
             if (HasParameter(landTriggerParameter))
                 animator.ResetTrigger(Animator.StringToHash(landTriggerParameter));
 
@@ -331,6 +358,16 @@ public sealed class PlayerAnimationController : MonoBehaviour
         SetBoolean(swimmingParameter, swimming);
         SetBoolean(boatParameter, inBoat);
         SetBoolean(backwardParameter, movingBackwards);
+
+        // The movement motor exposes its actual dash lifetime. Convert the end of
+        // that lifetime into a one-shot Animator trigger instead of driving a bool.
+        bool isDashing = groundedMode && player.GroundedMovement != null &&
+                         player.GroundedMovement.IsDashing;
+        if (wasDashing && !isDashing)
+        {
+            SetTrigger(dashEndTriggerParameter);
+        }
+        wasDashing = isDashing;
 
         if (jumping && !wasJumping)
         {

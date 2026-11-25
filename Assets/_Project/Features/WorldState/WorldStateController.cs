@@ -10,6 +10,7 @@ public class WorldStateController : Singleton<WorldStateController>
     public SpectralOceanFFT SpectralOcean;
 
     private int latestDecay = 0;
+    private bool reached3Decay = false;
 
     public UnityEvent OnGameOver;
     
@@ -21,7 +22,11 @@ public class WorldStateController : Singleton<WorldStateController>
         // É O OBJETIVO O BARCO NÃO SAIR DO LUGAR COM 0 DECAYYYY
         SpectralOcean.SetWindStrength(Mathf.Lerp(0f, 1f, Decay / (float)DecayMaximum));
 
-        if (latestDecay != 0 && value == 0)
+        if (value == 3 && !reached3Decay)
+        {
+            reached3Decay = true;
+        }
+        if (latestDecay != 0 && value == 0 && reached3Decay)
         {
             OnGameOver.Invoke();
         }
@@ -46,7 +51,7 @@ public class WorldStateController : Singleton<WorldStateController>
 
     private void CheckDecay()
     {
-        if (latestDecay !=  Decay)
+        if (latestDecay != Decay)
         {
             UpdateDecay(Decay);
         }

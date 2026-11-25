@@ -181,8 +181,11 @@ MonoBehaviour:
   JumpAction: {fileID: -2099379676528639254, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   DiveAction: {fileID: 0}
   DashAction: {fileID: 0}
-  CameraInputController: {fileID: 0}
-  CameraZoom: {fileID: 0}
+  DashDistance: 9
+  DashDuration: 0.8
+  DashStaminaCost: 20
+  CameraInputController: {fileID: 2459767113613431875}
+  CameraZoom: {fileID: 6591528548865814736}
   HudPrefab: {fileID: 738900181408381747, guid: 1e959e48fb11dfb44a15717b63a62cf1, type: 3}
   WindIndicatorPrefab: {fileID: 1840680984099877268, guid: c17fa6502a7433546afc93b4c05f8c89, type: 3}
   PauseMenuPrefab: {fileID: 6242906933977764522, guid: c8352081983c14546b411b16696cfad2, type: 3}
@@ -406,6 +409,8 @@ MonoBehaviour:
   landTriggerParameter: Land
   swimHopTriggerParameter: SwimHop
   swimLandTriggerParameter: SwimLand
+  dashTriggerParameter: Dash
+  dashEndTriggerParameter: DashEnd
   boatDodgeTriggerParameter: BoatDodge
   attackTriggerParameter: Attack
   deadParameter: Dead

@@ -13,7 +13,7 @@ public sealed class PlayerRespawn : MonoBehaviour
     public PlayerHud Hud;
     public float DeathDelay = 2.2f;
     [Tooltip("Time for the player to get up before control is returned.")]
-    public float RiseTime = 2.4f;
+    public float RiseTime = 0.4f;
 
     private PlayerController _player;
     private Pose _defaultPlayerPose;

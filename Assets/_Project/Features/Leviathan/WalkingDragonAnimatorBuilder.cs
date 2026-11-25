@@ -191,13 +191,30 @@ namespace Assets._Project.Features.WalkingDragon.Editor
                 blendType = BlendTreeType.Simple1D,
                 blendParameter = "Speed",
                 useAutomaticThresholds = false,
-                minThreshold = 0f,
-                maxThreshold = 16f
+                minThreshold = -13f,
+                maxThreshold = 13f
             };
 
+            // Negative Speed values are used after a ram impact. Both negative
+            // children reuse the Walk clip with negative time scales, so retreat
+            // always looks like backward walking (not a forward run/moonwalk).
+            // The farther negative threshold accelerates that same backward walk.
+            tree.AddChild(clips["Walk"], -13f);
+            tree.AddChild(clips["Walk"], -3.5f);
             tree.AddChild(clips["Idle"], 0f);
             tree.AddChild(clips["Walk"], 3.5f);
             tree.AddChild(clips["Run"], 13f);
+
+            ChildMotion[] motions = tree.children;
+            for (int i = 0; i < motions.Length; i++)
+            {
+                if (Mathf.Approximately(motions[i].threshold, -13f))
+                    motions[i].timeScale = -1.7f;
+                else if (Mathf.Approximately(motions[i].threshold, -3.5f))
+                    motions[i].timeScale = -1f;
+            }
+            tree.children = motions;
+
             AssetDatabase.AddObjectToAsset(tree, controller);
             return tree;
         }

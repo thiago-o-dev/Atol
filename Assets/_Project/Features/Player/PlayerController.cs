@@ -28,6 +28,14 @@ public sealed class PlayerController : MonoBehaviour
     [Tooltip("Optional. If unassigned, Left Alt is used.")]
     public InputActionReference DashAction;
 
+    [Header("Player Dash")]
+    [Tooltip("Planar distance (metres) covered by a player dash.")]
+    [Min(0f)] public float DashDistance = 2.88f;
+    [Tooltip("Duration of the player's dash in seconds. The dash animation should be timed to this value.")]
+    [Min(0.01f)] public float DashDuration = 0.18f;
+    [Tooltip("Stamina spent when the player's dash successfully starts.")]
+    [Min(0f)] public float DashStaminaCost = 20f;
+
     [Header("Camera Input")]
     [Tooltip("Optional. If empty, the Cinemachine input controller is searched for on this object and its children.")]
     public CinemachineInputAxisController CameraInputController;
@@ -83,6 +91,10 @@ public sealed class PlayerController : MonoBehaviour
     private WindIndicatorUI windIndicator;
     private bool interactionPressPending;
     private bool playerMovementLocked;
+    // Cutscenes block player movement automatically. Explicitly enabling movement
+    // during an active cutscene opts out of that block until all cutscenes finish.
+    private bool allowMovementDuringCutscene;
+    private bool hudVisibilityOverriddenForCutscene;
     private bool cameraControlLocked;
     private bool cameraControlStateCached;
     private bool cameraInputControllerWasEnabled;
@@ -109,8 +121,13 @@ public sealed class PlayerController : MonoBehaviour
     public bool IsBailing => bailing;
     /// <summary>True while the player must not act: locked, in a cutscene or paused.</summary>
     public bool InputBlocked => InputLocked || CutsceneComponent.AnyPlaying || PauseMenu.IsPaused;
-    /// <summary>True while movement is explicitly disabled, paused, or blocked by a cutscene.</summary>
-    public bool MovementInputBlocked => playerMovementLocked || InputBlocked;
+    /// <summary>
+    /// Movement is blocked by an explicit lock, pause, or an active cutscene unless
+    /// EnablePlayerMovement / EnableCameraAndPlayerMovement explicitly overrides it.
+    /// General cutscene input (interactions, etc.) remains blocked by InputBlocked.
+    /// </summary>
+    public bool MovementInputBlocked => playerMovementLocked || InputLocked || PauseMenu.IsPaused ||
+        (CutsceneComponent.AnyPlaying && !allowMovementDuringCutscene);
     public bool IsAboardBoat => isAboardBoat;
     public BoatController CurrentBoat => currentBoat;
 
@@ -157,22 +174,31 @@ public sealed class PlayerController : MonoBehaviour
             CameraZoom.enabled = false;
     }
 
-    /// <summary>Restores camera input to the enabled/disabled state it had before it was locked.</summary>
+    /// <summary>
+    /// Restores camera input to the enabled/disabled state it had before it was locked.
+    /// Also reapplies the gameplay cursor state and makes the HUD visible when camera
+    /// control is explicitly restored during a cutscene.
+    /// </summary>
     public void EnableCameraControl()
     {
-        if (!cameraControlLocked)
-            return;
-
-        cameraControlLocked = false;
-        if (cameraControlStateCached)
+        if (cameraControlLocked)
         {
-            if (CameraInputController != null)
-                CameraInputController.enabled = cameraInputControllerWasEnabled;
-            if (CameraZoom != null)
-                CameraZoom.enabled = cameraZoomWasEnabled;
+            cameraControlLocked = false;
+            if (cameraControlStateCached)
+            {
+                if (CameraInputController != null)
+                    CameraInputController.enabled = cameraInputControllerWasEnabled;
+                if (CameraZoom != null)
+                    CameraZoom.enabled = cameraZoomWasEnabled;
+            }
+
+            cameraControlStateCached = false;
         }
 
-        cameraControlStateCached = false;
+        // Pause owns the cursor while active; otherwise restore the centered,
+        // visible gameplay pointer immediately instead of waiting for LateUpdate.
+        UpdateCursorLock();
+        ShowHudForCutsceneOverride();
     }
 
     /// <summary>Stops walking, swimming input, jumping, and dashing. Callable from a UnityEvent.</summary>
@@ -182,6 +208,7 @@ public sealed class PlayerController : MonoBehaviour
             return;
 
         playerMovementLocked = true;
+        allowMovementDuringCutscene = false;
         latestDirection = Vector2.zero;
         activeMovement?.Move(Vector2.zero);
         activeMovement?.Jump(true);
@@ -202,17 +229,21 @@ public sealed class PlayerController : MonoBehaviour
         sailInputActive = false;
     }
 
-    /// <summary>Allows player movement input again. Callable from a UnityEvent.</summary>
+    /// <summary>
+    /// Allows player movement input again. When called during a cutscene, this is an
+    /// explicit opt-out from automatic cutscene movement blocking. Pause and InputLocked
+    /// still take priority. Callable from a UnityEvent.
+    /// </summary>
     public void EnablePlayerMovement()
     {
-        if (!playerMovementLocked)
-            return;
-
         playerMovementLocked = false;
+        allowMovementDuringCutscene = CutsceneComponent.AnyPlaying;
         latestDirection = MovementAction != null && MovementAction.action != null && MovementAction.action.enabled
             ? Vector2.ClampMagnitude(MovementAction.action.ReadValue<Vector2>(), 1f)
             : Vector2.zero;
-        activeMovement?.Move(latestDirection);
+
+        activeMovement?.Move(MovementInputBlocked ? Vector2.zero : latestDirection);
+        ShowHudForCutsceneOverride();
     }
 
     /// <summary>Disables both camera input and player movement. Callable from a UnityEvent.</summary>
@@ -222,11 +253,27 @@ public sealed class PlayerController : MonoBehaviour
         DisablePlayerMovement();
     }
 
-    /// <summary>Restores both camera input and player movement. Callable from a UnityEvent.</summary>
+    /// <summary>
+    /// Restores both camera input and player movement. This explicit combined enable
+    /// overrides automatic cutscene movement blocking for the duration of the active
+    /// cutscene, without overriding pause or InputLocked. Callable from a UnityEvent.
+    /// </summary>
     public void EnableCameraAndPlayerMovement()
     {
+        // Set this before enabling movement so the global cutscene check cannot win
+        // for the remainder of this frame.
+        allowMovementDuringCutscene = CutsceneComponent.AnyPlaying;
         EnableCameraControl();
         EnablePlayerMovement();
+    }
+
+    private void ShowHudForCutsceneOverride()
+    {
+        if (!CutsceneComponent.AnyPlaying || hud == null)
+            return;
+
+        hud.SetHudActive(true);
+        hudVisibilityOverriddenForCutscene = true;
     }
 
     private void Awake()
@@ -339,6 +386,19 @@ public sealed class PlayerController : MonoBehaviour
 
     private void LateUpdate()
     {
+        // Clear the explicit cutscene override only after every overlapping cutscene
+        // has ended. This restores the normal automatic movement and HUD behavior for
+        // the next cutscene/gameplay transition.
+        if (!CutsceneComponent.AnyPlaying)
+        {
+            allowMovementDuringCutscene = false;
+            if (hudVisibilityOverriddenForCutscene)
+            {
+                hud?.UseAutomaticVisibility();
+                hudVisibilityOverriddenForCutscene = false;
+            }
+        }
+
         // Run independently of Update's pause early-return so the pointer is
         // released as soon as the pause menu becomes active.
         UpdateCursorLock();
@@ -360,7 +420,9 @@ public sealed class PlayerController : MonoBehaviour
         if (Cursor.lockState != targetLockState)
             Cursor.lockState = targetLockState;
 
-        bool shouldShowCursor = !shouldLock;
+        // The project uses a visible gameplay pointer while keeping it centered by
+        // the locked cursor state. Pause still releases the lock and leaves it visible.
+        const bool shouldShowCursor = true;
         if (Cursor.visible != shouldShowCursor)
             Cursor.visible = shouldShowCursor;
     }
@@ -1233,7 +1295,7 @@ public sealed class PlayerController : MonoBehaviour
     private void TryDash()
     {
         if (!MovementInputBlocked && GroundedMovement != null && !isAboardBoat && IsSameMovement(activeMovement, GroundedMovement))
-            GroundedMovement.Dash();
+            GroundedMovement.DashWithSettings(DashDistance, DashDuration, DashStaminaCost);
     }
 
     private static void Subscribe(InputActionReference reference, System.Action<InputAction.CallbackContext> callback)
