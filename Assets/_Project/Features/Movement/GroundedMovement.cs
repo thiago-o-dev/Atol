@@ -23,6 +23,7 @@ public class GroundedMovement : MonoBehaviour, IMovement, IPlanarVelocityMovemen
     [Min(0f)] public float JumpStaminaCost = 10f;
 
     [Header("Dash")]
+    [Tooltip("Dash speed used by the original parameterless Dash() API. PlayerController uses DashWithSettings and derives speed from its own distance setting.")]
     [Min(0f)] public float DashSpeed = 16f;
     [Min(0.01f)] public float DashDuration = 0.18f;
     [Min(0f)] public float DashCooldown = 0.4f;
@@ -135,22 +136,56 @@ public class GroundedMovement : MonoBehaviour, IMovement, IPlanarVelocityMovemen
 
     public bool Dash()
     {
+        // Keep the original path intact for NPCs and other callers that rely on
+        // DashSpeed + DashDuration + DashStaminaCost from this component.
+        return TryStartDash(DashSpeed, DashDuration, DashStaminaCost);
+    }
+
+    /// <summary>
+    /// Starts a dash using caller-supplied distance and stamina cost while retaining
+    /// this movement's configured duration and cooldown. This overload preserves the
+    /// original player-facing API for any existing callers.
+    /// </summary>
+    public bool DashWithSettings(float distance, float staminaCost)
+    {
+        return DashWithSettings(distance, DashDuration, staminaCost);
+    }
+
+    /// <summary>
+    /// Starts a dash with caller-supplied distance, duration, and stamina cost.
+    /// Dash speed is derived from distance / duration. The original parameterless
+    /// Dash() method and its NPC configuration remain independent and unchanged.
+    /// </summary>
+    public bool DashWithSettings(float distance, float duration, float staminaCost)
+    {
+        distance = Mathf.Max(0f, distance);
+        if (distance <= 0f)
+            return false;
+
+        float dashDuration = Mathf.Max(0.01f, duration);
+        float requestedSpeed = distance / dashDuration;
+        return TryStartDash(requestedSpeed, dashDuration, staminaCost);
+    }
+
+    private bool TryStartDash(float dashSpeed, float duration, float staminaCost)
+    {
         if (Controller == null || !Controller.enabled || _isDashing || Time.time < _nextDashTime)
             return false;
 
         if (!Controller.isGrounded && !CanCoyoteJump)
             return false;
 
-        if (Stamina != null && !Stamina.TryConsume(DashStaminaCost))
+        if (Stamina != null && !Stamina.TryConsume(staminaCost))
             return false;
 
         Vector3 direction = _direction.sqrMagnitude > 0f
             ? Quaternion.Euler(0f, GetTargetAngle(), 0f) * Vector3.forward
             : Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
 
-        _dashVelocity = direction * DashSpeed;
+        float dashDuration = Mathf.Max(0.01f, duration);
+        _dashVelocity = direction * Mathf.Max(0f, dashSpeed);
         _isDashing = true;
-        _dashEndTime = Time.time + DashDuration;
+        _dashEndTime = Time.time + dashDuration;
         _nextDashTime = _dashEndTime + DashCooldown;
         DashStarted?.Invoke();
         return true;

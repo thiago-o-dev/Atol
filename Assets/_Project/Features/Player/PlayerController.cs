@@ -28,6 +28,14 @@ public sealed class PlayerController : MonoBehaviour
     [Tooltip("Optional. If unassigned, Left Alt is used.")]
     public InputActionReference DashAction;
 
+    [Header("Player Dash")]
+    [Tooltip("Planar distance (metres) covered by a player dash.")]
+    [Min(0f)] public float DashDistance = 2.88f;
+    [Tooltip("Duration of the player's dash in seconds. The dash animation should be timed to this value.")]
+    [Min(0.01f)] public float DashDuration = 0.18f;
+    [Tooltip("Stamina spent when the player's dash successfully starts.")]
+    [Min(0f)] public float DashStaminaCost = 20f;
+
     [Header("Camera Input")]
     [Tooltip("Optional. If empty, the Cinemachine input controller is searched for on this object and its children.")]
     public CinemachineInputAxisController CameraInputController;
@@ -1287,7 +1295,7 @@ public sealed class PlayerController : MonoBehaviour
     private void TryDash()
     {
         if (!MovementInputBlocked && GroundedMovement != null && !isAboardBoat && IsSameMovement(activeMovement, GroundedMovement))
-            GroundedMovement.Dash();
+            GroundedMovement.DashWithSettings(DashDistance, DashDuration, DashStaminaCost);
     }
 
     private static void Subscribe(InputActionReference reference, System.Action<InputAction.CallbackContext> callback)

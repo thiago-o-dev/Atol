@@ -55465,28 +55465,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5925433674301824424, guid: f593bc20677ebf14abd27a4853408c68, type: 3}
   m_PrefabInstance: {fileID: 1755724370}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1761978600 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6591528548865814736, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
-  m_PrefabInstance: {fileID: 1846243162}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b5ab49cfc0cf76478faebfa26339782, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
---- !u!114 &1761978603 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2459767113613431875, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
-  m_PrefabInstance: {fileID: 1846243162}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 89875cdc57c54474a8a74efd9b2a3b5d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineInputAxisController
 --- !u!1001 &1763412518
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -57164,7 +57142,7 @@ PrefabInstance:
       objectReference: {fileID: 1888898776}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.200679
+      value: 1.2149416
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalPosition.y
@@ -57172,23 +57150,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.5768929
+      value: -3.8955443
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.97535276
+      value: 0.9957566
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.015644815
+      value: 0.015972378
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.22006783
+      value: -0.09061784
       objectReference: {fileID: 0}
     - target: {fileID: 6981162543374608517, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.0035299235
+      value: 0.0014535508
       objectReference: {fileID: 0}
     - target: {fileID: 7266475739418501036, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
       propertyPath: Ocean
@@ -57203,17 +57181,9 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 995137758}
     - target: {fileID: 8797379442825105498, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
-      propertyPath: CameraZoom
+      propertyPath: DashAction
       value: 
-      objectReference: {fileID: 1761978600}
-    - target: {fileID: 8797379442825105498, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
-      propertyPath: CameraInputController
-      value: 
-      objectReference: {fileID: 1761978603}
-    - target: {fileID: 8797379442825105498, guid: 5a117f51f1bbdf345bcfc0058e190bd0, type: 3}
-      propertyPath: BoatExitObstructionMask.m_Bits
-      value: 4294967295
-      objectReference: {fileID: 0}
+      objectReference: {fileID: -7471211009204490832, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -57776,7 +57746,7 @@ MonoBehaviour:
   Timeline: {fileID: 1870548699}
   Clip: {fileID: 0}
   PlayOnAwake: 1
-  SkipCutscene: 0
+  SkipCutscene: 1
   OnCutsceneStarted:
     m_PersistentCalls:
       m_Calls:
@@ -58355,8 +58325,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1888898773}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.002729884, y: 0.98528117, z: -0.015804343, w: -0.1701876}
-  m_LocalPosition: {x: -6.771735, y: 39.93309, z: -167.19554}
+  m_LocalRotation: {x: -0.0027298823, y: 0.98528117, z: -0.015804345, w: -0.17018749}
+  m_LocalPosition: {x: 82.08948, y: 22.266226, z: -66.73705}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -42,11 +42,12 @@ A deliberate swimming hop continues to use `Swimming Hop` followed by `Swim Fall
 | `Swimming` | Bool | Swimming movement is active |
 | `InBoat` | Bool | Boat movement is active |
 | `Backward` | Bool | Selects the reverse-walk clip |
-| `Jump`, `Land`, `SwimHop`, `SwimLand`, `BoatDodge` | Trigger | One-shot animation events |
+| `Dash`, `DashEnd`, `Jump`, `Land`, `SwimHop`, `SwimLand`, `BoatDodge` | Trigger | One-shot animation events; `Dash` enters the ground dash state and `DashEnd` returns to locomotion |
 
 ## States and blend trees
 
 - `Grounded Locomotion`: existing idle and directional walking blend.
+- `Ground Dash`: a single animation state using `FromUMA/Run.anim` directly (not a blend tree). The player animation controller sends the `Dash` trigger when the grounded motor raises `DashStarted`, then sends `DashEnd` when the motor's dash duration finishes. Replace the state's Motion with a dedicated dash clip when one is available; the seated boat-dodge clip is intentionally not reused.
 - `Unarmed Walk Back`: reverse-walk clip; can transition to `Air Falling` after the same 0.2-second qualification.
 - `Jumping Up`: transitions to `Air Falling` only after a qualified descent. Short jumps recover directly to grounded locomotion.
 - `Air Falling`: entered from grounded locomotion or jump once the descent is qualified.
@@ -55,6 +56,10 @@ A deliberate swimming hop continues to use `Swimming Hop` followed by `Swim Fall
 - `Swimming Hop`: deliberate out-of-water hop.
 - `Swim Falling`: shared swim-hop descent and wave-ejection state. It returns to swim locomotion on `SwimLand`, or leaves swimming when the PlayerController has confirmed dry-ground contact.
 - `Boat Sitting Idle` and `Boat Fast Dodge`: unchanged from the supplied baseline.
+
+## Player dash
+
+`PlayerController.DashDistance` sets the player's planar dash distance in metres, and `PlayerController.DashStaminaCost` sets the stamina spent on a successful dash. `GroundedMovement.DashDuration` and `DashCooldown` continue to control timing. NPCs that call the original parameterless `GroundedMovement.Dash()` keep using that component's `DashSpeed` and `DashStaminaCost` values.
 
 The Animator's Base Layer has IK Pass enabled. Keep `PlayerFootPlacementIK` on the Humanoid Animator object; its foot corrections should remain enabled only for grounded walking/landing and blended out for swimming and boat sitting.
 
@@ -69,6 +74,7 @@ After importing in Unity 6000.5.6f, test these cases in Play Mode:
 5. Get lifted clear of the water by a strong wave: stay on `SwimmingMovement` and enter `Swim Falling`; do not return to grounded until `CharacterController.isGrounded` is true and the surface is below the exit hysteresis.
 6. Re-enter the water after wave ejection: return to swimming locomotion via `SwimLand`.
 7. Land on dry ground after wave ejection: confirm the movement mode changes to grounded only after solid ground contact.
+8. Dash on dry ground: confirm the `Dash` trigger enters the single-clip `Ground Dash` state from forward and backward grounded locomotion, the `DashEnd` trigger returns to locomotion when the motor's dash duration ends, and neither changes the seated `Boat Fast Dodge` state.
 
 This archive was edited statically; Unity compilation, FBX import, and Play Mode validation still need to be completed in the target project.
 
