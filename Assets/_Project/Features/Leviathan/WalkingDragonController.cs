@@ -176,6 +176,10 @@ namespace Assets._Project.Features.WalkingDragon
         [Tooltip("When disabled, the dragon remains at its current position, keeps facing the player, and only uses fireballs. Toggle with DisableMovement() / EnableMovement().")]
         [SerializeField] private bool movementEnabled = true;
 
+        [Tooltip("True while a Timeline/cutscene or another script owns the dragon transform.")]
+        private bool externalMovementActive;
+        private bool bodyWasKinematicBeforeExternalMovement;
+
         [Header("Attack Controls / Cutscenes")]
         [Tooltip("When enabled, the dragon continues to track and circle the player, but cannot start or complete attacks. Active fireballs are paused too.")]
         public bool AttacksFrozen;
@@ -356,7 +360,7 @@ namespace Assets._Project.Features.WalkingDragon
 
         private void FixedUpdate()
         {
-            if (_swimming == null || _body == null)
+            if (_swimming == null || _body == null || externalMovementActive)
                 return;
 
             // Reassert these settings every physics tick so another component cannot
@@ -1679,6 +1683,63 @@ namespace Assets._Project.Features.WalkingDragon
         /// Stops navigation and boat rams while leaving player tracking, slow facing,
         /// and fireball attacks active. Useful for a stationary arena-style boss phase.
         /// </summary>
+        /// <summary>
+        /// Transfers transform ownership to Timeline or another external mover.
+        /// Call before moving the dragon. The Rigidbody is made kinematic so physics
+        /// cannot fight the externally-authored transform motion.
+        /// </summary>
+        public void BeginExternalMovement()
+        {
+            if (externalMovementActive || _body == null)
+                return;
+
+            externalMovementActive = true;
+            bodyWasKinematicBeforeExternalMovement = _body.isKinematic;
+
+            // Cancel any AI-driven movement/attack sequence before handing over.
+            _ramRetreatActive = false;
+            CancelBoatRam();
+            CancelAttackSequences();
+            StopPlanarMovementImmediately();
+
+            _body.linearVelocity = Vector3.zero;
+            _body.angularVelocity = Vector3.zero;
+            _body.isKinematic = true;
+            _body.Sleep();
+        }
+
+        /// <summary>
+        /// Completes external transform movement, synchronizes the Rigidbody with
+        /// the final pose, and restores its previous physics mode. Safe to call from
+        /// a UnityEvent after Timeline/animation has finished moving the dragon.
+        /// </summary>
+        public void MovementFinished()
+        {
+            if (!externalMovementActive)
+                return;
+
+            // The external mover may have changed transform.position/rotation
+            // directly. Synchronize that final pose before physics resumes.
+            Physics.SyncTransforms();
+            if (_body != null)
+            {
+                _body.position = transform.position;
+                _body.rotation = transform.rotation;
+                _body.isKinematic = bodyWasKinematicBeforeExternalMovement;
+                _body.linearVelocity = Vector3.zero;
+                _body.angularVelocity = Vector3.zero;
+                _body.WakeUp();
+            }
+
+            externalMovementActive = false;
+
+            // Discard stale navigation targets so the AI repaths from the new pose.
+            _orbitInitialized = false;
+            _hasCachedOrbitPoint = false;
+            _nextSteerTime = 0f;
+            _hasGroundContactOffset = false;
+        }
+
         public void DisableMovement()
         {
             SetMovementEnabled(false);
