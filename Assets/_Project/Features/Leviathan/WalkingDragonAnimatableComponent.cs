@@ -345,7 +345,10 @@ namespace Assets._Project.Features.WalkingDragon
         private void UpdateAnimatorParameters()
         {
             Vector3 planarVelocity = movement != null ? movement.PlanarVelocity : Vector3.zero;
-            float speed = planarVelocity.magnitude;
+            // The controller stops the dragon at impact, then moves it backward
+            // while it keeps facing the player. A negative Speed selects the
+            // reverse-walk portion of the generated locomotion blend tree.
+            float speed = dragon.IsRamRetreating ? -planarVelocity.magnitude : planarVelocity.magnitude;
             float verticalSpeed = body != null ? body.linearVelocity.y :
                 (movement != null ? movement.VerticalVelocity : 0f);
 

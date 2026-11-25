@@ -26,7 +26,9 @@ namespace Assets._Project.Features.WalkingDragon
             OrbitSwimmingTarget,
             RamRoar,
             RamJump,
-            RamBoat
+            RamBoat,
+            RamRetreat,
+            StationaryFireball
         }
 
         [Header("Player Tracking")]
@@ -163,6 +165,17 @@ namespace Assets._Project.Features.WalkingDragon
         [Min(0.1f)] public float LookAhead = 45f;
         [Min(0f)] public float SteerInterval = 0.2f;
 
+        [Header("Ram Impact Retreat")]
+        [Tooltip("After a successful hull impact, the dragon brakes immediately and backs away while continuing to face the player.")]
+        [Min(0f)] public float RamRetreatDistance = 48f;
+        [Min(0.1f)] public float RamRetreatSpeed = 15f;
+        [Min(0.1f)] public float RamRetreatTimeout = 5.5f;
+        [Min(0.1f)] public float RamRetreatStopDistance = 2f;
+
+        [Header("Movement Control")]
+        [Tooltip("When disabled, the dragon remains at its current position, keeps facing the player, and only uses fireballs. Toggle with DisableMovement() / EnableMovement().")]
+        [SerializeField] private bool movementEnabled = true;
+
         [Header("Attack Controls / Cutscenes")]
         [Tooltip("When enabled, the dragon continues to track and circle the player, but cannot start or complete attacks. Active fireballs are paused too.")]
         public bool AttacksFrozen;
@@ -182,6 +195,8 @@ namespace Assets._Project.Features.WalkingDragon
         public bool IsRammingBoat => _ramInProgress;
         public bool IsRamJumping => CurrentState == State.RamJump;
         public bool IsRamCharging => CurrentState == State.RamBoat;
+        public bool IsRamRetreating => _ramRetreatActive;
+        public bool IsMovementEnabled => movementEnabled;
         public bool IsFireballWindingUp => _fireballWindingUp;
 
         /// <summary>Raised when the boss begins its roar telegraph.</summary>
@@ -228,6 +243,9 @@ namespace Assets._Project.Features.WalkingDragon
         private float _ramChargeStartTime;
         private float _ramJumpBaseBodyY;
         private float _ramJumpOffset;
+        private bool _ramRetreatActive;
+        private Vector3 _ramRetreatTarget;
+        private float _ramRetreatEndTime;
         private float _nextBoatReferenceWarningTime;
         private BoatController _collisionIgnoredBoat;
         private readonly List<CollisionIgnorePair> _ignoredBoatCollisionPairs = new List<CollisionIgnorePair>(32);
@@ -263,6 +281,7 @@ namespace Assets._Project.Features.WalkingDragon
         // vertical movement is grounded to the seabed and never follows wave samples.
         private float WaterLevel => _ocean != null ? _ocean.WaterLevelY : FallbackWaterLevel;
 
+
         private bool AttacksFrozenByGameState => AttacksFrozen ||
             (FreezeAttacksDuringCutscenes && CutsceneComponent.AnyPlaying);
 
@@ -288,8 +307,10 @@ namespace Assets._Project.Features.WalkingDragon
             // SwimmingMovement normally turns every swimmer toward its travel
             // direction. The boss must face its target while moving sideways around
             // the orbit, so use the same slow damping there and apply the final
-            // target-facing rotation after ApplyMovement() each physics tick.
-            _swimming.TurnSmoothTime = Mathf.Max(_swimming.TurnSmoothTime, TurnSmoothTime);
+            // target-facing rotation after ApplyMovement() each physics tick. Give
+            // the generic motor an effectively disabled turn response so backward
+            // retreat/orbit input cannot rotate the dragon away from its target.
+            _swimming.TurnSmoothTime = 1000f;
 
             // A creature this large walks on the sea floor; the generic swimmer's
             // buoyancy and wave-follow systems must not lift, bob, or drift it.
@@ -363,6 +384,7 @@ namespace Assets._Project.Features.WalkingDragon
                 _ocean = _swimming.Ocean;
 
             _swimming.Ocean = null;
+            _swimming.TurnSmoothTime = 1000f;
             _swimming.RideWaveSurface = false;
             _swimming.EnableWaveDrift = false;
             _swimming.WaveLiftMultiplier = 0f;
@@ -395,10 +417,35 @@ namespace Assets._Project.Features.WalkingDragon
 
         private void UpdateAI()
         {
+            // Stationary boss mode deliberately bypasses all navigation and boat
+            // attacks, but retains player tracking, facing, and the fireball loop.
+            if (!movementEnabled)
+            {
+                if (_ramInProgress)
+                    CancelBoatRam();
+                _ramRetreatActive = false;
+                StopPlanarMovementImmediately();
+                CurrentState = State.StationaryFireball;
+                UpdateFireballAttack(Target != null && (Target.Health == null || !Target.Health.IsDead));
+                return;
+            }
+
+            // A successful ram has its own short retreat state. This runs before
+            // movement-state classification because the ram usually knocks the
+            // player out of the boat during the impact itself.
+            if (_ramRetreatActive)
+            {
+                // Keep the impact-to-reverse-walk beat clean. Resume fireball
+                // pressure as soon as the short retreat has completed.
+                UpdateRamRetreat();
+                return;
+            }
+
             if (Target == null)
             {
                 CancelAttackSequences();
                 UpdatePatrol();
+                UpdateFireballAttack(false);
                 return;
             }
 
@@ -421,12 +468,56 @@ namespace Assets._Project.Features.WalkingDragon
                 UpdateOrbit(Target.transform.position, null);
             }
 
-            // Fireballs are a universal pressure attack, not a land-only state.
-            // Boat rams remain an additional attack when the player is aboard.
+            UpdateFireballAttack(targetCanBeAttacked);
+        }
+
+        private void UpdateFireballAttack(bool targetCanBeAttacked)
+        {
             if (!targetCanBeAttacked || _attacksFrozenNow || FireballPrefab == null)
                 CancelFireballWindup();
             else
                 TryFireball();
+        }
+
+        private void UpdateRamRetreat()
+        {
+            CurrentState = State.RamRetreat;
+            Vector3 toRetreatPoint = _ramRetreatTarget - transform.position;
+            toRetreatPoint.y = 0f;
+
+            if (toRetreatPoint.magnitude <= Mathf.Max(0.1f, RamRetreatStopDistance) ||
+                Time.time >= _ramRetreatEndTime)
+            {
+                _ramRetreatActive = false;
+                StopPlanarMovementImmediately();
+                _hasCachedOrbitPoint = false;
+                _orbitInitialized = false;
+                _orbitElapsed = 0f;
+                return;
+            }
+
+            // Positive motor speed with a destination behind the target-facing
+            // dragon produces physical reverse movement. The animatable component
+            // exposes the corresponding negative signed Speed parameter.
+            MoveDirectTowards(_ramRetreatTarget, RamRetreatSpeed);
+        }
+
+        private void StopPlanarMovementImmediately()
+        {
+            if (_swimming != null)
+            {
+                _swimming.Speed = 0f;
+                _swimming.Move(Vector2.zero);
+                _swimming.SetPlanarVelocity(Vector3.zero);
+            }
+
+            if (_body != null)
+            {
+                Vector3 velocity = _body.linearVelocity;
+                velocity.x = 0f;
+                velocity.z = 0f;
+                _body.linearVelocity = velocity;
+            }
         }
 
         private void UpdatePatrol()
@@ -1016,13 +1107,41 @@ namespace Assets._Project.Features.WalkingDragon
                 flooding.AddWater(BoatRamFlood, hullPoint);
             }
 
+            // Clear any fireball wind-up so it cannot interrupt the impact / reverse-
+            // walk beat or release a stale projectile while the dragon backs away.
+            CancelFireballWindup();
+
             // This event is emitted only after hull contact succeeds. The animatable
             // component uses it for the impact pose and long-range impact sound.
             RamImpact?.Invoke(hullPoint);
 
+            // Brake at the exact impact frame, then immediately retreat along the
+            // reverse of the charge vector. FaceCurrentTarget() continues to turn
+            // toward the player independently of this backward movement.
+            StopPlanarMovementImmediately();
+            _ramInProgress = false;
+            _ramBoat = null;
+            _ramPhase = RamPhase.None;
+            _ramJumpOffset = 0f;
+
+            Vector3 retreatDirection = Target != null
+                ? transform.position - Target.transform.position
+                : -ramDirection;
+            retreatDirection.y = 0f;
+            if (retreatDirection.sqrMagnitude < 0.001f)
+                retreatDirection = -ramDirection;
+            if (retreatDirection.sqrMagnitude < 0.001f)
+                retreatDirection = -Vector3.ProjectOnPlane(transform.forward, Vector3.up);
+            retreatDirection.Normalize();
+
+            _ramRetreatTarget = transform.position + retreatDirection * Mathf.Max(0f, RamRetreatDistance);
+            _ramRetreatTarget.y = transform.position.y;
+            _ramRetreatEndTime = Time.time + Mathf.Max(0.1f, RamRetreatTimeout);
+            _ramRetreatActive = RamRetreatDistance > 0.01f;
+            CurrentState = _ramRetreatActive ? State.RamRetreat : State.OrbitBoat;
+
             _nextBoatRamTime = Time.time + RamCooldown;
             _orbitElapsed = 0f;
-            CancelBoatRam();
             _hasCachedOrbitPoint = false;
 
             // Spawn only after the ram state has ended and only when the player
@@ -1487,6 +1606,14 @@ namespace Assets._Project.Features.WalkingDragon
 
         private void FaceCurrentTarget()
         {
+            // During retreat, and while locked in stationary fireball mode, face
+            // the player's actual transform rather than the centre of their boat.
+            if (Target != null && (_ramRetreatActive || !movementEnabled))
+            {
+                FacePoint(Target.transform.position);
+                return;
+            }
+
             if (_ramInProgress && _ramBoat != null)
             {
                 FacePoint(_ramBoat.transform.position);
@@ -1548,6 +1675,45 @@ namespace Assets._Project.Features.WalkingDragon
             }
         }
 
+        /// <summary>
+        /// Stops navigation and boat rams while leaving player tracking, slow facing,
+        /// and fireball attacks active. Useful for a stationary arena-style boss phase.
+        /// </summary>
+        public void DisableMovement()
+        {
+            SetMovementEnabled(false);
+        }
+
+        /// <summary>Re-enables orbiting, patrol, and boat-ram movement.</summary>
+        public void EnableMovement()
+        {
+            SetMovementEnabled(true);
+        }
+
+        /// <summary>Sets whether the dragon is allowed to navigate or perform boat rams.</summary>
+        public void SetMovementEnabled(bool enabled)
+        {
+            if (movementEnabled == enabled)
+                return;
+
+            movementEnabled = enabled;
+            _ramRetreatActive = false;
+            CancelBoatRam();
+            StopPlanarMovementImmediately();
+
+            if (enabled)
+            {
+                _orbitInitialized = false;
+                _hasCachedOrbitPoint = false;
+                _orbitElapsed = 0f;
+                _nextBoatRamTime = Time.time + Mathf.Max(0f, OrbitBeforeRam);
+            }
+            else
+            {
+                CurrentState = State.StationaryFireball;
+            }
+        }
+
         /// <summary>Call from Timeline, a cutscene director, or gameplay code.</summary>
         public void SetAttacksFrozen(bool frozen)
         {
@@ -1598,6 +1764,14 @@ namespace Assets._Project.Features.WalkingDragon
             a.y = 0f;
             b.y = 0f;
             return Vector3.Distance(a, b);
+        }
+
+        private void OnValidate()
+        {
+            RamRetreatDistance = Mathf.Max(0f, RamRetreatDistance);
+            RamRetreatSpeed = Mathf.Max(0.1f, RamRetreatSpeed);
+            RamRetreatTimeout = Mathf.Max(0.1f, RamRetreatTimeout);
+            RamRetreatStopDistance = Mathf.Max(0.1f, RamRetreatStopDistance);
         }
 
         private void OnDrawGizmos()
@@ -1674,6 +1848,15 @@ namespace Assets._Project.Features.WalkingDragon
                     Gizmos.DrawWireSphere(sharkSpawnPoint, 2f);
                     Gizmos.DrawLine(boat.transform.position, sharkSpawnPoint);
                 }
+            }
+
+            // Post-impact reverse path. This is the short distance the boss backs
+            // away while continuing to face the player to prevent body overlap.
+            if (_ramRetreatActive || (Application.isPlaying && CurrentState == State.RamRetreat))
+            {
+                Gizmos.color = new Color(0.2f, 1f, 1f, 0.95f);
+                Gizmos.DrawWireSphere(_ramRetreatTarget, Mathf.Max(0.5f, RamRetreatStopDistance));
+                Gizmos.DrawLine(root, _ramRetreatTarget);
             }
 
             // Seafloor contact reference and fallback ground height.

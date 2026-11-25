@@ -59,7 +59,7 @@ Material:
     m_Floats:
     - _Exposure1: 1.22
     - _Exposure2: 1
-    - _FadeRatio: 0
+    - _FadeRatio: 0.103875935
     - _FresnelBias: 0
     - _FresnelBias_S1: 0
     - _FresnelEmissionIntensity: 2

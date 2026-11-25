@@ -39,6 +39,15 @@ namespace Assets._Project.Features.Audio
         [Tooltip("How much music yields to the threat layer at maximum threat.")]
         [Range(0f, 1f)] public float MusicDucking = 0.6f;
         [Range(0f, 1f)] public float TensionVolume = 0.55f;
+
+        [Header("Sea Volume")]
+        [Range(0f, 1f)]
+        [Tooltip("Overall sea ambience volume multiplier. Lower this to keep the sea quieter at all heights.")]
+        public float SeaVolume = 0.25f;
+        [Min(0.01f)]
+        [Tooltip("How far above the Sea AudioSource's Y position the listener must be for the sea ambience to fade out completely.")]
+        public float SeaFadeHeight = 25f;
+
         public float FadeSpeed = 0.5f;
         public float UnderwaterCutoff = 600f;
 
@@ -69,6 +78,9 @@ namespace Assets._Project.Features.Audio
         private Coroutine _musicFadeRoutine;
         private float _threat;
         private float _cutoff = OpenCutoff;
+        private float _seaOriginalVolume = 1f;
+        private float _seaCurrentVolume;
+        private Transform _audioListener;
 
         private void Awake()
         {
@@ -80,6 +92,12 @@ namespace Assets._Project.Features.Audio
             }
 
             Instance = this;
+
+            if (Sea != null)
+            {
+                _seaOriginalVolume = Sea.volume;
+                _seaCurrentVolume = Sea.volume;
+            }
 
             if (Music != null)
             {
@@ -96,6 +114,12 @@ namespace Assets._Project.Features.Audio
         {
             _sharks = FindObjectsByType<SharkController>(FindObjectsInactive.Include);
             _underwater = FindAnyObjectByType<OceanUnderwaterController>();
+
+            AudioListener listener = FindAnyObjectByType<AudioListener>();
+            if (listener != null)
+                _audioListener = listener.transform;
+            else if (Camera.main != null)
+                _audioListener = Camera.main.transform;
 
             if (Tension != null)
                 Tension.volume = 0f;
@@ -317,10 +341,44 @@ namespace Assets._Project.Features.Audio
             incoming.Weight = 1f;
         }
 
+        private void UpdateSeaVolume()
+        {
+            if (Sea == null)
+                return;
+
+            float heightAboveSea = 0f;
+
+            if (_audioListener != null)
+            {
+                heightAboveSea = Mathf.Max(
+                    0f,
+                    _audioListener.position.y - Sea.transform.position.y
+                );
+            }
+
+            // The sea remains at its reduced base volume at or below sea level,
+            // then smoothly fades out as the listener moves farther above it.
+            float fadeProgress = Mathf.Clamp01(heightAboveSea / Mathf.Max(0.01f, SeaFadeHeight));
+            float heightAttenuation = 1f - Mathf.SmoothStep(0f, 1f, fadeProgress);
+
+            float targetVolume = _seaOriginalVolume * SeaVolume * heightAttenuation;
+
+            // Smooth volume changes to avoid audible stepping when the listener moves.
+            _seaCurrentVolume = Mathf.Lerp(
+                _seaCurrentVolume,
+                targetVolume,
+                6f * Time.unscaledDeltaTime
+            );
+
+            Sea.volume = _seaCurrentVolume;
+        }
+
         private void Update()
         {
             if (_sharks == null)
                 return;
+
+            UpdateSeaVolume();
 
             float threat = 0f;
             foreach (SharkController shark in _sharks)
