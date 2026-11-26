@@ -13,7 +13,7 @@ namespace Assets._Project.Features.Boat
     {
         [SerializeField] private TMP_Text hintText;
         [SerializeField] private string controlsText =
-            "<b>A / D</b>  Steer     <b>W / S</b>  Sail     <b>Hold Q / E</b>  Rotate sail\n<b>Hold F</b>  Bail water     <b>Click</b>  Strike     <b>Space</b>  Leave boat";
+            "<b>A / D</b>  Virar     <b>W / S</b>  Içar Vela     <b>Segurar Q / E</b>  Para girar vela\n<b>Segurar F</b>  Arrumar barco     <b>Click</b>  Atacar     <b>Espaço</b>  Sair do barco";
         [Tooltip("Seconds fully visible after boarding before the hint dims.")]
         [SerializeField] private float dimAfter = 8f;
         [SerializeField, Range(0f, 1f)] private float dimmedAlpha = 0.3f;
