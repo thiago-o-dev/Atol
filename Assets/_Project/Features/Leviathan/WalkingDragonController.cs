@@ -139,6 +139,7 @@ namespace Assets._Project.Features.WalkingDragon
         public SharkController SharkPrefab;
         [Tooltip("Enable spawning one shark after each successful player hit from a boat ram.")]
         public bool SpawnSharkAfterSuccessfulRam = true;
+        public float SharkSpawnChance = 0.5f;
         [Tooltip("Spawn offset in the rammed boat's local space. Negative Z places the shark behind the boat; negative Y starts it below the surface.")]
         public Vector3 SharkSpawnLocalOffset = new Vector3(0f, -2f, -14f);
 
@@ -1160,6 +1161,9 @@ namespace Assets._Project.Features.WalkingDragon
         private void SpawnSharkReinforcement(BoatController boat)
         {
             if (!SpawnSharkAfterSuccessfulRam || SharkPrefab == null || boat == null)
+                return;
+
+            if (Random.Range(0f, 1f) >= SharkSpawnChance)
                 return;
 
             Vector3 spawnPosition = boat.transform.TransformPoint(SharkSpawnLocalOffset);
